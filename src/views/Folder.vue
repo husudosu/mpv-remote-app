@@ -5,30 +5,69 @@
         <ion-buttons slot="start">
           <ion-menu-button color="primary"></ion-menu-button>
         </ion-buttons>
-        <ion-title>{{ $route.params.id }}</ion-title>
+        <ion-title>{{ toolbarTitle }}</ion-title>
       </ion-toolbar>
     </ion-header>
     
     <ion-content :fullscreen="true">
       <ion-header collapse="condense">
         <ion-toolbar>
-          <ion-title size="large">{{ $route.params.id }}</ion-title>
+          <ion-title size="large">{{ toolbarTitle }}</ion-title>
         </ion-toolbar>
       </ion-header>
-    
-      <div id="container">
-        <strong class="capitalize">{{ $route.params.id }}</strong>
-        <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-      </div>
+
+      <ion-grid>
+        <ion-row>
+          <ion-col size=12 class="videoControls">
+            <ion-button shape="round" @click="onPlayPauseClicked">
+              <ion-icon v-if="playerData.pause" slot="icon-only" :icon="playOutline"></ion-icon>
+              <ion-icon v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
+            </ion-button>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col size=12 class="videotitle">
+            {{ playerData.time }}s
+          </ion-col>
+        </ion-row>
+      </ion-grid>
     </ion-content>
   </ion-page>
 </template>
 
-<script lang="ts">
-import { IonButtons, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
+<script>
+import { IonButtons, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol, IonButton, IonIcon} from '@ionic/vue';
+import {computed } from 'vue'
+import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
+import { playOutline, pauseOutline } from 'ionicons/icons';
+import { socket } from '../main'
 
 export default {
-  name: 'Folder',
+  setup() {
+    const store = useStore()
+    const route = useRoute()
+    const playerData = computed(() => store.state.mpvsocket.playerData)
+    const connectedState = computed(() => store.state.mpvsocket.connected)
+  
+    const toolbarTitle = computed(() => {
+      return playerData.value.playback || 'Player'
+    })
+
+    const onPlayPauseClicked = () => {
+      socket.emit('set_player_prop', {'property': 'pause', value: !playerData.value.pause})
+    }
+
+    return {
+      playerData,
+      connectedState,
+      route,
+      toolbarTitle,
+      playOutline,
+      pauseOutline,
+      onPlayPauseClicked
+    } 
+  },
   components: {
     IonButtons,
     IonContent,
@@ -36,12 +75,26 @@ export default {
     IonMenuButton,
     IonPage,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonButton,
+    IonIcon
   }
 }
 </script>
 
 <style scoped>
+
+.videotitle {
+  padding: 10px;
+}
+
+.videoControls {
+  margin: 10px;
+}
+
 #container {
   text-align: center;
   position: absolute;
