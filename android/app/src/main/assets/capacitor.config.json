@@ -1,0 +1,6 @@
+{
+	"appId": "com.test.app",
+	"appName": "mpv_controller_android",
+	"webDir": "public",
+	"bundledWebRuntime": false
+}

@@ -10,7 +10,9 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@capacitor/core": "3.0.0",
+    "@capacitor/android": "3.0.0",
+    "@capacitor/core": "^3.0.0",
+    "@ionic-native/web-intent": "^5.33.1",
     "@ionic/vue": "^5.4.0",
     "@ionic/vue-router": "^5.4.0",
     "core-js": "^3.6.5",
@@ -20,7 +22,7 @@
     "vuex": "^4.0.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "3.0.0",
+    "@capacitor/cli": "^3.0.0",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-e2e-cypress": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",

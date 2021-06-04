@@ -1,5 +1,7 @@
 {
   "name": "mpv_controller_android",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "vue"
 }
