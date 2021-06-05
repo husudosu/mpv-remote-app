@@ -1,5 +1,3 @@
-
-
 const initialState = {
     connected: false,
     playerData: {
@@ -34,14 +32,12 @@ export const mpvsocket = {
             }
         },
         setPause(state, value){
+            // If paused remove playback update.
             console.log(`Committing ${value}`)
             state.playerData.pause = value
         }
     },
     actions:{
     },
-    getters:{
-        percent_pos: state => { console.log(state.playerData.percent_pos); return state.playerData.percent_pos}
-    }
 }
 

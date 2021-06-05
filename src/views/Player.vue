@@ -8,8 +8,7 @@
         <ion-title>{{ toolbarTitle }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    
-    <ion-content :fullscreen="true">
+    <ion-content :fullscreen="true" v-if="serverConfigured">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">{{ toolbarTitle }}</ion-title>
@@ -19,48 +18,70 @@
       <ion-grid>
         <ion-row>
           <ion-col size=12 class="videoControls">
-            <ion-button shape="round" @click="onPlayPauseClicked">
-              <ion-icon v-if="playerData.pause" slot="icon-only" :icon="playOutline"></ion-icon>
-              <ion-icon v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
-            </ion-button>
-            <ion-button shape="round" @click="onStopClicked">
-              <ion-icon slot="icon-only" :icon="stopOutline"></ion-icon>
-            </ion-button>
-
           </ion-col>
         </ion-row>
-        <ion-row>
-          <ion-col cols=11>
-            <ion-input v-model="newFileName" placeholder="File/URL"></ion-input>
-          </ion-col>
-          <ion-col cols=1>
-            <ion-button @click="onChangeFileClicked">Open</ion-button>
+        <ion-row class="remote_buttons">
+          <ion-col>
+              <ion-button>
+                <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
+              </ion-button>
+              <ion-button>
+                <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
+              </ion-button>
+              <ion-button>
+                <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
+              </ion-button>
           </ion-col>
         </ion-row>
-
-
+        <ion-row class="remote_buttons">
+            <ion-col>
+            <ion-button @click="onOpenURLClicked">
+              <ion-icon slot="start"  :icon="logoYoutube"></ion-icon>
+              Open URL
+            </ion-button>
+          </ion-col>
+        </ion-row>
       </ion-grid>
     </ion-content>
-    <ion-footer>
+    <ion-content v-else>
+      Server not configured yet.
+    </ion-content>
+    <ion-footer v-if="serverConfigured">
         <ion-row class="ion-justify-content-end">
           <ion-col size=12 class="videotitle">
             <div class="playbackTime">{{ playerData.playback_time }} / {{ playerData.duration }}</div>
             <input id="seekbar" type="range" name="rng" min="0" step="1" :value="playerData.percent_pos" style="width: 100%;" @input="onSeek">
           </ion-col>
         </ion-row>
+        <ion-row class="videoControls">
+          <ion-button size="small" @click="onPlayPauseClicked">
+            <ion-icon size="small" v-if="playerData.pause" slot="icon-only" :icon="playOutline"></ion-icon>
+            <ion-icon size="small" v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
+          </ion-button>
+          <ion-button size="small" @click="onStopClicked">
+            <ion-icon size="small" slot="icon-only" :icon="stopOutline"></ion-icon>
+          </ion-button>
+        </ion-row>
+
     </ion-footer>
   </ion-page>
 </template>
 
 <script>
 import {
-  IonButtons, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol, IonButton, IonIcon, IonInput, IonFooter
+  IonButtons, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol, IonButton, IonIcon, IonFooter,
+  alertController
 } from '@ionic/vue';
+
 import {computed, ref} from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
-import { playOutline, pauseOutline, stopOutline } from 'ionicons/icons';
-import { socket } from '../main'
+import { 
+  playOutline, pauseOutline, stopOutline,
+  volumeHighOutline, volumeLowOutline, volumeMuteOutline,
+  logoYoutube,
+  } from 'ionicons/icons';
+import { socket, connect } from '../socketClient'
 
 
 export default {
@@ -69,9 +90,13 @@ export default {
     const route = useRoute()
     const playerData = computed(() => store.state.mpvsocket.playerData)
     const connectedState = computed(() => store.state.mpvsocket.connected)
+    const serverConfigured = computed(() => store.state.settings.configured)
     const newFileName = ref('')
     const seekTo = ref(0)
 
+    if (store.state.settings.configured){
+      connect()
+    }
     const toolbarTitle = computed(() => {
       return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player"
     })
@@ -94,20 +119,56 @@ export default {
       socket.emit('seek', e.target.value)
     }
 
+    const onOpenURLClicked = async() => {
+      const alert = await alertController
+        .create({
+          header: "Open URL",
+          inputs: [
+            {
+              name: 'url',
+              placeholder: 'URL',
+            }
+          ],
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+              handler: () => {
+                console.log("Cancel clicked!")
+              }
+            },
+            {
+              text: 'Ok',
+              handler: (val) => {
+                console.log(`Clicked ok, data: ${JSON.stringify(val)}`)
+                socket.emit("openFile", val.url)
+              }
+            }
+          ]
+        })
+        return alert.present()
+    }
+
     return {
       playerData,
       newFileName,
       connectedState,
       route,
       toolbarTitle,
-      playOutline,
-      pauseOutline,
-      stopOutline,
       onPlayPauseClicked,
       onChangeFileClicked,
       onStopClicked,
       onSeek,
-      seekTo
+      onOpenURLClicked,
+      seekTo,
+      serverConfigured,
+      playOutline,
+      pauseOutline,
+      stopOutline,
+      volumeHighOutline,
+      volumeLowOutline,
+      volumeMuteOutline,
+      logoYoutube,
     } 
   },
   components: {
@@ -123,8 +184,7 @@ export default {
     IonCol,
     IonButton,
     IonIcon,
-    IonInput,
-    IonFooter
+    IonFooter,
   }
 }
 </script>
@@ -136,7 +196,12 @@ export default {
 }
 
 .videoControls {
-  margin: 10px;
+  text-align: right;
+}
+.videoControls ion-button {
+  /* padding-top: 10px; */
+  margin: 5px;
+  margin-right: 1px;
 }
 
 #container {
@@ -171,8 +236,16 @@ export default {
 
 #seekbar {
   width: 100%;
-  padding-left: 15px;
-  padding-right: 15px;
   background-color: red;
 }
+
+.remote_buttons {
+  text-align: center;
+}
+
+.remote_buttons ion-button {
+  margin: 5px;
+}
+
+
 </style>

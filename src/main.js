@@ -25,64 +25,8 @@ import './theme/variables.css';
 
 
 import {store} from './store'
-
-
-import SocketIO from "socket.io-client";
-
-export const socket = SocketIO("http://192.168.88.4:8000", {
-  timeout: 1000,
-  wsEngine: 'ws',
-  transportOptions: {
-    polling: {
-      extraHeaders: {
-        "X-Username": 'sudosu',
-      },
-    },
-  },
-});
-
-setInterval(() => {
-  console.log("Refreshing playback")
-  socket.emit("playbackTime")
-}, 1500);
-
-socket.on("connect", () => {
-  store.commit("mpvsocket/setConnectState", true);
-  console.log("Socket connected");
-  // socket.emit("player_data", (data) => {
-  //   store.commit("mpvsocket/setPlayerData", data);
-  // });
-  console.log("User connected");
-});
-
-socket.on("disconnect", () => {
-  store.commit("mpvsocket/setConnectState", false);
-  console.log("User disconnect");
-});
-
-socket.on("client_count", (data) => {
-  console.log(data);
-});
-
-// socket.on("playback_time_property", (data) => {
-//   store.commit("mpvsocket/setPlayback", data);
-// });
-
-socket.on("pause", (data) => {
-  console.log(`Paused trigger from server ${data}`)
-  store.commit("mpvsocket/setPause", data);
-});
-
-// On new file opened
-socket.on("playerData", (data) => {
-  store.commit("mpvsocket/setPlayerData", data);
-  console.log(data);
-});
-
-socket.on("playbackTimeResponse", (data) => {
-  console.log(data);
-  store.commit("mpvsocket/setPlayback", data);
-});
+import {socket} from './socketClient'
+console.log(socket)
 
 const app = createApp(App)
   .use(IonicVue)
