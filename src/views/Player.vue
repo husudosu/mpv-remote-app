@@ -47,21 +47,37 @@
       Server not configured yet.
     </ion-content>
     <ion-footer v-if="serverConfigured">
-        <ion-row class="ion-justify-content-end">
-          <ion-col size=12 class="videotitle">
-            <div class="playbackTime">{{ playerData.playback_time }} / {{ playerData.duration }}</div>
-            <input id="seekbar" type="range" name="rng" min="0" step="1" :value="playerData.percent_pos" style="width: 100%;" @input="onSeek">
-          </ion-col>
-        </ion-row>
-        <ion-row class="videoControls">
-          <ion-button size="small" @click="onPlayPauseClicked">
-            <ion-icon size="small" v-if="playerData.pause" slot="icon-only" :icon="playOutline"></ion-icon>
-            <ion-icon size="small" v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
-          </ion-button>
-          <ion-button size="small" @click="onStopClicked">
-            <ion-icon size="small" slot="icon-only" :icon="stopOutline"></ion-icon>
-          </ion-button>
-        </ion-row>
+        <template v-if="isPlayerActive">
+          <ion-row class="ion-justify-content-end">
+            <ion-col size=12 class="videotitle">
+              <div class="playbackTime">
+                    {{ playerData.playback_time }} / {{ playerData.duration }}
+              </div>
+              <input 
+                id="seekbar"
+                type="range"
+                name="rng"
+                min="0"
+                step="1"
+                :value="playerData.percent_pos" 
+                style="width: 100%;" 
+                @input="onSeek"
+              >
+            </ion-col>
+          </ion-row>
+          <ion-row class="videoControls">
+            <ion-button size="small" @click="onPlayPauseClicked">
+              <ion-icon size="small" v-if="playerData.pause" slot="icon-only" :icon="playOutline"></ion-icon>
+              <ion-icon size="small" v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
+            </ion-button>
+            <ion-button size="small" @click="onStopClicked">
+              <ion-icon size="small" slot="icon-only" :icon="stopOutline"></ion-icon>
+            </ion-button>
+          </ion-row>
+        </template>
+        <template v-else>
+          <div class="playbackTimeInactive">No playback</div>
+        </template>
 
     </ion-footer>
   </ion-page>
@@ -98,9 +114,16 @@ export default {
       connect()
     }
     const toolbarTitle = computed(() => {
-      return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player"
+      if (connectedState.value){
+        return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player"
+      }
+      return "Disconnected from MPV"
     })
 
+    const isPlayerActive = computed(() => {
+      return store.state.mpvsocket.playerData.filename ? true : false;
+    });
+  
     const onPlayPauseClicked = () => {
       console.log(`Pause clicked. Current value: ${store.state.mpvsocket.playerData.pause}`)
       socket.emit('set_player_prop', ["pause", !store.state.mpvsocket.playerData.pause])
@@ -117,6 +140,25 @@ export default {
 
     const onSeek = (e) => {
       socket.emit('seek', e.target.value)
+    }
+
+    const changeVolume = (action) => {
+      // TODO: Handle push & hold button somehow
+      switch (action){
+        case 'mute':
+          socket.emit("set_player_prop", ["volume", 0])
+          break;
+        case 'increase':
+          if (playerData.value.volume < 100){
+            socket.emit("set_player_prop", ["volume", playerData.value.volume + 5]);
+          }
+          break;
+        case 'decrease':
+          if (playerData.value.volume > 0){
+            socket.emit("set_player_prop", ["volume", playerData.value.volume - 5]);
+          }
+          break;
+      }
     }
 
     const onOpenURLClicked = async() => {
@@ -153,6 +195,7 @@ export default {
       playerData,
       newFileName,
       connectedState,
+      isPlayerActive,
       route,
       toolbarTitle,
       onPlayPauseClicked,
@@ -161,6 +204,7 @@ export default {
       onSeek,
       onOpenURLClicked,
       seekTo,
+      changeVolume,
       serverConfigured,
       playOutline,
       pauseOutline,
@@ -232,6 +276,11 @@ export default {
 .playbackTime {
   text-align: center;
   align-content: center;
+}
+
+.playbackTimeInactive {
+  text-align: center;
+  padding: 20px;
 }
 
 #seekbar {

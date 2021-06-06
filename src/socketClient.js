@@ -32,7 +32,7 @@ export async function disconnect(){
     }
 }
 
-export function refreshPlaybackInterval(){
+function refreshPlaybackInterval(){
     socket.emit("playbackTime");
 }
 
@@ -44,16 +44,9 @@ function handle_socket(){
 
     socket.on("disconnect", () => {
         store.commit("mpvsocket/setConnectState", false);
+        if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
         console.log("User disconnect");
     });
-
-    socket.on("client_count", (data) => {
-        console.log(data);
-    });
-
-    // socket.on("playback_time_property", (data) => {
-    //   store.commit("mpvsocket/setPlayback", data);
-    // });
 
     socket.on("pause", (data) => {
         console.log(`Paused trigger from server ${data}`);
@@ -73,10 +66,17 @@ function handle_socket(){
     socket.on("playerData", (data) => {
         store.commit("mpvsocket/setPlayerData", data);
         // Start checking
-        if (!data.pause){
+        if (!data.pause && data.filename){
             playbackRefreshInterval = setInterval(() => {refreshPlaybackInterval()}, 1500)
         }
         console.log(data); 
+    });
+
+    // End of file or stopped
+    socket.on('stopped', () => {
+        console.log("End of file reached");
+        if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
+        store.commit('mpvsocket/resetPlayback');
     });
 
     socket.on("playbackTimeResponse", (data) => {

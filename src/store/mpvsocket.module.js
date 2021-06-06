@@ -1,17 +1,15 @@
 const initialState = {
     connected: false,
     playerData: {
-        playback_time: null,
+        playback_time: '00:00:00',
         pause: true,
-        time: null,
         percent_pos: 0,
         volume: null,
-        subtitles: null,
-        audio: null,
         fullscreen: null,
         mute: null,
-        subtitle_tracks: [],
-        audio_tracks: [],
+        filename: null,
+        duration: '00:00:00',
+        media_title: null,
     }
 }
 
@@ -35,6 +33,14 @@ export const mpvsocket = {
             // If paused remove playback update.
             console.log(`Committing ${value}`)
             state.playerData.pause = value
+        },
+        // On EOF or Playback stopped
+        resetPlayback(state){
+            state.playerData.filename = null;
+            state.playerData.duration = '00:00:00';
+            state.playerData.playback_time = '00:00:00';
+            state.playerData.percent_pos = 0;
+            state.playerData.media_title = null;
         }
     },
     actions:{
