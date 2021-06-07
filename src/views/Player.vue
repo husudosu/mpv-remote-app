@@ -22,20 +22,20 @@
         </ion-row>
         <ion-row class="remote_buttons">
           <ion-col>
-              <ion-button>
+              <ion-button :disabled="!connectedState" @click="changeVolume('decrease')">
                 <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
               </ion-button>
-              <ion-button>
+              <ion-button :disabled="!connectedState" @click="changeVolume('mute')">
                 <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
               </ion-button>
-              <ion-button>
+              <ion-button :disabled="!connectedState" @click="changeVolume('increase')">
                 <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
               </ion-button>
           </ion-col>
         </ion-row>
         <ion-row class="remote_buttons">
             <ion-col>
-            <ion-button @click="onOpenURLClicked">
+            <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
               <ion-icon slot="start"  :icon="logoYoutube"></ion-icon>
               Open URL
             </ion-button>
@@ -126,7 +126,7 @@ export default {
   
     const onPlayPauseClicked = () => {
       console.log(`Pause clicked. Current value: ${store.state.mpvsocket.playerData.pause}`)
-      socket.emit('set_player_prop', ["pause", !store.state.mpvsocket.playerData.pause])
+      socket.emit('setPlayerProp', ["pause", !store.state.mpvsocket.playerData.pause])
     }
 
     const onStopClicked = () => {
@@ -146,16 +146,16 @@ export default {
       // TODO: Handle push & hold button somehow
       switch (action){
         case 'mute':
-          socket.emit("set_player_prop", ["volume", 0])
+          socket.emit("setPlayerProp", ["mute", !store.state.mpvsocket.playerData.mute]);
           break;
         case 'increase':
           if (playerData.value.volume < 100){
-            socket.emit("set_player_prop", ["volume", playerData.value.volume + 5]);
+            socket.emit("setPlayerProp", ["volume", store.state.mpvsocket.playerData.volume + 5]);
           }
           break;
         case 'decrease':
           if (playerData.value.volume > 0){
-            socket.emit("set_player_prop", ["volume", playerData.value.volume - 5]);
+            socket.emit("setPlayerProp", ["volume", store.state.mpvsocket.playerData.volume - 5]);
           }
           break;
       }

@@ -74,6 +74,7 @@ export default defineComponent({
       playCircleOutline,
       isSelected: (url) => url === route.path ? 'selected' : ''
     }
+
   }
 });
 </script>

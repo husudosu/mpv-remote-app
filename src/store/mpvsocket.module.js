@@ -10,6 +10,7 @@ const initialState = {
         filename: null,
         duration: '00:00:00',
         media_title: null,
+        playlist: []
     }
 }
 
@@ -18,15 +19,15 @@ export const mpvsocket = {
     state: {...initialState},
     mutations: {
         setConnectState(state, value){
-            state.connected = value
+            state.connected = value;
         },
         setPlayerData(state, value){
             state.playerData = value
         },
         setPlayback(state, value){
-            state.playerData.playback_time = value.playback_time
+            state.playerData.playback_time = value.playback_time;
             if (value.percent_pos){
-                state.playerData.percent_pos = value.percent_pos
+                state.playerData.percent_pos = value.percent_pos;
             }
         },
         setPause(state, value){
@@ -41,6 +42,9 @@ export const mpvsocket = {
             state.playerData.playback_time = '00:00:00';
             state.playerData.percent_pos = 0;
             state.playerData.media_title = null;
+        },
+        setProp(state, value){
+            state.playerData[value.property] = value.value;
         }
     },
     actions:{
