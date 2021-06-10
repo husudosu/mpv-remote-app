@@ -53,6 +53,12 @@ export default defineComponent({
         mdIcon: playCircleOutline
       },
       {
+        title: 'Playlist',
+        url: '/folder/playlist',
+        iosIcon: cogOutline,
+        mdIcon: cogOutline
+      },
+      {
         title: 'Settings',
         url: '/folder/settings',
         iosIcon: cogOutline,

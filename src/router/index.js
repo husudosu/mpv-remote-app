@@ -8,13 +8,20 @@ const routes = [
     redirect: '/folder/player'
   },
   {
+    name: 'folder.player',
     path: '/folder/player',
     component: () => import ('../views/Player.vue')
   },
   {
+    name: 'folder.settings',
     path: '/folder/settings',
     component: () => import ('../views/Settings.vue')
-  }
+  },
+  {
+    name: 'folder.playlist',
+    path: '/folder/playlist',
+    component: () => import('../views/Playlist.vue')
+  },
 ]
 
 const router = createRouter({
@@ -23,7 +30,10 @@ const router = createRouter({
 })
 
 router.beforeEach(async(to, from, next) => {
-  disconnect()
+  console.log(to.name)
+  if (to.name === 'folder.settings'){
+    disconnect()
+  }
   await store.dispatch('settings/loadSettings')
   next()
 })

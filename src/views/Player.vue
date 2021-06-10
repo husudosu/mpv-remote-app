@@ -47,7 +47,7 @@
       Server not configured yet.
     </ion-content>
     <ion-footer v-if="serverConfigured">
-        <template v-if="isPlayerActive">
+        <template v-if="isPlayerActive && connectedState">
           <ion-row class="ion-justify-content-end">
             <ion-col size=12 class="videotitle">
               <div class="playbackTime">
@@ -89,58 +89,61 @@ import {
   alertController
 } from '@ionic/vue';
 
-import {computed, ref} from 'vue'
-import { useStore } from 'vuex'
-import { useRoute } from 'vue-router'
+import {computed, ref} from 'vue';
+import { useStore } from 'vuex';
+import { useRoute } from 'vue-router';
 import { 
   playOutline, pauseOutline, stopOutline,
   volumeHighOutline, volumeLowOutline, volumeMuteOutline,
   logoYoutube,
   } from 'ionicons/icons';
-import { socket, connect } from '../socketClient'
+import { socket, connect } from '../socketClient';
 
 
 export default {
   setup() {
-    const store = useStore()
-    const route = useRoute()
-    const playerData = computed(() => store.state.mpvsocket.playerData)
-    const connectedState = computed(() => store.state.mpvsocket.connected)
-    const serverConfigured = computed(() => store.state.settings.configured)
-    const newFileName = ref('')
-    const seekTo = ref(0)
+    // TODO: Replace alert with modal.
+    const store = useStore();
+    const route = useRoute();
+    const playerData = computed(() => store.state.mpvsocket.playerData);
+    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const serverConfigured = computed(() => store.state.settings.configured);
+    const newFileName = ref('');
+    const seekTo = ref(0);
 
-    if (store.state.settings.configured){
-      connect()
+    // Connect if needed.
+    if (store.state.settings.configured && !store.state.mpvsocket.connected){
+      connect();
     }
+
     const toolbarTitle = computed(() => {
       if (connectedState.value){
-        return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player"
+        return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player";
       }
-      return "Disconnected from MPV"
-    })
+      return "Disconnected from MPV";
+    });
 
     const isPlayerActive = computed(() => {
       return store.state.mpvsocket.playerData.filename ? true : false;
     });
   
     const onPlayPauseClicked = () => {
-      console.log(`Pause clicked. Current value: ${store.state.mpvsocket.playerData.pause}`)
-      socket.emit('setPlayerProp', ["pause", !store.state.mpvsocket.playerData.pause])
-    }
+      console.log(`Pause clicked. Current value: ${store.state.mpvsocket.playerData.pause}`);
+      socket.emit('setPlayerProp', ["pause", !store.state.mpvsocket.playerData.pause]);
+    };
 
     const onStopClicked = () => {
-      socket.emit('stopPlayback')
-    }
+      socket.emit('stopPlayback');
+    };
 
     const onChangeFileClicked = () => {
-      console.log("Change file clicked")
-      socket.emit('openFile', newFileName.value)
-    }
+      console.log("Change file clicked");
+      socket.emit('openFile', newFileName.value);
+    };
 
     const onSeek = (e) => {
-      socket.emit('seek', e.target.value)
-    }
+      socket.emit('seek', e.target.value);
+    };
 
     const changeVolume = (action) => {
       // TODO: Handle push & hold button somehow
@@ -167,28 +170,29 @@ export default {
           header: "Open URL",
           inputs: [
             {
+              type: 'text',
               name: 'url',
               placeholder: 'URL',
-            }
+            },
           ],
           buttons: [
             {
               text: 'Cancel',
               role: 'cancel',
               handler: () => {
-                console.log("Cancel clicked!")
+                console.log("Cancel clicked!");
               }
             },
             {
               text: 'Ok',
               handler: (val) => {
-                console.log(`Clicked ok, data: ${JSON.stringify(val)}`)
-                socket.emit("openFile", val.url)
+                console.log(`Clicked ok, data: ${JSON.stringify(val)}`);
+                socket.emit("openFile", val.url);
               }
             }
           ]
         })
-        return alert.present()
+        return alert.present();
     }
 
     return {
