@@ -77,7 +77,7 @@ function handle_socket(){
     socket.on("playerData", (data) => {
         store.commit("mpvsocket/setPlayerData", data);
         // Start checking
-        if (!data.pause && data.filename){
+        if (!data.pause && data.filename && !playbackRefreshInterval){
             playbackRefreshInterval = setInterval(() => {refreshPlaybackInterval()}, 1500);
         }
         console.log(data); 
