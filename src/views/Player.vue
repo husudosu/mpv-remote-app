@@ -15,12 +15,12 @@
         </ion-toolbar>
       </ion-header>
 
-      <ion-grid>
+      <ion-grid style="height: 100%;">
         <ion-row>
           <ion-col size=12 class="videoControls">
           </ion-col>
         </ion-row>
-        <ion-row class="remote_buttons">
+        <ion-row class="remoteButtons">
           <ion-col>
               <ion-button :disabled="!connectedState" @click="changeVolume('decrease')">
                 <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
@@ -33,12 +33,17 @@
               </ion-button>
           </ion-col>
         </ion-row>
-        <ion-row class="remote_buttons">
+        <ion-row class="remoteButtons">
             <ion-col>
-              <ion-button :disabled="!connectedState" @click="onOpenURLClickedModal">
-                <ion-icon slot="start"  :icon="logoYoutube"></ion-icon>
+              <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
+                <ion-icon slot="start" :icon="logoYoutube"></ion-icon>
                 Open URL
               </ion-button>
+          </ion-col>
+        </ion-row>
+        <ion-row class="remoteButtons">
+          <ion-col>
+
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -46,6 +51,10 @@
     <ion-content v-else>
       Server not configured yet.
     </ion-content>
+    <ion-footer class="ion-no-border remoteFooter">
+        <ion-button @click="onAudioSettingsClicked" :disabled="!connectedState">Audio</ion-button>
+        <ion-button :disabled="!connectedState">Subtitle</ion-button>
+    </ion-footer>
     <ion-footer v-if="serverConfigured">
         <template v-if="isPlayerActive && connectedState">
           <ion-row class="ion-justify-content-end">
@@ -66,7 +75,7 @@
             </ion-col>
           </ion-row>
           <ion-row class="videoControls">
-            <ion-col class="ion-align-self-start">
+            <ion-col cols=10>
               <ion-button size="small" @click="onPlayPauseClicked">
                 <ion-icon size="small" v-if="playerData.pause" slot="icon-only" :icon="playOutline"></ion-icon>
                 <ion-icon size="small" v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
@@ -74,6 +83,10 @@
               <ion-button size="small" @click="onStopClicked">
                 <ion-icon size="small" slot="icon-only" :icon="stopOutline"></ion-icon>
               </ion-button>
+            </ion-col>
+            <ion-col cols=2 class="codecInfo">
+              {{ playerData.currentTracks.video.codec.toUpperCase() }},
+              {{ playerData.currentTracks.audio.codec.toUpperCase() }}
             </ion-col>
           </ion-row>
         </template>
@@ -88,7 +101,7 @@
 <script>
 import {
   IonButtons, IonContent, IonHeader, IonMenuButton, IonPage, IonTitle, IonToolbar, IonGrid, IonRow, IonCol, IonButton, IonIcon, IonFooter,
-  alertController, modalController,
+  modalController,
 } from '@ionic/vue';
 
 import {computed, ref} from 'vue';
@@ -101,7 +114,7 @@ import {
   } from 'ionicons/icons';
 import { socket, connect } from '../socketClient';
 import openURLModal from '../components/openURLModal.vue';
-
+import audioSettingsModal from '../components/audioSettingsModal.vue';
 
 export default {
   setup() {
@@ -113,7 +126,6 @@ export default {
     const serverConfigured = computed(() => store.state.settings.configured);
     const newFileName = ref('');
     const seekTo = ref(0);
-    const isOpenURLModalOpened = ref(false);
     // Connect if needed.
     if (store.state.settings.configured && !store.state.mpvsocket.connected){
       connect();
@@ -169,38 +181,6 @@ export default {
     }
 
     const onOpenURLClicked = async() => {
-      const alert = await alertController
-        .create({
-          header: "Open URL",
-          inputs: [
-            {
-              type: 'text',
-              name: 'url',
-              placeholder: 'URL',
-            },
-          ],
-          buttons: [
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              handler: () => {
-                console.log("Cancel clicked!");
-              }
-            },
-            {
-              text: 'Ok',
-              handler: (val) => {
-                console.log(`Clicked ok, data: ${JSON.stringify(val)}`);
-                socket.emit("openFile", val.url);
-              }
-            }
-          ]
-        })
-        return alert.present();
-    }
-
-    const onOpenURLClickedModal = async() => {
-      isOpenURLModalOpened.value = true;
       const modal = await modalController
         .create({
           component: openURLModal,
@@ -219,6 +199,18 @@ export default {
         return modal.present();
     }
 
+    const onAudioSettingsClicked = async() => {
+      const modal = await modalController
+        .create({
+          component: audioSettingsModal,
+          componentProps: {
+            modalController: modalController
+          }
+        });
+
+        return modal.present();
+    }
+
     return {
       playerData,
       newFileName,
@@ -230,7 +222,6 @@ export default {
       onChangeFileClicked,
       onStopClicked,
       onSeek,
-      onOpenURLClicked,
       seekTo,
       changeVolume,
       serverConfigured,
@@ -242,8 +233,8 @@ export default {
       volumeMuteOutline,
       logoYoutube,
       modalController,
-      isOpenURLModalOpened,
-      onOpenURLClickedModal
+      onOpenURLClicked,
+      onAudioSettingsClicked
     } 
   },
   components: {
@@ -315,13 +306,27 @@ export default {
   background-color: red;
 }
 
-.remote_buttons {
+.remoteButtons {
   text-align: center;
 }
 
-.remote_buttons ion-button {
+.remoteButtons ion-button {
   margin: 5px;
 }
 
+.remoteFooter {
+  border: 0px;
+  padding: 5px 5px 10px 10px;
+  text-align: right;
+}
 
+.remoteFooter ion-button {
+  margin: 5px;
+  width: 100px;
+}
+
+.codecInfo {
+  text-align: right;
+  padding-top: 15px;
+}
 </style>
