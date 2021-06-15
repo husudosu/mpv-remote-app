@@ -69,7 +69,10 @@ export default {
         }
 
         const doReorder = (event) => {
-            console.log(event);
+            const fromIndex = event.detail.from;
+            const toIndex = event.detail.to;
+            console.log(`Move element from ${fromIndex} to ${toIndex}`);
+            socket.emit("playlistMove", {fromIndex, toIndex});
             event.detail.complete();
         }
 

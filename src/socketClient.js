@@ -6,6 +6,7 @@ export let socket = null;
 
 export let playbackRefreshInterval = null;
 
+// TODO: Handle connection failure.
 export async function connect(){
     await store.dispatch("settings/loadSettings");
     

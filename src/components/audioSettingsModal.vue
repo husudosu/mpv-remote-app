@@ -56,7 +56,8 @@ export default {
         })
         
         const onAppendClicked = () => {
-
+            // TODO: Change audio track
+            props.modalController.dismiss();
         };
 
         const onCancelClicked = () => {
