@@ -44,6 +44,7 @@ export const mpvsocket = {
             state.playerData.media_title = null;
         },
         setProp(state, value){
+            console.log(`Property changed: ${value.property}: ${JSON.stringify(value.value)}`)
             state.playerData[value.property] = value.value;
         }
     },

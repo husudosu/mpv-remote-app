@@ -18,15 +18,20 @@
                 <ion-button size="small">
                     <ion-icon :icon="trashBin"></ion-icon>
                 </ion-button>
-
+                <ion-button size="small" @click="onPreLoadPlaylistClicked"> 
+                    Preload playlist
+                </ion-button>
             </ion-toolbar>
 
             <ion-reorder-group @ionItemReorder="doReorder($event)" :disabled="playerData.playlist.length <= 1 ">
                     <ion-item @click="onItemClicked(item)" v-for="item in playerData.playlist" :key="item.id">
                         <ion-label>
-                            <ion-icon v-if="item.playing" slot="start" :icon="playOutline"></ion-icon>
+                            <ion-icon v-if="item.current" slot="start" :icon="playOutline"></ion-icon>
                                 {{ item.filename }}
                         </ion-label>
+                        <ion-button  @click="onRemoveItemClicked(item)" fill="clear" slot="end">
+                            <ion-icon slot="icon-only" :icon="trashBin"></ion-icon>
+                        </ion-button>
                         <ion-reorder slot="end"></ion-reorder>
                     </ion-item>
             </ion-reorder-group>
@@ -68,13 +73,23 @@ export default {
             connect();
         }
 
-        const doReorder = (event) => {
+        const doReorder = async(event) => {
             const fromIndex = event.detail.from;
             const toIndex = event.detail.to;
             console.log(`Move element from ${fromIndex} to ${toIndex}`);
-            socket.emit("playlistMove", {fromIndex, toIndex});
+            await socket.emit("playlistMove", {fromIndex, toIndex});
             event.detail.complete();
         }
+        
+        const onPreLoadPlaylistClicked = () => {
+            // Loads few playlist item for testing.
+            socket.emit("openFile", {filename: "/home/sudosu/test.webm", appendToPlaylist: true});
+            socket.emit("openFile", {filename: "/home/sudosu/test1.mkv", appendToPlaylist: true}); 
+        };
+        
+        const onRemoveItemClicked = (item) => {
+            socket.emit("playlistRemove", item.index)
+        };
 
         const onItemClicked = (item) => {
             /* TODO: Create double tap gesture somehow for ion-item.
@@ -100,7 +115,9 @@ export default {
             remove,
             trashBin,
             doReorder,
-            onItemClicked
+            onItemClicked,
+            onPreLoadPlaylistClicked,
+            onRemoveItemClicked
         }
     },
     components: {
