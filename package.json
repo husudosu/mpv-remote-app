@@ -16,6 +16,7 @@
     "@ionic-native/web-intent": "^5.33.1",
     "@ionic/vue": "^5.4.0",
     "@ionic/vue-router": "^5.4.0",
+    "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "socket.io-client": "^4.1.2",
     "vue": "^3.0.0-0",

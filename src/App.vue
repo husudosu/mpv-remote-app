@@ -25,7 +25,7 @@
 import { IonApp, IonContent, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonMenu, IonMenuToggle, IonNote, IonRouterOutlet, IonSplitPane } from '@ionic/vue';
 import { defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { playCircleOutline, cogOutline } from 'ionicons/icons';
+import { playCircleOutline, cogOutline, listOutline } from 'ionicons/icons';
 
 export default defineComponent({
   name: 'App',
@@ -55,8 +55,8 @@ export default defineComponent({
       {
         title: 'Playlist',
         url: '/folder/playlist',
-        iosIcon: cogOutline,
-        mdIcon: cogOutline
+        iosIcon: listOutline,
+        mdIcon: listOutline
       },
       {
         title: 'Settings',
@@ -77,6 +77,7 @@ export default defineComponent({
       selectedIndex,
       appPages, 
       cogOutline,
+      listOutline,
       playCircleOutline,
       isSelected: (url) => url === route.path ? 'selected' : ''
     }

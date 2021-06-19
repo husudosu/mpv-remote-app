@@ -25,6 +25,9 @@
                     <ion-label position="stacked">Server Port</ion-label>
                     <ion-input v-model="server_port" @ionBlur="setSetting('server_port')" placeholder="8080"></ion-input>
                 </ion-item>
+                <ion-item>
+                    Filebrowser bookmarks (TODO)
+                </ion-item>
             </ion-list>
         </ion-content>
     </ion-page>

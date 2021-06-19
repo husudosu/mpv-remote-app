@@ -15,7 +15,7 @@
                 </ion-toolbar>
             </ion-header>
             <ion-toolbar>
-                <ion-button size="small">
+                <ion-button @click="onClearPlaylistClicked" size="small">
                     <ion-icon :icon="trashBin"></ion-icon>
                 </ion-button>
                 <ion-button size="small" @click="onPreLoadPlaylistClicked"> 
@@ -74,11 +74,23 @@ export default {
         }
 
         const doReorder = async(event) => {
-            const fromIndex = event.detail.from;
-            const toIndex = event.detail.to;
+            let fromIndex = event.detail.from;
+            let toIndex = event.detail.to;
+
+            const itemIndex = playerData.value.playlist[event.detail.from].index;
+            console.log(itemIndex)
+
             console.log(`Move element from ${fromIndex} to ${toIndex}`);
-            await socket.emit("playlistMove", {fromIndex, toIndex});
-            event.detail.complete();
+
+            // We moving element down.
+            if (toIndex > fromIndex){
+                toIndex += 2;
+            }
+
+            socket.emit("playlistMove", {fromIndex, toIndex}, function(data){
+                store.commit('mpvsocket/setProp', {property: 'playlist', value: data.playlist})
+                event.detail.complete(true);
+            })
         }
         
         const onPreLoadPlaylistClicked = () => {
@@ -87,8 +99,12 @@ export default {
             socket.emit("openFile", {filename: "/home/sudosu/test1.mkv", appendToPlaylist: true}); 
         };
         
+        const onClearPlaylistClicked = () => {
+            socket.emit("playlistClear");
+        }
+
         const onRemoveItemClicked = (item) => {
-            socket.emit("playlistRemove", item.index)
+            socket.emit("playlistRemove", item.index);
         };
 
         const onItemClicked = (item) => {
@@ -100,7 +116,7 @@ export default {
 
             if (Math.abs(now - lastOnStart) <= DOUBLE_CLICK_THRESHOLD) {
                 console.log("Double clicked");
-                socket.emit('playlistPlayIndex', item.id - 1);
+                socket.emit('playlistPlayIndex', item.index);
                 lastOnStart = 0;
             } else {
                 lastOnStart = now;
@@ -117,7 +133,8 @@ export default {
             doReorder,
             onItemClicked,
             onPreLoadPlaylistClicked,
-            onRemoveItemClicked
+            onRemoveItemClicked,
+            onClearPlaylistClicked
         }
     },
     components: {

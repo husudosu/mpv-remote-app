@@ -42,6 +42,15 @@
           </ion-col>
         </ion-row>
         <ion-row class="remoteButtons">
+            <ion-col>
+              <ion-button :disabled="!connectedState" @click="onFileBrowserClicked">
+                <ion-icon slot="start" :icon="folder"></ion-icon>
+                  Browse files
+              </ion-button>
+          </ion-col>
+        </ion-row>
+
+        <ion-row class="remoteButtons">
           <ion-col>
 
           </ion-col>
@@ -110,15 +119,15 @@ import { useRoute } from 'vue-router';
 import { 
   playOutline, pauseOutline, stopOutline,
   volumeHighOutline, volumeLowOutline, volumeMuteOutline,
-  logoYoutube,
+  logoYoutube, folder
   } from 'ionicons/icons';
 import { socket, connect } from '../socketClient';
 import openURLModal from '../components/openURLModal.vue';
 import audioSettingsModal from '../components/audioSettingsModal.vue';
+import fileBrowserModal from '../components/fileBrowserModal.vue';
 
 export default {
   setup() {
-    // TODO: Replace alert with modal.
     const store = useStore();
     const route = useRoute();
     const playerData = computed(() => store.state.mpvsocket.playerData);
@@ -130,7 +139,6 @@ export default {
     if (store.state.settings.configured && !store.state.mpvsocket.connected){
       connect();
     }
-
     const toolbarTitle = computed(() => {
       if (connectedState.value){
         return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player";
@@ -156,6 +164,23 @@ export default {
       socket.emit('openFile', newFileName.value);
     };
 
+    const onFileBrowserClicked = async() => {
+      const modal = await modalController
+        .create({
+          component: fileBrowserModal,
+          componentProps: {
+            modalController: modalController
+          }
+        })
+        modal.onDidDismiss()
+        .then((response) => {
+          if (response.data){
+            console.log(`Data from modal: ${JSON.stringify(response.data)}`);
+            socket.emit("openFile", {filename : response.data, appendToPlaylist: false}); 
+          }
+        })
+      return modal.present();
+    };
 
     const onSeek = (e) => {
       socket.emit('seek', e.target.value);
@@ -232,9 +257,11 @@ export default {
       volumeLowOutline,
       volumeMuteOutline,
       logoYoutube,
+      folder,
       modalController,
       onOpenURLClicked,
-      onAudioSettingsClicked
+      onAudioSettingsClicked,
+      onFileBrowserClicked
     } 
   },
   components: {

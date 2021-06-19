@@ -7,6 +7,12 @@ const initialState = {
         server_ip: null,
         server_port: 8000,
     },
+    filebrowserBookmarks: [
+        {
+            title: "S5@Anime",
+            path: "/mnt/s5/torrent/anime"
+        }
+    ],
     configured: true
 }
 
@@ -23,14 +29,16 @@ export const settings = {
     },
     actions: {
         loadSettings: async function({commit}) {
-            const server_ip = await Storage.get({ key: "server_ip"})
-            const server_port = await Storage.get({ key: "server_port" })
+            const server_ip = await Storage.get({ key: "server_ip"});
+            const server_port = await Storage.get({ key: "server_port" });
+            const filebrowser_bookmarks = await Storage.get({key: "filebrowser_bookmarks" });
+
             console.log(`Config variables: ${server_ip.value} ${server_port.value}`)
 
             if (!server_ip.value || !server_port.value ){
                 commit('setConfigured', false)
             }
-            commit('setAppSettings', {server_ip, server_port})
+            commit('setAppSettings', {server_ip, server_port, filebrowser_bookmarks});
         },
         setSetting: async function({dispatch}, payload){
             await Storage.set({
