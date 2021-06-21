@@ -7,10 +7,16 @@ const initialState = {
         server_ip: null,
         server_port: 8000,
     },
-    filebrowserBookmarks: [
+    collections: [
         {
-            title: "S5@Anime",
-            path: "/mnt/s5/torrent/anime"
+            title: "Anime",
+            paths: [
+                "/mnt/s5/torrent/anime",
+                "/mnt/s4/torrent/anime",
+                "/mnt/s3/torrent/anime",
+                "/mnt/s2/torrent/anime",
+                "/mnt/s1/torrent/anime"
+            ]
         }
     ],
     configured: true
@@ -45,7 +51,7 @@ export const settings = {
                 key: payload.key,
                 value: payload.value
             })
-            dispatch("loadSettings")
+            await dispatch("loadSettings")
         }
     }
 }

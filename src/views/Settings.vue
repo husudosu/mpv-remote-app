@@ -25,17 +25,16 @@
                     <ion-label position="stacked">Server Port</ion-label>
                     <ion-input v-model="server_port" @ionBlur="setSetting('server_port')" placeholder="8080"></ion-input>
                 </ion-item>
-                <ion-item>
-                    Filebrowser bookmarks (TODO)
-                </ion-item>
             </ion-list>
         </ion-content>
     </ion-page>
 </template>
 
 <script>
-import {computed, ref} from 'vue'
-import {useStore} from 'vuex'
+
+import {computed, ref} from 'vue';
+import {useStore} from 'vuex';
+import {useRouter} from 'vue-router';
 import {
     IonButtons,
     IonContent,
@@ -49,36 +48,52 @@ import {
     IonLabel,
     IonInput,
 } from '@ionic/vue';
+import {connect, disconnect} from '../socketClient';
 export default {
     setup() {
-        const store  = useStore()
-
-        const currentSettings = computed(() => store.state.settings.server)
-        const server_ip = ref(store.state.settings.server.server_ip.value)
-        const server_port = ref(store.state.settings.server.server_port.value)
+        const store  = useStore();
+        const router = useRouter();
+        const currentSettings = computed(() => store.state.settings.server);
+        const server_ip = ref(store.state.settings.server.server_ip.value);
+        const server_port = ref(store.state.settings.server.server_port.value);
 
         const setSetting = async(key) => {
-            let value = null
+            let value = null;
+            let shouldReconnect = false;
             switch (key){
                 case 'server_ip':
-                    value = server_ip.value
-                    break
+                    value = server_ip.value;
+                    shouldReconnect = true;
+                    break;
                 case 'server_port':
-                    value = server_port.value
-                    break
+                    value = server_port.value;
+                    shouldReconnect = true;
+                    break;
             }
             if (value){
-                await store.dispatch('settings/setSetting', {key, value})
+                await store.dispatch('settings/setSetting', {key, value});
+                await store.dispatch('settings/loadSettings');
+
+                if (shouldReconnect){
+                    console.log("Should reconnect");
+                    await disconnect();
+                    await connect();
+                }
             }
             console.log(`${key} changed: ${value}`)
 
         }
 
+        const mediaCollectionsClicked = () => {
+            router.push({name: 'folder.settings.collections'});
+        };
+
         return {
             currentSettings,
             setSetting,
             server_ip,
-            server_port
+            server_port,
+            mediaCollectionsClicked
         }
     },
     components:{

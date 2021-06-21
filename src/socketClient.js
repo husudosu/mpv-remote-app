@@ -12,6 +12,9 @@ export async function connect(){
     
     let server_ip = store.state.settings.server.server_ip.value;
     let server_port = store.state.settings.server.server_port.value;
+    console.log(`Gonna connect to: ${server_ip}:${server_port}`)
+
+    if (socket && socket.connected === true) await disconnect();
     if (!server_port) server_port = 8000;
     if (server_ip){
         console.log(`Connecting to: ${server_ip}:${server_port}`);
@@ -25,11 +28,11 @@ export async function disconnect(){
     TODO: Only disconnect when settings gonna change
     clearInterval should be called if the view != player
     */
+    if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
     if (socket){
-        if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
         console.log("Socket disconnect");
         socket.disconnect();
-        
+        socket = null;
     }
 }
 

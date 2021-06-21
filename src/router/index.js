@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { store } from '../store';
-import { disconnect } from '../socketClient'
+import { connect } from '../socketClient';
 
 const routes = [
   {
@@ -22,6 +22,11 @@ const routes = [
     path: '/folder/playlist',
     component: () => import('../views/Playlist.vue')
   },
+  {
+    name: 'folder.settings.collections',
+    path: '/folder/settings/collections',
+    component: () => import('../views/Collections.vue')
+  }
 ]
 
 const router = createRouter({
@@ -31,10 +36,10 @@ const router = createRouter({
 
 router.beforeEach(async(to, from, next) => {
   console.log(to.name)
-  if (to.name === 'folder.settings'){
-    disconnect()
-  }
   await store.dispatch('settings/loadSettings')
+  if (store.state.settings.configured && !store.state.mpvsocket.connected) {
+    connect();
+  }
   next()
 })
 export default router

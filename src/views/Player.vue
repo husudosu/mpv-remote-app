@@ -5,7 +5,9 @@
         <ion-buttons slot="start">
           <ion-menu-button color="primary"></ion-menu-button>
         </ion-buttons>
-        <ion-title>{{ toolbarTitle }}</ion-title>
+        <ion-title>
+          <marquee behavior="scroll" direction="left" scrollamount="5" vspace=15>{{ toolbarTitle }}</marquee>
+        </ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true" v-if="serverConfigured">
@@ -84,7 +86,7 @@
             </ion-col>
           </ion-row>
           <ion-row class="videoControls">
-            <ion-col cols=10>
+            <ion-col cols=11>
               <ion-button size="small" @click="onPlayPauseClicked">
                 <ion-icon size="small" v-if="playerData.pause" slot="icon-only" :icon="playOutline"></ion-icon>
                 <ion-icon size="small" v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
@@ -92,10 +94,12 @@
               <ion-button size="small" @click="onStopClicked">
                 <ion-icon size="small" slot="icon-only" :icon="stopOutline"></ion-icon>
               </ion-button>
-            </ion-col>
-            <ion-col cols=2 class="codecInfo">
-              {{ playerData.currentTracks.video.codec.toUpperCase() }},
-              {{ playerData.currentTracks.audio.codec.toUpperCase() }}
+              <ion-button size="small" @click="onPrevClicked">
+                <ion-icon size="small" slot="icon-only" :icon="playSkipBackOutline"></ion-icon>
+              </ion-button>
+              <ion-button size="small" @click="onNextClicked">
+                <ion-icon size="small" slot="icon-only" :icon="playSkipForwardOutline"></ion-icon>
+              </ion-button>
             </ion-col>
           </ion-row>
         </template>
@@ -119,9 +123,9 @@ import { useRoute } from 'vue-router';
 import { 
   playOutline, pauseOutline, stopOutline,
   volumeHighOutline, volumeLowOutline, volumeMuteOutline,
-  logoYoutube, folder
+  logoYoutube, folder, playSkipBackOutline, playSkipForwardOutline
   } from 'ionicons/icons';
-import { socket, connect } from '../socketClient';
+import { socket } from '../socketClient';
 import openURLModal from '../components/openURLModal.vue';
 import audioSettingsModal from '../components/audioSettingsModal.vue';
 import fileBrowserModal from '../components/fileBrowserModal.vue';
@@ -136,9 +140,9 @@ export default {
     const newFileName = ref('');
     const seekTo = ref(0);
     // Connect if needed.
-    if (store.state.settings.configured && !store.state.mpvsocket.connected){
-      connect();
-    }
+    // if (store.state.settings.configured && !store.state.mpvsocket.connected){
+    //   connect();
+    // }
     const toolbarTitle = computed(() => {
       if (connectedState.value){
         return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player";
@@ -236,6 +240,15 @@ export default {
         return modal.present();
     }
 
+    const onPrevClicked = () => {
+      socket.emit("playlistPrev");
+    }
+
+    const onNextClicked = () => {
+      socket.emit("playlistNext");
+    }
+
+
     return {
       playerData,
       newFileName,
@@ -258,10 +271,14 @@ export default {
       volumeMuteOutline,
       logoYoutube,
       folder,
+      playSkipBackOutline,
+      playSkipForwardOutline,
       modalController,
       onOpenURLClicked,
       onAudioSettingsClicked,
-      onFileBrowserClicked
+      onFileBrowserClicked,
+      onPrevClicked,
+      onNextClicked
     } 
   },
   components: {

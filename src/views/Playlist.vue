@@ -59,7 +59,7 @@ import {
 import { playOutline, add, remove, trashBin } from 'ionicons/icons';
 import { computed } from 'vue';
 import {useStore} from 'vuex';
-import {connect, socket} from '../socketClient'
+import {socket} from '../socketClient'
 
 export default {
     setup() {
@@ -68,10 +68,6 @@ export default {
         const playerData = computed(() => store.state.mpvsocket.playerData);
         const DOUBLE_CLICK_THRESHOLD = 500;
         let lastOnStart = 0;
-
-        if (store.state.settings.configured && !store.state.mpvsocket.connected){
-            connect();
-        }
 
         const doReorder = async(event) => {
             let fromIndex = event.detail.from;
