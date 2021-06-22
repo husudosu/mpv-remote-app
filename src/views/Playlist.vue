@@ -84,8 +84,10 @@ export default {
             }
 
             socket.emit("playlistMove", {fromIndex, toIndex}, function(data){
+                console.log(`${JSON.stringify(data)}`)
                 store.commit('mpvsocket/setProp', {property: 'playlist', value: data.playlist})
                 event.detail.complete(true);
+                console.log(`Callback done, updated playlist: ${JSON.stringify(data.playlist)}`);
             })
         }
         

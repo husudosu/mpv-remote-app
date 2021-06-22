@@ -48,12 +48,15 @@ export default {
         const tracks = ref([]);
 
         // get tracks
-        socket.emit('tracks');
-
-        socket.on("tracksResponse", (data) => {
+        socket.emit('tracks', null,  function(data) {
+            console.log("Callback done")
+            console.log(JSON.stringify(data))
             tracks.value = data
-            console.log(tracks.value);
         })
+
+        const getTracks = async() => {
+            console.log("Getting tracks")
+        };
         
         const onAppendClicked = () => {
             // TODO: Change audio track
@@ -64,6 +67,9 @@ export default {
             console.log("Cancel");
             props.modalController.dismiss();
         };
+
+        getTracks();
+        console.log(`Tracks: ${tracks.value}`);
 
         return {
             tracks,
