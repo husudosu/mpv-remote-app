@@ -6,6 +6,7 @@ export let socket = null;
 
 export let playbackRefreshInterval = null;
 
+// TODO: On setting playlist item, creates a new interval which is not good!
 // TODO: Handle connection failure.
 export async function connect(){
     await store.dispatch("settings/loadSettings");
@@ -69,10 +70,12 @@ function handle_socket(){
         
         // Playback paused
         if (data === true){
+            console.log("Clearing interval")
             if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
         }
         // Start play again
         else {
+            console.log("Playing again")
             playbackRefreshInterval = setInterval(() => refreshPlaybackInterval(), 1500);
         }
     });

@@ -6,7 +6,7 @@
           <ion-menu-button color="primary"></ion-menu-button>
         </ion-buttons>
         <ion-title>
-          <marquee behavior="scroll" direction="left" scrollamount="5" vspace=15>{{ toolbarTitle }}</marquee>
+          {{ toolbarTitle }}
         </ion-title>
       </ion-toolbar>
     </ion-header>
@@ -64,7 +64,7 @@
     </ion-content>
     <ion-footer class="ion-no-border remoteFooter">
         <ion-button @click="onAudioSettingsClicked" :disabled="!connectedState">Audio</ion-button>
-        <ion-button :disabled="!connectedState">Subtitle</ion-button>
+        <ion-button @click="onSubtitleSettingsClicked" :disabled="!connectedState">Subtitle</ion-button>
     </ion-footer>
     <ion-footer v-if="serverConfigured">
         <template v-if="isPlayerActive && connectedState">
@@ -128,6 +128,7 @@ import {
 import { socket } from '../socketClient';
 import openURLModal from '../components/openURLModal.vue';
 import audioSettingsModal from '../components/audioSettingsModal.vue';
+import subtitleSettingsModal from '../components/subtitleSettingsModal.vue';
 import fileBrowserModal from '../components/fileBrowserModal.vue';
 
 export default {
@@ -240,6 +241,18 @@ export default {
         return modal.present();
     }
 
+    const onSubtitleSettingsClicked = async() => {
+      const modal = await modalController
+        .create({
+          component: subtitleSettingsModal,
+          componentProps: {
+            modalController: modalController
+          }
+        });
+
+        return modal.present();
+    }
+
     const onPrevClicked = () => {
       socket.emit("playlistPrev");
     }
@@ -278,7 +291,8 @@ export default {
       onAudioSettingsClicked,
       onFileBrowserClicked,
       onPrevClicked,
-      onNextClicked
+      onNextClicked,
+      onSubtitleSettingsClicked
     } 
   },
   components: {

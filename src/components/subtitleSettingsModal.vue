@@ -2,15 +2,15 @@
     <ion-page>
         <ion-header>
             <ion-toolbar>
-                <ion-title>Audio settings</ion-title>
+                <ion-title>Subtitle settings</ion-title>
             </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
             <ion-item>
-                <ion-label>Audio track</ion-label>
-                <ion-select :value="activeAudioTrackId">
-                    <ion-select-option :value="audio.id" v-for="audio in audioTracks" :key="audio.id" >
-                        {{ audio.lang }}
+                <ion-label>Subtitle</ion-label>
+                <ion-select v-model="selectedTrack" @ionChange="onSubtitleTrackChanged" :value="activeSubTrackId">
+                    <ion-select-option :value="sub.id" v-for="sub in subTracks" :key="sub.id" >
+                        {{ sub.lang || sub.external_filename }}
                     </ion-select-option>
                 </ion-select>
             </ion-item>
@@ -20,7 +20,6 @@
         </ion-footer>
     </ion-page>
 </template>
-
 <script>
 import { ref } from 'vue';
 import { socket } from '../socketClient';
@@ -46,14 +45,16 @@ export default {
     ],
     setup(props) {
         const tracks = ref([]);
-        const audioTracks = ref([]);
-        const activeAudioTrackId = ref();
-
+        const subTracks = ref([]);
+        const activeSubTrackId = ref();
+        const selectedTrack = ref({});
         // get tracks
         socket.emit('tracks', null, function(data) {
             tracks.value = data.tracks;
-            audioTracks.value = data.tracks.filter((el) => el.type === "audio");
-            activeAudioTrackId.value = audioTracks.value.find((el) => el.selected === true).id
+            subTracks.value = data.tracks.filter((el) => el.type === "sub");
+            activeSubTrackId.value = subTracks.value.find((el) => el.selected === true).id
+            selectedTrack.value = activeSubTrackId.value
+            console.log(subTracks.value)
         })
         
         const onAppendClicked = () => {
@@ -66,13 +67,19 @@ export default {
             props.modalController.dismiss();
         };
 
+        const onSubtitleTrackChanged = () => {
+            console.log(JSON.stringify(selectedTrack.value));
+            socket.emit('subReload', selectedTrack.value);
+        }
 
         return {
             tracks,
-            audioTracks,
-            activeAudioTrackId,
+            subTracks,
+            activeSubTrackId,
             onAppendClicked,
-            onCancelClicked
+            onCancelClicked,
+            onSubtitleTrackChanged,
+            selectedTrack
         };
     },
     components:{
