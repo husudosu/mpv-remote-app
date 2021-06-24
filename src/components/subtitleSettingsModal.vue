@@ -14,6 +14,17 @@
                     </ion-select-option>
                 </ion-select>
             </ion-item>
+
+            <ion-item>
+                <ion-label>Delay</ion-label>
+                <ion-button @click="onSubDelayChanged('decrease')">
+                    -
+                </ion-button>
+                {{ subSettings.subDelay }}
+                <ion-button @click="onSubDelayChanged('increase')">
+                    +
+                </ion-button>
+            </ion-item>
         </ion-content>
         <ion-footer>
             <ion-button @click="onCancelClicked">Close</ion-button>
@@ -48,6 +59,10 @@ export default {
         const subTracks = ref([]);
         const activeSubTrackId = ref();
         const selectedTrack = ref({});
+        const subSettings = ref({
+            subDelay: 0,
+        });
+
         // get tracks
         socket.emit('tracks', null, function(data) {
             tracks.value = data.tracks;
@@ -55,6 +70,10 @@ export default {
             activeSubTrackId.value = subTracks.value.find((el) => el.selected === true).id
             selectedTrack.value = activeSubTrackId.value
             console.log(subTracks.value)
+        })
+
+        socket.emit('subSettings', null, function(data){
+            subSettings.value = data;
         })
         
         const onAppendClicked = () => {
@@ -72,6 +91,18 @@ export default {
             socket.emit('subReload', selectedTrack.value);
         }
 
+        const onSubDelayChanged = (order) => {
+            switch (order){
+                case 'increase':
+                    subSettings.value.subDelay += 1;
+                    socket.emit("adjustSubtitleTiming", subSettings.value.subDelay);
+                    break;
+                case 'decrease':
+                    subSettings.value.subDelay -= 1;
+                    socket.emit("adjustSubtitleTiming", subSettings.value.subDelay);
+                    break;
+            }
+        }
         return {
             tracks,
             subTracks,
@@ -79,7 +110,9 @@ export default {
             onAppendClicked,
             onCancelClicked,
             onSubtitleTrackChanged,
-            selectedTrack
+            onSubDelayChanged,
+            selectedTrack,
+            subSettings
         };
     },
     components:{
