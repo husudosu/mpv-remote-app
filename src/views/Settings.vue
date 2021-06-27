@@ -19,11 +19,18 @@
             <ion-list>
                 <ion-item>
                     <ion-label position="stacked">Server IP</ion-label>
-                    <ion-input v-model="server_ip" @ionBlur="setSetting('server_ip')"></ion-input>
+                    <ion-input
+                        v-model="server_ip"
+                        @ionBlur="setSetting('server_ip')"></ion-input>
                 </ion-item>
                 <ion-item>
                     <ion-label position="stacked">Server Port</ion-label>
-                    <ion-input v-model="server_port" @ionBlur="setSetting('server_port')" placeholder="8080"></ion-input>
+                    <ion-input
+                        v-model="server_port"
+                        @ionBlur="setSetting('server_port')"
+                        placeholder="8000"
+                        type="number"
+                    ></ion-input>
                 </ion-item>
             </ion-list>
         </ion-content>

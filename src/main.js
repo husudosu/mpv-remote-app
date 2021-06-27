@@ -24,9 +24,7 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 
 
-import {store} from './store'
-import {socket} from './socketClient'
-console.log(socket)
+import {store} from './store';
 
 const app = createApp(App)
   .use(IonicVue)

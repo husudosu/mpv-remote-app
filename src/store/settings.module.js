@@ -41,9 +41,9 @@ export const settings = {
 
             console.log(`Config variables: ${server_ip.value} ${server_port.value}`)
 
-            if (!server_ip.value || !server_port.value ){
-                commit('setConfigured', false)
-            }
+            if (!server_ip.value || !server_port.value ) commit('setConfigured', false);
+            else commit("setConfigured", true);
+
             commit('setAppSettings', {server_ip, server_port, filebrowser_bookmarks});
         },
         setSetting: async function({dispatch}, payload){
