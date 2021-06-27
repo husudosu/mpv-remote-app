@@ -1,0 +1,3 @@
+- When server configured set configured to true
+- Improve launch time speed
+- Create "branding" for app like logo, app info etc...

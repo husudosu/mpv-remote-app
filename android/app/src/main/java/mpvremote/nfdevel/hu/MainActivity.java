@@ -1,4 +1,4 @@
-package com.test.app;
+package mpvremote.nfdevel.hu;
 
 import com.getcapacitor.BridgeActivity;
 

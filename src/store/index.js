@@ -1,5 +1,4 @@
 import { createStore } from "vuex";
-// import { socket } from "../main";
 import { mpvsocket } from "./mpvsocket.module";
 import { settings } from './settings.module'
 
@@ -12,8 +11,3 @@ export const store = createStore({
         mpvsocket,
     },
 });
-
-
-// socket.on("connect", () => {
-//     console.log("connect")
-// });

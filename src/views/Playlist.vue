@@ -9,11 +9,6 @@
             </ion-toolbar>
         </ion-header>
         <ion-content :fullscreen="true">
-            <ion-header collapse="condense">
-                <ion-toolbar>
-                    <ion-title size="large">Playlist</ion-title>
-                </ion-toolbar>
-            </ion-header>
             <ion-toolbar>
                 <ion-button @click="onClearPlaylistClicked" size="small">
                     <ion-icon :icon="trashBin"></ion-icon>

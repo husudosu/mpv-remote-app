@@ -1,5 +1,5 @@
 {
-  "name": "mpv_controller_android",
+  "name": "mpvRemote",
   "integrations": {
     "capacitor": {}
   },

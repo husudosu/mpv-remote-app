@@ -6,17 +6,13 @@
           <ion-menu-button color="primary"></ion-menu-button>
         </ion-buttons>
         <ion-title>
-          {{ toolbarTitle }}
+          {{ playerData.media_title || playerData.filename }}
         </ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true" v-if="serverConfigured">
-      <ion-header collapse="condense">
-        <ion-toolbar>
-          <ion-title size="large">{{ toolbarTitle }}</ion-title>
-        </ion-toolbar>
-      </ion-header>
-
+      <!-- Itt mégegyszer volt toolbar a title-nek !-->
+  
       <ion-grid style="height: 100%;">
         <ion-row>
           <ion-col size=12 class="videoControls">
@@ -49,12 +45,6 @@
                 <ion-icon slot="start" :icon="folder"></ion-icon>
                   Browse files
               </ion-button>
-          </ion-col>
-        </ion-row>
-
-        <ion-row class="remoteButtons">
-          <ion-col>
-
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -140,16 +130,6 @@ export default {
     const serverConfigured = computed(() => store.state.settings.configured);
     const newFileName = ref('');
     const seekTo = ref(0);
-    // Connect if needed.
-    // if (store.state.settings.configured && !store.state.mpvsocket.connected){
-    //   connect();
-    // }
-    const toolbarTitle = computed(() => {
-      if (connectedState.value){
-        return store.state.mpvsocket.playerData.media_title || store.state.mpvsocket.playerData.filename || "Player";
-      }
-      return "Disconnected from MPV";
-    });
 
     const isPlayerActive = computed(() => {
       return store.state.mpvsocket.playerData.filename ? true : false;
@@ -247,7 +227,8 @@ export default {
           component: subtitleSettingsModal,
           componentProps: {
             modalController: modalController
-          }
+          },
+          backdropDismiss: true
         });
 
         return modal.present();
@@ -268,7 +249,6 @@ export default {
       connectedState,
       isPlayerActive,
       route,
-      toolbarTitle,
       onPlayPauseClicked,
       onChangeFileClicked,
       onStopClicked,
