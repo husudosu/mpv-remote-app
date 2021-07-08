@@ -70,9 +70,9 @@ export default defineComponent({
     if (path !== undefined) {
       selectedIndex.value = appPages.findIndex(page => page.title.toLowerCase() === path.toLowerCase());
     }
-    
+        
     const route = useRoute();
-    
+
     return { 
       selectedIndex,
       appPages, 

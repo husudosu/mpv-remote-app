@@ -22,9 +22,11 @@ import '@ionic/vue/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
-
+import './theme/darkmode.css';
 
 import {store} from './store';
+
+document.body.classList.toggle("dark", true);
 
 const app = createApp(App)
   .use(IonicVue)

@@ -29,21 +29,22 @@
               <ion-button :disabled="!connectedState" @click="changeVolume('increase')">
                 <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
               </ion-button>
+              <ion-button :disabled="!connectedState" @click="changeVolume('increase')">
+                <ion-icon slot="icon-only" :icon="scanOutline"></ion-icon>
+              </ion-button>
           </ion-col>
         </ion-row>
         <ion-row class="remoteButtons">
             <ion-col>
               <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
-                <ion-icon slot="start" :icon="logoYoutube"></ion-icon>
-                Open URL
+                <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
               </ion-button>
           </ion-col>
         </ion-row>
         <ion-row class="remoteButtons">
             <ion-col>
               <ion-button :disabled="!connectedState" @click="onFileBrowserClicked">
-                <ion-icon slot="start" :icon="folder"></ion-icon>
-                  Browse files
+                <ion-icon slot="icon-only" :icon="folder"></ion-icon>
               </ion-button>
           </ion-col>
         </ion-row>
@@ -54,7 +55,12 @@
     </ion-content>
     <ion-footer class="ion-no-border remoteFooter">
         <ion-button @click="onAudioSettingsClicked" :disabled="!connectedState">Audio</ion-button>
-        <ion-button @click="onSubtitleSettingsClicked" :disabled="!connectedState">Subtitle</ion-button>
+        <ion-button
+          @click="onSubtitleSettingsClicked"
+          :disabled="!connectedState"
+        >
+          <ion-icon slot="icon-only" :icon="journalOutline"></ion-icon>
+        </ion-button>
     </ion-footer>
     <ion-footer v-if="serverConfigured">
         <template v-if="isPlayerActive && connectedState">
@@ -113,7 +119,8 @@ import { useRoute } from 'vue-router';
 import { 
   playOutline, pauseOutline, stopOutline,
   volumeHighOutline, volumeLowOutline, volumeMuteOutline,
-  logoYoutube, folder, playSkipBackOutline, playSkipForwardOutline
+  logoYoutube, folder, playSkipBackOutline, playSkipForwardOutline,
+  scanOutline, journalOutline
   } from 'ionicons/icons';
 import { socket } from '../socketClient';
 import openURLModal from '../components/openURLModal.vue';
@@ -266,6 +273,8 @@ export default {
       folder,
       playSkipBackOutline,
       playSkipForwardOutline,
+      scanOutline,
+      journalOutline,
       modalController,
       onOpenURLClicked,
       onAudioSettingsClicked,
