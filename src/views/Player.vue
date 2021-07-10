@@ -402,6 +402,8 @@ Seekbar style
 input[type=range] {
   -webkit-appearance: none;
   width: 100%;
+  margin-left: 5px;
+  
 }
 input[type=range]:focus {
   outline: none;
@@ -475,7 +477,7 @@ input[type=range]::-ms-thumb {
   height: 36px;
   width: 16px;
   border-radius: 3px;
-  background: #ffffff;
+  background: #26335c;
   cursor: pointer;
 }
 input[type=range]:focus::-ms-fill-lower {

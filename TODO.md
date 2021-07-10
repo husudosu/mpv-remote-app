@@ -1,15 +1,15 @@
 - Improve launch time speed
 - Create "branding" for app like logo, app info etc...
-- Add dark mode
-- Improve CSS
 - Disable buttons on playlist, when disconnected
 - Disable audio & subtitle when not playing media
-- Add full screen button
 - Convert playback to component and add it playlist page too!
 - Remove pre-load playlist option from playlist page
-- Improve player landscape mode css.
 - Ion-header title behaves strangely on page switching.
-- If there's no playback and starting it no interval has been set
+- Update track list on audio/sub track change.
 Done:
 - When server configured set configured to true [DONE]
 - Require number input for server port [DONE]
+- Improve player landscape mode css [DONE]
+- Add dark mode [DONE]
+- Improve CSS [DONE]
+- Add full screen button [DONE]

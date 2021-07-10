@@ -8,30 +8,40 @@
         <ion-content class="ion-padding">
             <ion-list-header>Basic Info</ion-list-header>
             <ion-list>
-                <ion-item>
-                    <ion-label>Title</ion-label>
-                    <ion-label class="prop">{{ playerData.media_title }}</ion-label>
+                <ion-item v-if="playerData.media_title != playerData.filename">
+                    <ion-label class="ion-text-wrap">
+                        <h2>Title</h2>
+                        <p>{{ playerData.media_title }}</p>
+                    </ion-label>
                 </ion-item>
                 <ion-item>
-                    <ion-label>Filename</ion-label>
-                    <ion-label>{{ playerData.filename }}</ion-label>
+                    <ion-label class="ion-text-wrap">
+                        <h2>File name</h2>
+                        <p>{{ playerData.filename }}</p>
+                    </ion-label>
+
                 </ion-item>
                 <ion-item>
-                    <ion-label>Duration</ion-label>
-                    <ion-label>{{ playerData.duration }}</ion-label>
+                    <ion-label class="ion-text-wrap">
+                        <h2>Duration</h2>
+                        <p>{{ playerData.duration }}</p>
+                    </ion-label>
                 </ion-item>
             </ion-list>
-
             <template v-for="track in videoTracks" :key=track.id>
                 <ion-list-header>Video {{ track.id }} {{ track.selected ? "(Selected)" : ""}}</ion-list-header>
                 <ion-list>
                         <ion-item>
-                            <ion-label>Size</ion-label>
-                            <ion-label>{{ track.demuxW }}x{{ track.demuxH }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Size</h2>
+                                <p>{{ track.demuxW }}x{{ track.demuxH }}</p>
+                            </ion-label>
                         </ion-item>
                         <ion-item>
-                            <ion-label>Codec</ion-label>
-                            <ion-label>{{ track.codec }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Codec</h2>
+                                <p>{{ track.codec }}</p>
+                            </ion-label>
                         </ion-item>
             </ion-list>
             </template>
@@ -40,20 +50,29 @@
                 <ion-list-header>Audio {{ track.id }} {{ track.selected ? "(Selected)" : ""}}</ion-list-header>
                 <ion-list>
                         <ion-item>
-                            <ion-label>Codec</ion-label>
-                            <ion-label>{{ track.codec }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Codec</h2>
+                                <p>{{ track.codec }}</p>
+                            </ion-label>
                         </ion-item>
                         <ion-item>
-                            <ion-label>Language</ion-label>
-                            <ion-label>{{ track.lang }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Language</h2>
+                                <p>{{ track.lang }}</p>
+                            </ion-label>
                         </ion-item>
                         <ion-item>
-                            <ion-label>Channel count</ion-label>
-                            <ion-label>{{ track.demuxChannelCount }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Channel count</h2>
+                                <p>{{ track.demuxChannelCount }}</p>
+                            </ion-label>
+
                         </ion-item>
                         <ion-item>
-                            <ion-label>Sample rate</ion-label>
-                            <ion-label>{{ track.demuxSamplerate }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Sample rate</h2>
+                                <p>{{ track.demuxSamplerate }}</p>
+                            </ion-label>
                         </ion-item>
                 </ion-list>
             </template>
@@ -61,16 +80,22 @@
                 <ion-list-header>Subtitle {{ track.id }} {{ track.selected ? "(Selected)" : ""}}</ion-list-header>
                 <ion-list>
                         <ion-item>
-                            <ion-label>Codec</ion-label>
-                            <ion-label>{{ track.codec }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Codec</h2>
+                                <p>{{ track.codec }}</p>
+                            </ion-label>
                         </ion-item>
                         <ion-item>
-                            <ion-label>Language</ion-label>
-                            <ion-label>{{ track.lang }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Language</h2>
+                                <p>{{ track.lang }}</p>
+                            </ion-label>
                         </ion-item>
                         <ion-item v-if="track.external_filename">
-                            <ion-label>Filename</ion-label>
-                            <ion-label>{{ track.external_filename }}</ion-label>
+                            <ion-label class="ion-text-wrap">
+                                <h2>Filename</h2>
+                                <p>{{ track.external_filename }}</p>
+                            </ion-label>
                         </ion-item>
                 </ion-list>
             </template>

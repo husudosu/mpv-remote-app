@@ -14,16 +14,13 @@
                 <ion-button @click="onClearPlaylistClicked" size="small">
                     <ion-icon :icon="trashBin"></ion-icon>
                 </ion-button>
-                <ion-button size="small" @click="onPreLoadPlaylistClicked"> 
-                    Preload playlist
-                </ion-button>
-
-
             <ion-reorder-group @ionItemReorder="doReorder($event)" :disabled="playerData.playlist.length <= 1 ">
                     <ion-item @click="onItemClicked(item)" v-for="item in playerData.playlist" :key="item.id">
-                        <ion-label>
-                            <ion-icon v-if="item.current" slot="start" :icon="playOutline"></ion-icon>
+                        <ion-icon class="playlistItemIndicator" v-if="item.current" slot="start" :icon="play"></ion-icon>
+                        <ion-label class="ion-text-wrap">
+                            <p>
                                 {{ item.filename }}
+                            </p>
                         </ion-label>
                         <ion-button  @click="onRemoveItemClicked(item)" fill="clear" slot="end">
                             <ion-icon slot="icon-only" :icon="trashBin"></ion-icon>
@@ -52,7 +49,7 @@ import {
     IonButton,
 } from '@ionic/vue';
 
-import { playOutline, add, remove, trashBin } from 'ionicons/icons';
+import { play, add, remove, trashBin } from 'ionicons/icons';
 import { computed } from 'vue';
 import {useStore} from 'vuex';
 import {socket} from '../socketClient'
@@ -120,7 +117,7 @@ export default {
 
         return {
             playerData,
-            playOutline,
+            play,
             add,
             remove,
             trashBin,
@@ -148,3 +145,12 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+    .playlistItemIndicator {
+        width: 16px;
+        height: 16px;
+        margin-right: 5px;
+        color: green;
+    }
+</style>
