@@ -139,7 +139,7 @@ ion-menu.md ion-item {
 }
 
 ion-menu.md ion-item.selected {
-  --background: rgba(var(--ion-color-primary-rgb), 0.14);
+  --background: rgba(var(--ion-color-primary-rgb), 0.25);
 }
 
 ion-menu.md ion-item.selected ion-icon {
@@ -152,6 +152,10 @@ ion-menu.md ion-item ion-icon {
 
 ion-menu.md ion-item ion-label {
   font-weight: 500;
+}
+
+ion-menu.md ion-item.selected ion-label {
+  color: rgb(151, 149, 149);
 }
 
 ion-menu.ios ion-content {

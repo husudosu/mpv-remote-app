@@ -1,22 +1,23 @@
 <template>
     <ion-page>
         <ion-header :translucent="true">
-            <ion-toolbar>
-                <ion-buttons slot="start">
-                    <ion-menu-button color="primary"></ion-menu-button>
-                </ion-buttons>
-                <ion-title>Playlist</ion-title>
-            </ion-toolbar>
+        <ion-toolbar>
+            <ion-buttons slot="start">
+            <ion-menu-button color="#fff"></ion-menu-button>
+            </ion-buttons>
+            <ion-title>
+            Playlist
+            </ion-title>
+        </ion-toolbar>
         </ion-header>
         <ion-content :fullscreen="true">
-            <ion-toolbar>
                 <ion-button @click="onClearPlaylistClicked" size="small">
                     <ion-icon :icon="trashBin"></ion-icon>
                 </ion-button>
                 <ion-button size="small" @click="onPreLoadPlaylistClicked"> 
                     Preload playlist
                 </ion-button>
-            </ion-toolbar>
+
 
             <ion-reorder-group @ionItemReorder="doReorder($event)" :disabled="playerData.playlist.length <= 1 ">
                     <ion-item @click="onItemClicked(item)" v-for="item in playerData.playlist" :key="item.id">
@@ -147,8 +148,3 @@ export default {
     }
 }
 </script>
-<style scoped>
-    ion-toolbar {
-        margin: 0px 10px 0px 10px;
-    }
-</style>

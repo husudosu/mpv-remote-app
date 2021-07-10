@@ -9,7 +9,7 @@
 - Remove pre-load playlist option from playlist page
 - Improve player landscape mode css.
 - Ion-header title behaves strangely on page switching.
-
+- If there's no playback and starting it no interval has been set
 Done:
 - When server configured set configured to true [DONE]
 - Require number input for server port [DONE]

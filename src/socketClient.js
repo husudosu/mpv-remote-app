@@ -30,7 +30,7 @@ export async function disconnect(){
     TODO: Only disconnect when settings gonna change
     clearInterval should be called if the view != player
     */
-    if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
+    if (playbackRefreshInterval) clearPlaybackRefreshInterval();
     if (socket){
         console.log("Socket disconnect");
         socket.disconnect();
@@ -51,6 +51,11 @@ function refreshPlaybackInterval(){
     socket.emit("playbackTime");
 }
 
+function clearPlaybackRefreshInterval(){
+    clearInterval(playbackRefreshInterval);
+    playbackRefreshInterval = null;
+}
+
 function handle_socket(){
     socket.on("connect", () => {
         store.commit("mpvsocket/setConnectState", true);
@@ -60,7 +65,7 @@ function handle_socket(){
 
     socket.on("disconnect", () => {
         store.commit("mpvsocket/setConnectState", false);
-        if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
+        if (playbackRefreshInterval) clearPlaybackRefreshInterval();
         console.log("User disconnect");
         showToast("Disconnected from server");
     });
@@ -72,12 +77,15 @@ function handle_socket(){
         // Playback paused
         if (data === true){
             console.log("Clearing interval")
-            if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
+            if (playbackRefreshInterval) clearPlaybackRefreshInterval();
         }
         // Start play again
         else {
             console.log("Playing again")
-            playbackRefreshInterval = setInterval(() => refreshPlaybackInterval(), 1500);
+            console.log(playbackRefreshInterval)
+            if (!playbackRefreshInterval) {
+                playbackRefreshInterval = setInterval(() => refreshPlaybackInterval(), 1500);
+            }
         }
     });
 
@@ -99,7 +107,7 @@ function handle_socket(){
     // End of file or stopped
     socket.on('stopped', () => {
         console.log("End of file reached");
-        if (playbackRefreshInterval) clearInterval(playbackRefreshInterval);
+        if (playbackRefreshInterval) clearPlaybackRefreshInterval();
         store.commit('mpvsocket/resetPlayback');
     });
 

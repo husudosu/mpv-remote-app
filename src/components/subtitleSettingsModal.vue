@@ -15,7 +15,7 @@
                 </ion-select>
             </ion-item>
 
-            <ion-item>
+            <ion-item class="subtitleDelay">
                 <ion-label>Delay</ion-label>
                 <ion-button @click="onSubDelayChanged('decrease')">
                     -
@@ -142,4 +142,9 @@ ion-footer ion-button {
     width: 120px;
 }
 
+.subtitleDelay ion-button {
+    width: 26px;
+    height: 26px;
+    margin: 10px;
+}
 </style>

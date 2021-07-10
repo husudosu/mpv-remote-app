@@ -1,6 +1,6 @@
 body.dark {
-  --ion-color-primary: #428cff;
-  --ion-color-primary-rgb: 66, 140, 255;
+  --ion-color-primary: #455795;
+  --ion-color-primary-rgb: 69, 87, 149;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
   --ion-color-primary-shade: #3a7be0;
@@ -20,9 +20,9 @@ body.dark {
   --ion-color-tertiary-shade: #5d58e0;
   --ion-color-tertiary-tint: #7974ff;
 
-  --ion-color-success: #2fdf75;
-  --ion-color-success-rgb: 47, 223, 117;
-  --ion-color-success-contrast: #000000;
+  --ion-color-success: rgb(31, 138, 74);
+  --ion-color-success-rgb: 31, 138, 74;
+  --ion-color-success-contrast: #fff;
   --ion-color-success-contrast-rgb: 0, 0, 0;
   --ion-color-success-shade: #29c467;
   --ion-color-success-tint: #44e283;
@@ -107,7 +107,7 @@ body.dark {
  */
 
 .md body.dark {
-  --ion-background-color: #121212;
+  --ion-background-color: #0f1730;
   --ion-background-color-rgb: 18, 18, 18;
 
   --ion-text-color: #ffffff;
@@ -135,10 +135,23 @@ body.dark {
   --ion-color-step-900: #e7e7e7;
   --ion-color-step-950: #f3f3f3;
 
-  --ion-item-background: #1a1b1e;
+  --ion-item-background: #172246;
+  --ion-item-border-color: rgb(3, 3, 3);
+  --ion-toolbar-background: #26335c;
+
+
 }
 
 /* Optional CSS, this is added for the flashing that happens when toggling between themes */
 ion-item {
   --transition: none;
+}
+
+ion-footer {
+  background: #26335c;
+  color: #fff;
+}
+
+ion-toolbar {
+  background: #26335c;
 }
