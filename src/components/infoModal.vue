@@ -124,6 +124,10 @@ import {
     IonContent,
     IonFooter,
     IonButton,
+    IonListHeader,
+    IonLabel,
+    IonItem,
+    IonList,
 } from "@ionic/vue";
 
 export default {
@@ -169,6 +173,10 @@ export default {
         IonContent,
         IonFooter,
         IonButton,
+        IonListHeader,
+        IonLabel,
+        IonItem,
+        IonList,
     },
 };
 </script>

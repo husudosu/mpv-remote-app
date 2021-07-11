@@ -12,7 +12,6 @@
         </ion-header>
         <ion-content :fullscreen="true" v-if="serverConfigured">
             <!-- Itt mégegyszer volt toolbar a title-nek !-->
-
             <ion-grid style="height: 100%">
                 <ion-row class="remoteButtons">
                     <ion-col
@@ -118,63 +117,10 @@
                 </ion-row>
             </ion-grid>
         </ion-content>
-        <ion-content v-else> Server not configured yet. </ion-content>
-        <ion-footer v-if="serverConfigured && isPlayerActive && connectedState">
-            <template v-if="isPlayerActive && connectedState">
-                <ion-row class="ion-justify-content-end">
-                    <ion-col size="12" class="videotitle">
-                        <div class="playbackTime">
-                            {{ playerData.playback_time }} /
-                            {{ playerData.duration }}
-                        </div>
-                        <input
-                            id="seekbar"
-                            type="range"
-                            name="rng"
-                            min="0"
-                            step="1"
-                            :value="playerData.percent_pos"
-                            style="width: 100%"
-                            @input="onSeek"
-                        />
-                    </ion-col>
-                </ion-row>
-                <ion-row class="videoControls">
-                    <ion-col size="12">
-                        <ion-button @click="onPlayPauseClicked">
-                            <ion-icon
-                                v-if="playerData.pause"
-                                slot="icon-only"
-                                :icon="playOutline"
-                            ></ion-icon>
-                            <ion-icon
-                                v-else
-                                slot="icon-only"
-                                :icon="pauseOutline"
-                            ></ion-icon>
-                        </ion-button>
-                        <ion-button @click="onStopClicked">
-                            <ion-icon
-                                slot="icon-only"
-                                :icon="stopOutline"
-                            ></ion-icon>
-                        </ion-button>
-                        <ion-button @click="onPrevClicked">
-                            <ion-icon
-                                slot="icon-only"
-                                :icon="playSkipBackOutline"
-                            ></ion-icon>
-                        </ion-button>
-                        <ion-button @click="onNextClicked">
-                            <ion-icon
-                                slot="icon-only"
-                                :icon="playSkipForwardOutline"
-                            ></ion-icon>
-                        </ion-button>
-                    </ion-col>
-                </ion-row>
-            </template>
-        </ion-footer>
+        <ion-content v-else> Server not configued yet. </ion-content>
+        <playerController
+            v-if="serverConfigured && isPlayerActive && connectedState"
+        ></playerController>
     </ion-page>
 </template>
 
@@ -192,7 +138,6 @@ import {
     IonCol,
     IonButton,
     IonIcon,
-    IonFooter,
     modalController,
 } from "@ionic/vue";
 
@@ -200,16 +145,11 @@ import { computed, ref } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import {
-    playOutline,
-    pauseOutline,
-    stopOutline,
     volumeHighOutline,
     volumeLowOutline,
     volumeMuteOutline,
     logoYoutube,
     folder,
-    playSkipBackOutline,
-    playSkipForwardOutline,
     scanOutline,
     journalOutline,
     earOutline,
@@ -221,7 +161,7 @@ import audioSettingsModal from "../components/audioSettingsModal.vue";
 import subtitleSettingsModal from "../components/subtitleSettingsModal.vue";
 import fileBrowserModal from "../components/fileBrowserModal.vue";
 import infoModal from "../components/infoModal.vue";
-
+import playerController from "../components/playerController.vue";
 export default {
     setup() {
         const store = useStore();
@@ -235,8 +175,8 @@ export default {
         const screenOrientation = ref(screen.orientation.type);
 
         const newFileName = ref("");
-        const seekTo = ref(0);
 
+        // Is it worth to move this variable to Vuex store?
         window.addEventListener("orientationchange", function () {
             screenOrientation.value = screen.orientation.type;
             console.log(screen.orientation.type);
@@ -245,19 +185,6 @@ export default {
         const isPlayerActive = computed(() => {
             return store.state.mpvsocket.playerData.filename ? true : false;
         });
-        const onPlayPauseClicked = () => {
-            console.log(
-                `Pause clicked. Current value: ${store.state.mpvsocket.playerData.pause}`
-            );
-            socket.emit("setPlayerProp", [
-                "pause",
-                !store.state.mpvsocket.playerData.pause,
-            ]);
-        };
-
-        const onStopClicked = () => {
-            socket.emit("stopPlayback");
-        };
 
         const onChangeFileClicked = () => {
             console.log("Change file clicked");
@@ -283,10 +210,6 @@ export default {
                 }
             });
             return modal.present();
-        };
-
-        const onSeek = (e) => {
-            socket.emit("seek", e.target.value);
         };
 
         const changeVolume = (action) => {
@@ -361,14 +284,6 @@ export default {
             return modal.present();
         };
 
-        const onPrevClicked = () => {
-            socket.emit("playlistPrev");
-        };
-
-        const onNextClicked = () => {
-            socket.emit("playlistNext");
-        };
-
         const onFullscreenClicked = () => {
             socket.emit("fullscreen");
         };
@@ -390,31 +305,20 @@ export default {
             connectedState,
             isPlayerActive,
             route,
-            onPlayPauseClicked,
             onChangeFileClicked,
-            onStopClicked,
-            onSeek,
-            seekTo,
             changeVolume,
             serverConfigured,
-            playOutline,
-            pauseOutline,
-            stopOutline,
             volumeHighOutline,
             volumeLowOutline,
             volumeMuteOutline,
             logoYoutube,
             folder,
-            playSkipBackOutline,
-            playSkipForwardOutline,
             scanOutline,
             journalOutline,
             modalController,
             onOpenURLClicked,
             onAudioSettingsClicked,
             onFileBrowserClicked,
-            onPrevClicked,
-            onNextClicked,
             onSubtitleSettingsClicked,
             earOutline,
             informationCircle,
@@ -437,36 +341,12 @@ export default {
         IonCol,
         IonButton,
         IonIcon,
-        IonFooter,
+        playerController,
     },
 };
 </script>
 
 <style scoped>
-.videotitle {
-    padding: 10px;
-}
-
-.videoControls ion-col {
-    margin: 5px;
-    margin-right: 1px;
-}
-
-.playbackTime {
-    text-align: center;
-    align-content: center;
-}
-
-.playbackTimeInactive {
-    text-align: center;
-    padding: 20px;
-}
-
-#seekbar {
-    width: 100%;
-    height: 5px;
-}
-
 .remoteButtons {
     text-align: center;
 }
@@ -479,11 +359,6 @@ export default {
     border: 0px;
     padding: 5px 5px 10px 10px;
     text-align: right;
-}
-
-.videoControls ion-button {
-    width: 45px;
-    height: 45px;
 }
 
 .rotateIcon {
@@ -499,9 +374,6 @@ export default {
         width: 50px;
         height: 50px;
     }
-    .playbackTime {
-        display: none;
-    }
 }
 
 @media (orientation: portrait) {
@@ -513,95 +385,5 @@ export default {
         width: 60px;
         height: 60px;
     }
-}
-
-/*
-Seekbar style
-*/
-input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    margin-left: 5px;
-}
-input[type="range"]:focus {
-    outline: none;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 5px;
-    cursor: pointer;
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    background: #455795;
-    border-radius: 1px;
-    border: 0.1px solid #010101;
-}
-input[type="range"]::-webkit-slider-thumb {
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    border: 1px solid #000000;
-    height: 18px;
-    width: 13px;
-    border-radius: 3px;
-    background: #26335c;
-    cursor: pointer;
-    -webkit-appearance: none;
-    margin-top: -7px;
-}
-
-input[type="range"]:focus::-webkit-slider-runnable-track {
-    background: #367ebd;
-}
-input[type="range"]::-moz-range-track {
-    width: 100%;
-    height: 5px;
-    cursor: pointer;
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    background: #455795;
-    border-radius: 1px;
-    border: 0.1px solid #010101;
-}
-input[type="range"]::-moz-range-thumb {
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    border: 1px solid #000000;
-    height: 18px;
-    width: 13px;
-    border-radius: 3px;
-    background: #26335c;
-    cursor: pointer;
-}
-input[type="range"]::-ms-track {
-    width: 100%;
-    height: 8.4px;
-    cursor: pointer;
-    background: transparent;
-    border-color: transparent;
-    border-width: 16px 0;
-    color: transparent;
-}
-input[type="range"]::-ms-fill-lower {
-    background: #2a6495;
-    border: 0.2px solid #010101;
-    border-radius: 2.6px;
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-}
-input[type="range"]::-ms-fill-upper {
-    background: #3071a9;
-    border: 0.2px solid #010101;
-    border-radius: 2.6px;
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-}
-input[type="range"]::-ms-thumb {
-    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
-    border: 1px solid #000000;
-    height: 36px;
-    width: 16px;
-    border-radius: 3px;
-    background: #26335c;
-    cursor: pointer;
-}
-input[type="range"]:focus::-ms-fill-lower {
-    background: #3071a9;
-}
-input[type="range"]:focus::-ms-fill-upper {
-    background: #367ebd;
 }
 </style>

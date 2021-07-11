@@ -43,6 +43,9 @@
                 </ion-item>
             </ion-reorder-group>
         </ion-content>
+        <playerController
+            v-if="serverConfigured && isPlayerActive && connectedState"
+        ></playerController>
     </ion-page>
 </template>
 
@@ -67,11 +70,18 @@ import { play, add, remove, trashBin } from "ionicons/icons";
 import { computed } from "vue";
 import { useStore } from "vuex";
 import { socket } from "../socketClient";
-
+import playerController from "../components/playerController.vue";
 export default {
     setup() {
         const store = useStore();
+        const connectedState = computed(() => store.state.mpvsocket.connected);
+        const serverConfigured = computed(
+            () => store.state.settings.configured
+        );
         const playerData = computed(() => store.state.mpvsocket.playerData);
+        const isPlayerActive = computed(() => {
+            return store.state.mpvsocket.playerData.filename ? true : false;
+        });
         const DOUBLE_CLICK_THRESHOLD = 500;
         let lastOnStart = 0;
 
@@ -151,6 +161,9 @@ export default {
             add,
             remove,
             trashBin,
+            connectedState,
+            serverConfigured,
+            isPlayerActive,
             doReorder,
             onItemClicked,
             onPreLoadPlaylistClicked,
@@ -172,6 +185,7 @@ export default {
         IonLabel,
         IonIcon,
         IonButton,
+        playerController,
     },
 };
 </script>
