@@ -2,19 +2,19 @@
     <ion-page>
         <ion-header :translucent="true">
             <ion-toolbar>
-            <ion-buttons slot="start">
-                <ion-back-button></ion-back-button>
-            </ion-buttons>
-            <ion-title>Media collections</ion-title>
+                <ion-buttons slot="start">
+                    <ion-back-button></ion-back-button>
+                </ion-buttons>
+                <ion-title>Media collections</ion-title>
             </ion-toolbar>
         </ion-header>
 
-        <ion-content :fullscreen=true>
+        <ion-content :fullscreen="true">
             <ion-header collapse="condense">
                 <ion-toolbar>
                     <ion-title size="large">Media collections</ion-title>
                 </ion-toolbar>
-            </ion-header>            
+            </ion-header>
             <ion-toolbar>
                 <ion-buttons slot="end">
                     <ion-button color="success">
@@ -24,9 +24,7 @@
                 </ion-buttons>
             </ion-toolbar>
             <ion-list>
-                <ion-item>
-                    
-                </ion-item>
+                <ion-item> </ion-item>
             </ion-list>
         </ion-content>
     </ion-page>
@@ -44,19 +42,16 @@ import {
     IonItem,
     IonBackButton,
     IonButton,
-    IonIcon
-} from '@ionic/vue';
-import {
-    addOutline
-} from 'ionicons/icons';
+    IonIcon,
+} from "@ionic/vue";
+import { addOutline } from "ionicons/icons";
 export default {
     setup() {
-        
         return {
-            addOutline
-        }
+            addOutline,
+        };
     },
-    components:{
+    components: {
         IonPage,
         IonHeader,
         IonToolbar,
@@ -67,7 +62,7 @@ export default {
         IonItem,
         IonBackButton,
         IonButton,
-        IonIcon
-    }
-}
+        IonIcon,
+    },
+};
 </script>

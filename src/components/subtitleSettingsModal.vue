@@ -8,8 +8,16 @@
         <ion-content class="ion-padding">
             <ion-item>
                 <ion-label>Subtitle</ion-label>
-                <ion-select v-model="selectedTrack" @ionChange="onSubtitleTrackChanged" :value="activeSubTrackId">
-                    <ion-select-option :value="sub.id" v-for="sub in subTracks" :key="sub.id" >
+                <ion-select
+                    v-model="selectedTrack"
+                    @ionChange="onSubtitleTrackChanged"
+                    :value="activeSubTrackId"
+                >
+                    <ion-select-option
+                        :value="sub.id"
+                        v-for="sub in subTracks"
+                        :key="sub.id"
+                    >
                         {{ sub.lang || sub.external_filename }}
                     </ion-select-option>
                 </ion-select>
@@ -32,8 +40,8 @@
     </ion-page>
 </template>
 <script>
-import { ref } from 'vue';
-import { socket } from '../socketClient';
+import { ref } from "vue";
+import { socket } from "../socketClient";
 
 import {
     IonPage,
@@ -47,13 +55,10 @@ import {
     IonSelect,
     IonSelectOption,
     IonLabel,
-
-} from '@ionic/vue';
+} from "@ionic/vue";
 
 export default {
-    props: [
-        "modalController"
-    ],
+    props: ["modalController"],
     setup(props) {
         const tracks = ref([]);
         const subTracks = ref([]);
@@ -64,18 +69,20 @@ export default {
         });
 
         // get tracks
-        socket.emit('tracks', null, function(data) {
+        socket.emit("tracks", null, function (data) {
             tracks.value = data.tracks;
             subTracks.value = data.tracks.filter((el) => el.type === "sub");
-            activeSubTrackId.value = subTracks.value.find((el) => el.selected === true).id
-            selectedTrack.value = activeSubTrackId.value
-            console.log(subTracks.value)
-        })
+            activeSubTrackId.value = subTracks.value.find(
+                (el) => el.selected === true
+            ).id;
+            selectedTrack.value = activeSubTrackId.value;
+            console.log(subTracks.value);
+        });
 
-        socket.emit('subSettings', null, function(data){
+        socket.emit("subSettings", null, function (data) {
             subSettings.value = data;
-        })
-        
+        });
+
         const onAppendClicked = () => {
             // TODO: Change audio track
             props.modalController.dismiss();
@@ -88,21 +95,27 @@ export default {
 
         const onSubtitleTrackChanged = () => {
             console.log(JSON.stringify(selectedTrack.value));
-            socket.emit('subReload', selectedTrack.value);
-        }
+            socket.emit("subReload", selectedTrack.value);
+        };
 
         const onSubDelayChanged = (order) => {
-            switch (order){
-                case 'increase':
+            switch (order) {
+                case "increase":
                     subSettings.value.subDelay += 1;
-                    socket.emit("adjustSubtitleTiming", subSettings.value.subDelay);
+                    socket.emit(
+                        "adjustSubtitleTiming",
+                        subSettings.value.subDelay
+                    );
                     break;
-                case 'decrease':
+                case "decrease":
                     subSettings.value.subDelay -= 1;
-                    socket.emit("adjustSubtitleTiming", subSettings.value.subDelay);
+                    socket.emit(
+                        "adjustSubtitleTiming",
+                        subSettings.value.subDelay
+                    );
                     break;
             }
-        }
+        };
         return {
             tracks,
             subTracks,
@@ -112,10 +125,10 @@ export default {
             onSubtitleTrackChanged,
             onSubDelayChanged,
             selectedTrack,
-            subSettings
+            subSettings,
         };
     },
-    components:{
+    components: {
         IonPage,
         IonHeader,
         IonToolbar,
@@ -128,8 +141,7 @@ export default {
         IonSelectOption,
         IonLabel,
     },
-
-}
+};
 </script>
 
 <style scoped>

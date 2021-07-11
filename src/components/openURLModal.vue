@@ -7,11 +7,18 @@
         </ion-header>
         <ion-content class="ion-padding">
             <ion-item>
-                <ion-input placeholder="File/URL" type="text" v-model=dialog.filename></ion-input>
+                <ion-input
+                    placeholder="File/URL"
+                    type="text"
+                    v-model="dialog.filename"
+                ></ion-input>
             </ion-item>
             <ion-item>
-                <ion-label>Append to playlist</ion-label> 
-                <ion-checkbox type="text" v-model=dialog.appendToPlaylist></ion-checkbox>
+                <ion-label>Append to playlist</ion-label>
+                <ion-checkbox
+                    type="text"
+                    v-model="dialog.appendToPlaylist"
+                ></ion-checkbox>
             </ion-item>
         </ion-content>
         <ion-footer>
@@ -20,9 +27,8 @@
         </ion-footer>
     </ion-page>
 </template>
-
 <script>
-import { ref } from 'vue';
+import { ref } from "vue";
 import {
     IonPage,
     IonHeader,
@@ -34,18 +40,15 @@ import {
     IonItem,
     IonLabel,
     IonFooter,
-    IonButton
-
-} from '@ionic/vue';
+    IonButton,
+} from "@ionic/vue";
 
 export default {
-    props: [
-        "modalController"
-    ],
+    props: ["modalController"],
     setup(props) {
         const dialog = ref({
             filename: null,
-            appendToPlaylist: true
+            appendToPlaylist: true,
         });
         const onAppendClicked = () => {
             console.log(`Ok, data: ${dialog.value}`);
@@ -59,10 +62,10 @@ export default {
         return {
             dialog,
             onAppendClicked,
-            onCancelClicked
+            onCancelClicked,
         };
     },
-    components:{
+    components: {
         IonPage,
         IonHeader,
         IonToolbar,
@@ -73,10 +76,9 @@ export default {
         IonLabel,
         IonItem,
         IonFooter,
-        IonButton
+        IonButton,
     },
-
-}
+};
 </script>
 
 <style scoped>
@@ -88,5 +90,4 @@ ion-footer {
 ion-footer ion-button {
     width: 120px;
 }
-
 </style>

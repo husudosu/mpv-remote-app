@@ -9,7 +9,11 @@
             <ion-item>
                 <ion-label>Audio track</ion-label>
                 <ion-select :value="activeAudioTrackId">
-                    <ion-select-option :value="audio.id" v-for="audio in audioTracks" :key="audio.id" >
+                    <ion-select-option
+                        :value="audio.id"
+                        v-for="audio in audioTracks"
+                        :key="audio.id"
+                    >
                         {{ audio.lang }}
                     </ion-select-option>
                 </ion-select>
@@ -20,10 +24,9 @@
         </ion-footer>
     </ion-page>
 </template>
-
 <script>
-import { ref } from 'vue';
-import { socket } from '../socketClient';
+import { ref } from "vue";
+import { socket } from "../socketClient";
 
 import {
     IonPage,
@@ -37,25 +40,24 @@ import {
     IonSelect,
     IonSelectOption,
     IonLabel,
-
-} from '@ionic/vue';
+} from "@ionic/vue";
 
 export default {
-    props: [
-        "modalController"
-    ],
+    props: ["modalController"],
     setup(props) {
         const tracks = ref([]);
         const audioTracks = ref([]);
         const activeAudioTrackId = ref();
 
         // get tracks
-        socket.emit('tracks', null, function(data) {
+        socket.emit("tracks", null, function (data) {
             tracks.value = data.tracks;
             audioTracks.value = data.tracks.filter((el) => el.type === "audio");
-            activeAudioTrackId.value = audioTracks.value.find((el) => el.selected === true).id
-        })
-        
+            activeAudioTrackId.value = audioTracks.value.find(
+                (el) => el.selected === true
+            ).id;
+        });
+
         const onAppendClicked = () => {
             // TODO: Change audio track
             props.modalController.dismiss();
@@ -66,16 +68,15 @@ export default {
             props.modalController.dismiss();
         };
 
-
         return {
             tracks,
             audioTracks,
             activeAudioTrackId,
             onAppendClicked,
-            onCancelClicked
+            onCancelClicked,
         };
     },
-    components:{
+    components: {
         IonPage,
         IonHeader,
         IonToolbar,
@@ -88,8 +89,7 @@ export default {
         IonSelectOption,
         IonLabel,
     },
-
-}
+};
 </script>
 
 <style scoped>
@@ -101,5 +101,4 @@ ion-footer {
 ion-footer ion-button {
     width: 120px;
 }
-
 </style>
