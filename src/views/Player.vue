@@ -355,12 +355,6 @@ export default {
     margin: 5px;
 }
 
-.remoteFooter {
-    border: 0px;
-    padding: 5px 5px 10px 10px;
-    text-align: right;
-}
-
 .rotateIcon {
     transform: rotate(90deg);
 }
