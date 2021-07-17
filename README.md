@@ -17,7 +17,7 @@ First you need the plugin and server for MPV. [Follow instructions here.](https:
 
 After plugin installed, you can install the Android application which can be found in this repo.
 
-android/app/release/app.apk
+android/app/release/app-release.apk
 
 Configure IP & Port in your application and run mpv with --idle flag on your host PC.
 
