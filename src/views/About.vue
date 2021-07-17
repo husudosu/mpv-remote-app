@@ -37,10 +37,14 @@
       </ion-list>
 
       <div class="contactButtons">
-        <ion-button @click="openURL('https://github.com/')">
+        <ion-button
+          @click="openURL('https://github.com/husudosu/mpv-remote-app')"
+        >
           <ion-icon slot="icon-only" :icon="logoGithub"> </ion-icon>
         </ion-button>
-        <ion-button @click="openURL('https://github.com/')">
+        <ion-button
+          @click="openURL('https://github.com/husudosu/mpv-remote-app')"
+        >
           <ion-icon slot="icon-only" :icon="helpOutline"> </ion-icon>
         </ion-button>
       </div>
