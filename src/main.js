@@ -31,5 +31,5 @@ document.body.classList.toggle("dark", true);
 const app = createApp(App).use(IonicVue).use(router).use(store);
 
 router.isReady().then(() => {
-    app.mount("#app");
+  app.mount("#app");
 });
