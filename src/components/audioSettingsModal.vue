@@ -8,7 +8,11 @@
     <ion-content class="ion-padding">
       <ion-item>
         <ion-label>Audio track</ion-label>
-        <ion-select :value="activeAudioTrackId">
+        <ion-select
+          :value="activeAudioTrackId"
+          @ionChange="onSwitchAudioClicked"
+          v-model="selectedTrack"
+        >
           <ion-select-option
             :value="audio.id"
             v-for="audio in audioTracks"
@@ -48,7 +52,7 @@ export default {
     const tracks = ref([]);
     const audioTracks = ref([]);
     const activeAudioTrackId = ref();
-
+    const selectedTrack = ref();
     // get tracks
     socket.emit("tracks", null, function (data) {
       tracks.value = data.tracks;
@@ -56,24 +60,25 @@ export default {
       activeAudioTrackId.value = audioTracks.value.find(
         (el) => el.selected === true
       ).id;
+      selectedTrack.value = activeAudioTrackId.value;
     });
 
-    const onAppendClicked = () => {
-      // TODO: Change audio track
+    const onCancelClicked = () => {
       props.modalController.dismiss();
     };
 
-    const onCancelClicked = () => {
-      console.log("Cancel");
-      props.modalController.dismiss();
+    const onSwitchAudioClicked = () => {
+      console.log(`Selected audio track: ${selectedTrack.value}`);
+      socket.emit("audioReload", selectedTrack.value);
     };
 
     return {
       tracks,
       audioTracks,
       activeAudioTrackId,
-      onAppendClicked,
+      selectedTrack,
       onCancelClicked,
+      onSwitchAudioClicked,
     };
   },
   components: {

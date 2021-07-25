@@ -155,6 +155,7 @@ export default {
         component: fileBrowserModal,
         componentProps: {
           modalController: modalController,
+          action: "play",
         },
       });
       modal.onDidDismiss().then((response) => {

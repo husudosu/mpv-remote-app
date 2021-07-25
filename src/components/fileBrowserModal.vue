@@ -1,8 +1,21 @@
 <template>
   <ion-page>
+    <ion-loading :is-open="loading" message="Loading contents...">
+    </ion-loading>
     <ion-header>
       <ion-toolbar>
-        <ion-title>{{ files.dirname || "N/A" }}</ion-title>
+        <ion-title>{{ titleText }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="onChangeDriveClicked">
+            <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
+          </ion-button>
+          <ion-button @click="onCollectionsClicked">
+            <ion-icon :icon="bookmarksOutline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+      <ion-toolbar>
+        <ion-searchbar v-model="search" @ionChange="onSearch"></ion-searchbar>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -11,25 +24,21 @@
         ...
       </ion-item>
       <ion-item
-        v-for="(directory, index) in files.directories"
+        v-for="(entry, index) in files.content"
         :key="index"
-        @click="onDirectoryClicked(directory)"
+        @click="onEntryClicked(entry)"
       >
-        <ion-icon :icon="folder" slot="start"></ion-icon>
-        {{ directory.name }}
-      </ion-item>
-      <ion-item
-        v-for="(file, index) in files.files"
-        :key="index"
-        @click="onFileClicked(file)"
-      >
-        <ion-icon :icon="document" slot="start"></ion-icon>
-        {{ file.name }}
+        <ion-icon :icon="decideIcon(entry)" slot="start"></ion-icon>
+        {{ entry.name }}
       </ion-item>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
-      <ion-button @click="onOpenDirectoryClicked" color="success">
+      <ion-button
+        :disabled="!files.prevDir"
+        @click="onOpenDirectoryClicked"
+        color="success"
+      >
         Open folder
       </ion-button>
     </ion-footer>
@@ -39,8 +48,6 @@
 <script>
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
-
-// import { socket } from '../socketClient';
 
 import {
   IonPage,
@@ -52,64 +59,248 @@ import {
   IonFooter,
   IonButton,
   IonIcon,
+  IonButtons,
+  IonSearchbar,
+  IonLoading,
+  actionSheetController,
 } from "@ionic/vue";
-import { folder, document, add } from "ionicons/icons";
+import {
+  folder,
+  document,
+  add,
+  fileTray,
+  bookmarksOutline,
+  musicalNotes,
+  film,
+  journalOutline,
+} from "ionicons/icons";
+
 import axios from "axios";
 
 export default {
-  props: ["modalController"],
+  props: ["modalController", "action"],
   setup(props) {
     const store = useStore();
 
-    const files = ref([]);
-    const baseURL = computed(
-      () =>
-        `http://${store.state.settings.settings.server.server_ip}:${store.state.settings.settings.server.server_port}`
-    );
-    axios.get(`${baseURL.value}/fileman?path=/home/sudosu`).then((response) => {
-      console.log(response.data);
-      files.value = response.data;
+    const files = ref({});
+    const collections = ref([]);
+    const filesBak = ref([]);
+    const search = ref("");
+    const loading = ref(true);
+
+    const drives = ref([]);
+    const filemanLastPath = store.state.settings.settings.filemanLastPath;
+    let history = store.state.settings.settings.history || [];
+    const titleText = computed(() => {
+      if (files.value.dirname) return files.value.dirname;
+      else if (files.value.collection_id) {
+        const collection = collections.value.find(
+          (el) => el.id === parseInt(files.value.collection_id)
+        );
+        console.log(collection);
+        if (collection) return collection.name;
+        else return "Unknown collection";
+      }
+      return "N/A";
     });
-    const onCancelClicked = () => {
-      console.log("Cancel");
-      props.modalController.dismiss();
+
+    const apiInstance = axios.create({
+      baseURL: `http://${store.state.settings.settings.server.server_ip}:${store.state.settings.settings.server.server_port}`,
+      timeout: 10000,
+    });
+    apiInstance
+      .get(`/drivelist`)
+      .then((response) => (drives.value = response.data));
+    apiInstance
+      .get(`/collections`)
+      .then((response) => (collections.value = response.data));
+
+    const saveLastPath = async () => {
+      let filemanLastPath = {};
+      if ("cwd" in files.value) {
+        filemanLastPath.type = "directory";
+        filemanLastPath.cwd = files.value.cwd;
+      } else if ("collection_id" in files.value) {
+        filemanLastPath.type = "collection";
+        filemanLastPath.collection_id = files.value.collection_id;
+      }
+      // Also save history
+      await store.dispatch("settings/setSetting", {
+        key: "history",
+        value: JSON.stringify(history),
+      });
+
+      return store.dispatch("settings/setSetting", {
+        key: "filemanLastPath",
+        value: JSON.stringify(filemanLastPath),
+      });
     };
 
-    const onFileClicked = (file) => {
-      props.modalController.dismiss(file.fullPath);
-    };
+    const getDirectoryContents = async (path = null, collectionId = null) => {
+      let params = {};
+      if (path) params.path = path;
+      if (collectionId) params.collection = collectionId;
+      // Save to history
+      // Render spinner if loading takes more than 150 msec
+      let loadingTimeout = setTimeout(() => {
+        loading.value = true;
+      }, 150);
 
-    const onDirectoryClicked = (directory) => {
-      axios
-        .get(`${baseURL.value}/fileman?path=${directory.fullPath}`)
+      return apiInstance
+        .get(`/fileman`, { params })
         .then((response) => {
-          console.log(response.data);
           files.value = response.data;
+          filesBak.value = response.data;
+          search.value = "";
+        })
+        .finally(() => {
+          clearTimeout(loadingTimeout);
+          loading.value = false;
         });
+    };
+
+    // FIXME: Duplication of code, come up with better solution!
+    if (filemanLastPath) {
+      if (filemanLastPath.type == "collection") {
+        getDirectoryContents(null, filemanLastPath.collection_id).catch(
+          (err) => {
+            console.log(err);
+            getDirectoryContents();
+          }
+        );
+      } else if (filemanLastPath.type == "directory") {
+        getDirectoryContents(filemanLastPath.cwd).catch((err) => {
+          console.log(err);
+          getDirectoryContents();
+        });
+      }
+    } else {
+      getDirectoryContents();
+    }
+
+    const onCancelClicked = () => {
+      saveLastPath().then(() => props.modalController.dismiss());
+    };
+
+    const onEntryClicked = (entry) => {
+      if (entry.type === "directory") {
+        getDirectoryContents(entry.fullPath);
+        history.push(files.value.collection_id);
+      } else if (
+        (props.action === "play" && entry.type === "video") ||
+        entry.type === "audio" ||
+        entry.type === "subtitle"
+      ) {
+        saveLastPath().then(() =>
+          props.modalController.dismiss(entry.fullPath)
+        );
+      }
     };
 
     const onPrevDirectoryClicked = () => {
-      axios
-        .get(`${baseURL.value}/fileman?path=${files.value.prevDir}`)
-        .then((response) => {
-          files.value = response.data;
-        });
+      // Get collection
+      const collectionId = history.pop();
+
+      if (collectionId !== undefined && collectionId !== null) {
+        console.log(`Open collection from history ${collectionId}`);
+        getDirectoryContents(null, collectionId);
+      } else {
+        getDirectoryContents(files.value.prevDir);
+      }
+      console.log(`New history: ${history}`);
     };
 
+    const onChangeDriveClicked = async () => {
+      const buttons = drives.value.map((drive) => {
+        return {
+          text: drive._mounted,
+          role: drive._mounted,
+        };
+      });
+      const actionSheet = await actionSheetController.create({
+        header: "Select drive",
+        buttons,
+      });
+
+      await actionSheet.present();
+
+      const { role } = await actionSheet.onDidDismiss();
+      console.log(`Value:${role}`);
+
+      if (role !== "backdrop") {
+        getDirectoryContents(role);
+        // Clear history
+        history = [];
+      }
+    };
+
+    const onCollectionsClicked = async () => {
+      let buttons = collections.value.map((collection) => {
+        return {
+          text: collection.name,
+          role: collection.id,
+        };
+      });
+
+      const actionSheet = await actionSheetController.create({
+        header: "Select collection",
+        buttons,
+      });
+      await actionSheet.present();
+      const { role } = await actionSheet.onDidDismiss();
+
+      if (role !== "backdrop") {
+        getDirectoryContents(null, role);
+
+        // Clear history
+        history = [];
+      }
+    };
+
+    const onSearch = () => {
+      files.value = Object.assign({}, filesBak.value);
+      files.value.content = files.value.content.filter(
+        (el) => el.name.toLowerCase().indexOf(search.value.toLowerCase()) > -1
+      );
+    };
     const onOpenDirectoryClicked = () => {
-      props.modalController.dismiss(files.value.cwd);
+      saveLastPath().then(() => props.modalController.dismiss(files.value.cwd));
     };
 
+    const decideIcon = (entry) => {
+      switch (entry.type) {
+        case "file":
+          return files;
+        case "directory":
+          return folder;
+        case "video":
+          return film;
+        case "audio":
+          return musicalNotes;
+        case "subtitle":
+          return journalOutline;
+      }
+    };
     return {
       onCancelClicked,
-      onFileClicked,
-      onDirectoryClicked,
       onPrevDirectoryClicked,
       onOpenDirectoryClicked,
+      onChangeDriveClicked,
+      onEntryClicked,
+      onSearch,
+      decideIcon,
+      onCollectionsClicked,
+      titleText,
+      loading,
       files,
       folder,
       document,
       add,
+      fileTray,
+      bookmarksOutline,
+      search,
+      musicalNotes,
+      film,
     };
   },
   components: {
@@ -122,6 +313,9 @@ export default {
     IonFooter,
     IonButton,
     IonIcon,
+    IonButtons,
+    IonSearchbar,
+    IonLoading,
   },
 };
 </script>

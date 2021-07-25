@@ -9,7 +9,11 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
-      <ion-button @click="onClearPlaylistClicked" size="small">
+      <ion-button
+        @click="onClearPlaylistClicked"
+        size="small"
+        style="margin: 10px"
+      >
         <ion-icon :icon="trashBin"></ion-icon>
       </ion-button>
       <ion-reorder-group
@@ -29,7 +33,7 @@
           ></ion-icon>
           <ion-label class="ion-text-wrap">
             <p>
-              {{ item.filename }}
+              {{ item.title || item.filename }}
             </p>
           </ion-label>
           <ion-button
@@ -75,7 +79,9 @@ export default {
   setup() {
     const store = useStore();
     const connectedState = computed(() => store.state.mpvsocket.connected);
-    const serverConfigured = computed(() => store.state.settings.configured);
+    const serverConfigured = computed(
+      () => store.state.settings.settings.configured
+    );
     const playerData = computed(() => store.state.mpvsocket.playerData);
     const isPlayerActive = computed(() => {
       return store.state.mpvsocket.playerData.filename ? true : false;

@@ -69,7 +69,7 @@ export default {
     socket.emit("tracks", null, function (data) {
       tracks.value = data.tracks;
       subTracks.value = data.tracks.filter((el) => el.type === "sub");
-
+      console.log(tracks.value);
       if (subTracks.value.length > 0) {
         activeSubTrackId.value = subTracks.value.find(
           (el) => el.selected === true

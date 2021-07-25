@@ -33,6 +33,10 @@
             type="number"
           ></ion-input>
         </ion-item>
+
+        <ion-item :router-link="{ name: 'folder.settings.collections' }">
+          <ion-label>Media collections</ion-label>
+        </ion-item>
       </ion-list>
     </ion-content>
   </ion-page>

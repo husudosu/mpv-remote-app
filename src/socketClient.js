@@ -1,7 +1,7 @@
 import SocketIO from "socket.io-client";
 import { store } from "./store";
 
-import { toastController } from "@ionic/vue";
+// import { toastController } from "@ionic/vue";
 export let socket = null;
 
 export let playbackRefreshInterval = null;
@@ -18,7 +18,11 @@ export async function connect() {
   if (!server_port) server_port = 8000;
   if (server_ip) {
     console.log(`Connecting to: ${server_ip}:${server_port}`);
-    socket = SocketIO(`http://${server_ip}:${server_port}`);
+    socket = SocketIO(`http://${server_ip}:${server_port}`, {
+      reconnection: true,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 1500,
+    });
     handle_socket();
   }
 }
@@ -36,13 +40,13 @@ export async function disconnect() {
   }
 }
 
-async function showToast(message, duration = 1500) {
-  const toast = await toastController.create({
-    message,
-    duration,
-  });
-  return toast.present();
-}
+// async function showToast(message, duration = 1500) {
+//   const toast = await toastController.create({
+//     message,
+//     duration,
+//   });
+//   return toast.present();
+// }
 
 function refreshPlaybackInterval() {
   socket.emit("playbackTime");
@@ -57,14 +61,14 @@ function handle_socket() {
   socket.on("connect", () => {
     store.commit("mpvsocket/setConnectState", true);
     console.log("Connected to server");
-    showToast("Connected to server");
+    // showToast("Connected to server");
   });
 
   socket.on("disconnect", () => {
     store.commit("mpvsocket/setConnectState", false);
     if (playbackRefreshInterval) clearPlaybackRefreshInterval();
     console.log("User disconnect");
-    showToast("Disconnected from server");
+    // showToast("Disconnected from server");
   });
 
   socket.on("pause", (data) => {
