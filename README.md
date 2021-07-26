@@ -2,6 +2,9 @@
 
 MPV Remote application for controlling your media player
 
+NOTE:
+This project under heavy development right now, so it can break anytime!
+
 ## Functions
 
 - Volume control,

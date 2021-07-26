@@ -44,7 +44,6 @@
 <script>
 import { computed } from "vue";
 import { useStore } from "vuex";
-import { socket } from "../socketClient";
 
 import { IonFooter, IonRow, IonCol, IonIcon, IonButton } from "@ionic/vue";
 import {
@@ -68,26 +67,26 @@ export default {
       console.log(
         `Pause clicked. Current value: ${store.state.mpvsocket.playerData.pause}`
       );
-      socket.emit("setPlayerProp", [
+      store.state.mpvsocket.socket.emit("setPlayerProp", [
         "pause",
         !store.state.mpvsocket.playerData.pause,
       ]);
     };
 
     const onSeek = (e) => {
-      socket.emit("seek", e.target.value);
+      store.state.mpvsocket.socket.emit("seek", e.target.value);
     };
 
     const onStopClicked = () => {
-      socket.emit("stopPlayback");
+      store.state.mpvsocket.socket.emit("stopPlayback");
     };
 
     const onPrevClicked = () => {
-      socket.emit("playlistPrev");
+      store.state.mpvsocket.socket.emit("playlistPrev");
     };
 
     const onNextClicked = () => {
-      socket.emit("playlistNext");
+      store.state.mpvsocket.socket.emit("playlistNext");
     };
 
     return {

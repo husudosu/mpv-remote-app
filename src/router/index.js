@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "@ionic/vue-router";
-import { store } from "../store";
-import { connect } from "../socketClient";
+// import { store } from "../store";
+// import { connect } from "../socketClient";
 
 const routes = [
   {
@@ -39,15 +39,14 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => {
-  console.log(to.name);
-  await store.dispatch("settings/loadSettings");
-  if (
-    store.state.settings.settings.configured &&
-    !store.state.mpvsocket.connected
-  ) {
-    connect();
-  }
-  next();
-});
+// router.beforeEach(async (to, from, next) => {
+//   await store.dispatch("settings/loadSettings");
+//   if (
+//     store.state.settings.settings.configured &&
+//     !store.state.mpvsocket.connected
+//   ) {
+//     connect();
+//   }
+//   next();
+// });
 export default router;

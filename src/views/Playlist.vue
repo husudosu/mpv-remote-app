@@ -73,7 +73,6 @@ import {
 import { play, add, remove, trashBin } from "ionicons/icons";
 import { computed } from "vue";
 import { useStore } from "vuex";
-import { socket } from "../socketClient";
 import playerController from "../components/playerController.vue";
 export default {
   setup() {
@@ -103,37 +102,41 @@ export default {
         toIndex += 2;
       }
 
-      socket.emit("playlistMove", { fromIndex, toIndex }, function (data) {
-        console.log(`${JSON.stringify(data)}`);
-        store.commit("mpvsocket/setProp", {
-          property: "playlist",
-          value: data.playlist,
-        });
-        event.detail.complete(true);
-        console.log(
-          `Callback done, updated playlist: ${JSON.stringify(data.playlist)}`
-        );
-      });
+      store.state.mpvsocket.socket.emit(
+        "playlistMove",
+        { fromIndex, toIndex },
+        function (data) {
+          console.log(`${JSON.stringify(data)}`);
+          store.commit("mpvsocket/setProp", {
+            property: "playlist",
+            value: data.playlist,
+          });
+          event.detail.complete(true);
+          console.log(
+            `Callback done, updated playlist: ${JSON.stringify(data.playlist)}`
+          );
+        }
+      );
     };
 
     const onPreLoadPlaylistClicked = () => {
       // Loads few playlist item for testing.
-      socket.emit("openFile", {
+      store.state.mpvsocket.socket.emit("openFile", {
         filename: "/home/sudosu/test.webm",
         appendToPlaylist: true,
       });
-      socket.emit("openFile", {
+      store.state.mpvsocket.socket.emit("openFile", {
         filename: "/home/sudosu/test1.mkv",
         appendToPlaylist: true,
       });
     };
 
     const onClearPlaylistClicked = () => {
-      socket.emit("playlistClear");
+      store.state.mpvsocket.socket.emit("playlistClear");
     };
 
     const onRemoveItemClicked = (item) => {
-      socket.emit("playlistRemove", item.index);
+      store.state.mpvsocket.socket.emit("playlistRemove", item.index);
     };
 
     const onItemClicked = (item) => {
@@ -145,7 +148,7 @@ export default {
 
       if (Math.abs(now - lastOnStart) <= DOUBLE_CLICK_THRESHOLD) {
         console.log("Double clicked");
-        socket.emit("playlistPlayIndex", item.index);
+        store.state.mpvsocket.socket.emit("playlistPlayIndex", item.index);
         lastOnStart = 0;
       } else {
         lastOnStart = now;

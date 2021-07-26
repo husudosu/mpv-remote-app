@@ -61,6 +61,9 @@ import {
   informationCircleOutline,
 } from "ionicons/icons";
 
+import { useStore } from "vuex";
+import { App } from "@capacitor/app";
+
 export default defineComponent({
   name: "App",
   components: {
@@ -79,6 +82,7 @@ export default defineComponent({
   },
   setup() {
     const selectedIndex = ref(0);
+    const store = useStore();
     const appPages = [
       {
         title: "Player",
@@ -113,7 +117,21 @@ export default defineComponent({
       );
     }
 
+    App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        if (store.state.mpvsocket.socket.disconnected) {
+          console.log("App activated and socket disconnected,connecting...");
+          store.state.mpvsocket.socket.connect();
+        }
+      }
+    });
+
     const route = useRoute();
+
+    // First load settings
+    store.dispatch("settings/loadSettings").then(() => {
+      store.dispatch("mpvsocket/setupSocket");
+    });
 
     return {
       selectedIndex,

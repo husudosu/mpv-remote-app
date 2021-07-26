@@ -1,3 +1,7 @@
+// import store from "../store";
+import SocketIO from "socket.io-client";
+import { handle_socket } from "../socketClient";
+
 const initialState = {
   connected: false,
   playerData: {
@@ -12,6 +16,7 @@ const initialState = {
     media_title: null,
     playlist: [],
   },
+  socket: null,
 };
 
 export const mpvsocket = {
@@ -48,6 +53,26 @@ export const mpvsocket = {
       );
       state.playerData[value.property] = value.value;
     },
+    setSocket(state, value) {
+      state.socket = value;
+    },
   },
-  actions: {},
+  actions: {
+    setupSocket({ commit, rootState }) {
+      const server_ip = rootState.settings.settings.server.server_ip;
+      const server_port = rootState.settings.settings.server.server_port;
+      const socket = SocketIO(`http://${server_ip}:${server_port}`, {
+        reconnection: true,
+        reconnectionDelay: 500,
+        reconnectionDelayMax: 1000,
+        timeout: 1200,
+      });
+      commit("setSocket", socket);
+      handle_socket();
+    },
+    async clearSocket({ commit, state }) {
+      if (state.socket) await state.socket.disconnect();
+      commit("setSocket", null);
+    },
+  },
 };

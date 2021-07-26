@@ -38,8 +38,7 @@
 </template>
 <script>
 import { ref } from "vue";
-import { socket } from "../socketClient";
-
+import { useStore } from "vuex";
 import {
   IonPage,
   IonHeader,
@@ -64,9 +63,10 @@ export default {
     const subSettings = ref({
       subDelay: 0,
     });
+    const store = useStore();
 
     // get tracks
-    socket.emit("tracks", null, function (data) {
+    store.state.mpvsocket.socket.emit("tracks", null, function (data) {
       tracks.value = data.tracks;
       subTracks.value = data.tracks.filter((el) => el.type === "sub");
       console.log(tracks.value);
@@ -79,7 +79,7 @@ export default {
       }
     });
 
-    socket.emit("subSettings", null, function (data) {
+    store.state.mpvsocket.socket.emit("subSettings", null, function (data) {
       subSettings.value = data;
     });
 
@@ -94,18 +94,24 @@ export default {
 
     const onSubtitleTrackChanged = () => {
       console.log(JSON.stringify(selectedTrack.value));
-      socket.emit("subReload", selectedTrack.value);
+      store.state.mpvsocket.socket.emit("subReload", selectedTrack.value);
     };
 
     const onSubDelayChanged = (order) => {
       switch (order) {
         case "increase":
           subSettings.value.subDelay += 1;
-          socket.emit("adjustSubtitleTiming", subSettings.value.subDelay);
+          store.state.mpvsocket.socket.emit(
+            "adjustSubtitleTiming",
+            subSettings.value.subDelay
+          );
           break;
         case "decrease":
           subSettings.value.subDelay -= 1;
-          socket.emit("adjustSubtitleTiming", subSettings.value.subDelay);
+          store.state.mpvsocket.socket.emit(
+            "adjustSubtitleTiming",
+            subSettings.value.subDelay
+          );
           break;
       }
     };

@@ -30,7 +30,7 @@
 </template>
 <script>
 import { ref } from "vue";
-import { socket } from "../socketClient";
+import { useStore } from "vuex";
 
 import {
   IonPage,
@@ -53,8 +53,10 @@ export default {
     const audioTracks = ref([]);
     const activeAudioTrackId = ref();
     const selectedTrack = ref();
+    const store = useStore();
+
     // get tracks
-    socket.emit("tracks", null, function (data) {
+    store.state.mpvsocket.socket.emit("tracks", null, function (data) {
       tracks.value = data.tracks;
       audioTracks.value = data.tracks.filter((el) => el.type === "audio");
       activeAudioTrackId.value = audioTracks.value.find(
@@ -69,7 +71,7 @@ export default {
 
     const onSwitchAudioClicked = () => {
       console.log(`Selected audio track: ${selectedTrack.value}`);
-      socket.emit("audioReload", selectedTrack.value);
+      store.state.mpvsocket.socket.emit("audioReload", selectedTrack.value);
     };
 
     return {

@@ -115,7 +115,6 @@ import {
   earOutline,
   informationCircle,
 } from "ionicons/icons";
-import { socket } from "../socketClient";
 import openURLModal from "../components/openURLModal.vue";
 import audioSettingsModal from "../components/audioSettingsModal.vue";
 import subtitleSettingsModal from "../components/subtitleSettingsModal.vue";
@@ -123,6 +122,9 @@ import fileBrowserModal from "../components/fileBrowserModal.vue";
 import infoModal from "../components/infoModal.vue";
 import playerController from "../components/playerController.vue";
 export default {
+  ionViewWillEnter: () => {
+    console.log("View enter");
+  },
   setup() {
     const store = useStore();
     const route = useRoute();
@@ -147,7 +149,7 @@ export default {
 
     const onChangeFileClicked = () => {
       console.log("Change file clicked");
-      socket.emit("openFile", newFileName.value);
+      store.state.mpvsocket.socket.emit("openFile", newFileName.value);
     };
 
     const onFileBrowserClicked = async () => {
@@ -161,7 +163,7 @@ export default {
       modal.onDidDismiss().then((response) => {
         if (response.data) {
           console.log(`Data from modal: ${JSON.stringify(response.data)}`);
-          socket.emit("openFile", {
+          store.state.mpvsocket.socket.emit("openFile", {
             filename: response.data,
             appendToPlaylist: true,
           });
@@ -174,14 +176,14 @@ export default {
       // TODO: Handle push & hold button somehow
       switch (action) {
         case "mute":
-          socket.emit("setPlayerProp", [
+          store.state.mpvsocket.socket.emit("setPlayerProp", [
             "mute",
             !store.state.mpvsocket.playerData.mute,
           ]);
           break;
         case "increase":
           if (playerData.value.volume < 100) {
-            socket.emit("setPlayerProp", [
+            store.state.mpvsocket.socket.emit("setPlayerProp", [
               "volume",
               store.state.mpvsocket.playerData.volume + 5,
             ]);
@@ -189,7 +191,7 @@ export default {
           break;
         case "decrease":
           if (playerData.value.volume > 0) {
-            socket.emit("setPlayerProp", [
+            store.state.mpvsocket.socket.emit("setPlayerProp", [
               "volume",
               store.state.mpvsocket.playerData.volume - 5,
             ]);
@@ -211,7 +213,7 @@ export default {
           console.log(
             `Data from modal: ${JSON.stringify(response.data.value)}`
           );
-          socket.emit("openFile", response.data.value);
+          store.state.mpvsocket.socket.emit("openFile", response.data.value);
         }
       });
       return modal.present();
@@ -241,7 +243,7 @@ export default {
     };
 
     const onFullscreenClicked = () => {
-      socket.emit("fullscreen");
+      store.state.mpvsocket.socket.emit("fullscreen");
     };
 
     const onInfoClicked = async () => {

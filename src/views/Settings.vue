@@ -58,7 +58,6 @@ import {
   IonLabel,
   IonInput,
 } from "@ionic/vue";
-import { connect, disconnect } from "../socketClient";
 export default {
   setup() {
     const store = useStore();
@@ -81,11 +80,9 @@ export default {
       }
       if (value) {
         await store.dispatch("settings/setSetting", { key, value });
-
         if (shouldReconnect) {
-          console.log("Should reconnect");
-          await disconnect();
-          await connect();
+          await store.dispatch("mpvsocket/clearSocket");
+          await store.dispatch("mpvsocket/setupSocket");
         }
       }
     };

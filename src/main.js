@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import App from "./App.vue";
+import Container from "./Container.vue";
 import router from "./router";
 
 import { IonicVue } from "@ionic/vue";
@@ -28,7 +28,7 @@ import { store } from "./store";
 
 document.body.classList.toggle("dark", true);
 
-const app = createApp(App).use(IonicVue).use(router).use(store);
+const app = createApp(Container).use(IonicVue).use(router).use(store);
 
 router.isReady().then(() => {
   app.mount("#app");
