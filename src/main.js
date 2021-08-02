@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import Container from "./Container.vue";
 import router from "./router";
+import { store } from "./store";
 
 import { IonicVue } from "@ionic/vue";
 
@@ -23,8 +24,6 @@ import "@ionic/vue/css/display.css";
 /* Theme variables */
 import "./theme/variables.css";
 import "./theme/darkmode.css";
-
-import { store } from "./store";
 
 document.body.classList.toggle("dark", true);
 

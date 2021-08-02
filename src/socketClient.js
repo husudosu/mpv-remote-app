@@ -1,26 +1,5 @@
 import { store } from "./store";
 
-// import { toastController } from "@ionic/vue";
-
-export let playbackRefreshInterval = null;
-
-// async function showToast(message, duration = 1500) {
-//   const toast = await toastController.create({
-//     message,
-//     duration,
-//   });
-//   return toast.present();
-// }
-
-function refreshPlaybackInterval() {
-  store.state.mpvsocket.socket.emit("playbackTime");
-}
-
-function clearPlaybackRefreshInterval() {
-  clearInterval(playbackRefreshInterval);
-  playbackRefreshInterval = null;
-}
-
 export async function handle_socket() {
   store.state.mpvsocket.socket.on("connect", () => {
     store.commit("mpvsocket/setConnectState", true);
@@ -30,7 +9,7 @@ export async function handle_socket() {
 
   store.state.mpvsocket.socket.on("disconnect", async () => {
     store.commit("mpvsocket/setConnectState", false);
-    if (playbackRefreshInterval) clearPlaybackRefreshInterval();
+    store.commit("mpvsocket/clearPlaybackRefreshInterval");
     console.log("User disconnect");
     // showToast("Disconnected from server");
   });
@@ -42,18 +21,12 @@ export async function handle_socket() {
     // Playback paused
     if (data === true) {
       console.log("Clearing interval");
-      if (playbackRefreshInterval) clearPlaybackRefreshInterval();
+      store.commit("mpvsocket/clearPlaybackRefreshInterval");
     }
     // Start play again
     else {
       console.log("Playing again");
-      console.log(playbackRefreshInterval);
-      if (!playbackRefreshInterval) {
-        playbackRefreshInterval = setInterval(
-          () => refreshPlaybackInterval(),
-          1500
-        );
-      }
+      store.commit("mpvsocket/setPlaybackRefreshInterval");
     }
   });
 
@@ -61,10 +34,8 @@ export async function handle_socket() {
   store.state.mpvsocket.socket.on("playerData", (data) => {
     store.commit("mpvsocket/setPlayerData", data);
     // Start checking
-    if (!data.pause && data.filename && !playbackRefreshInterval) {
-      playbackRefreshInterval = setInterval(() => {
-        refreshPlaybackInterval();
-      }, 1500);
+    if (!data.pause && data.filename) {
+      store.commit("mpvsocket/setPlaybackRefreshInterval");
     }
     console.log(data);
   });
@@ -77,7 +48,7 @@ export async function handle_socket() {
   // End of file or stopped
   store.state.mpvsocket.socket.on("stopped", () => {
     console.log("End of file reached");
-    if (playbackRefreshInterval) clearPlaybackRefreshInterval();
+    store.commit("mpvsocket/clearPlaybackRefreshInterval");
     store.commit("mpvsocket/resetPlayback");
   });
 

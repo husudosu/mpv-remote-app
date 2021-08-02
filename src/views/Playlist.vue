@@ -13,6 +13,7 @@
         @click="onClearPlaylistClicked"
         size="small"
         style="margin: 10px"
+        :disabled="!connectedState"
       >
         <ion-icon :icon="trashBin"></ion-icon>
       </ion-button>

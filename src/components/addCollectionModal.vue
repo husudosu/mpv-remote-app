@@ -85,8 +85,7 @@ export default {
 
     const onDeletePathClicked = async (item) => {
       if ("id" in item) {
-        // Delete API level
-        console.log("Wat");
+        // TODO: Delete API level
         dialog.value.paths.splice(dialog.value.paths.indexOf(item), 1);
       } else {
         dialog.value.paths.splice(dialog.value.paths.indexOf(item), 1);

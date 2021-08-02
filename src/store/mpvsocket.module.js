@@ -17,6 +17,7 @@ const initialState = {
     playlist: [],
   },
   socket: null,
+  playbackRefreshInterval: null,
 };
 
 export const mpvsocket = {
@@ -56,9 +57,26 @@ export const mpvsocket = {
     setSocket(state, value) {
       state.socket = value;
     },
+    setPlaybackRefreshInterval(state) {
+      if (state.playbackRefreshInterval == null) {
+        state.playbackRefreshInterval = setInterval(() => {
+          if (state.socket.connected) state.socket.emit("playbackTime");
+          else console.log("Socket not connected");
+        }, 1500);
+      }
+    },
+    clearPlaybackRefreshInterval(state) {
+      if (state.playbackRefreshInterval != null) {
+        console.log("Store playbackRefreshInterval should be cleared.");
+        clearInterval(state.playbackRefreshInterval);
+      }
+
+      state.playbackRefreshInterval = null;
+    },
   },
   actions: {
     setupSocket({ commit, rootState }) {
+      console.log("Setting up Socket IO client.");
       const server_ip = rootState.settings.settings.server.server_ip;
       const server_port = rootState.settings.settings.server.server_port;
       const socket = SocketIO(`http://${server_ip}:${server_port}`, {
@@ -66,9 +84,11 @@ export const mpvsocket = {
         reconnectionDelay: 500,
         reconnectionDelayMax: 1000,
         timeout: 1200,
+        upgrade: false,
       });
       commit("setSocket", socket);
       handle_socket();
+      console.log("Socket IO client setup complete");
     },
     async clearSocket({ commit, state }) {
       if (state.socket) await state.socket.disconnect();

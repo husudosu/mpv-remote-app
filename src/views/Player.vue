@@ -6,7 +6,7 @@
           <ion-menu-button color="#fff"></ion-menu-button>
         </ion-buttons>
         <ion-title>
-          {{ playerData.media_title || playerData.filename }}
+          {{ playerTitle }}
         </ion-title>
       </ion-toolbar>
     </ion-header>
@@ -122,31 +122,30 @@ import fileBrowserModal from "../components/fileBrowserModal.vue";
 import infoModal from "../components/infoModal.vue";
 import playerController from "../components/playerController.vue";
 export default {
-  ionViewWillEnter: () => {
-    console.log("View enter");
-  },
   setup() {
     const store = useStore();
     const route = useRoute();
     const playerData = computed(() => store.state.mpvsocket.playerData);
     const connectedState = computed(() => store.state.mpvsocket.connected);
+    const screenOrientation = computed(() => store.state.app.screenOrientation);
     const serverConfigured = computed(
       () => store.state.settings.settings.configured
     );
+    const playerTitle = computed(() => {
+      if (connectedState.value) {
+        return (
+          playerData.value.media_title ||
+          playerData.value.filename ||
+          "Connected (No playback)"
+        );
+      } else {
+        return "Disconnected";
+      }
+    });
     const isPlayerActive = computed(() => {
       return store.state.mpvsocket.playerData.filename ? true : false;
     });
-    console.log(isPlayerActive.value);
-    const screenOrientation = ref(screen.orientation.type);
-
     const newFileName = ref("");
-
-    // Is it worth to move this variable to Vuex store?
-    window.addEventListener("orientationchange", function () {
-      screenOrientation.value = screen.orientation.type;
-      console.log(screen.orientation.type);
-    });
-
     const onChangeFileClicked = () => {
       console.log("Change file clicked");
       store.state.mpvsocket.socket.emit("openFile", newFileName.value);
@@ -259,6 +258,7 @@ export default {
 
     return {
       playerData,
+      playerTitle,
       newFileName,
       connectedState,
       isPlayerActive,

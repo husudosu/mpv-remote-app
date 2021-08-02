@@ -83,6 +83,7 @@ export default defineComponent({
   setup() {
     const selectedIndex = ref(0);
     const store = useStore();
+    const route = useRoute();
     const appPages = [
       {
         title: "Player",
@@ -109,7 +110,7 @@ export default defineComponent({
         mdIcon: informationCircleOutline,
       },
     ];
-
+    let autoDisconnectTimeout = null;
     const path = window.location.pathname.split("folder/")[1];
     if (path !== undefined) {
       selectedIndex.value = appPages.findIndex(
@@ -119,18 +120,41 @@ export default defineComponent({
 
     App.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
+        if (autoDisconnectTimeout) {
+          console.log("Clearing timeout");
+          clearTimeout(autoDisconnectTimeout);
+          // Check if playing
+          if (!store.state.mpvsocket.playerData.pause) {
+            console.log("Activate refresh");
+            store.commit("mpvsocket/setPlaybackRefreshInterval");
+          }
+        }
         if (store.state.mpvsocket.socket.disconnected) {
           console.log("App activated and socket disconnected,connecting...");
           store.state.mpvsocket.socket.connect();
+          console.log("Connected");
+        }
+      } else {
+        // Battery saving stuff
+        console.log("Disconnect in 3 minute");
+        store.commit("mpvsocket/clearPlaybackRefreshInterval");
+        if (store.state.mpvsocket.socket.connected) {
+          autoDisconnectTimeout = setTimeout(() => {
+            store.state.mpvsocket.socket.disconnect();
+            console.log("Disconnected from socket");
+          }, 180000);
         }
       }
     });
 
-    const route = useRoute();
-
     // First load settings
     store.dispatch("settings/loadSettings").then(() => {
       store.dispatch("mpvsocket/setupSocket");
+    });
+
+    window.addEventListener("orientationchange", function () {
+      store.commit("app/setScreenOrinetation", screen.orientation.type);
+      console.log(screen.orientation.type);
     });
 
     return {
