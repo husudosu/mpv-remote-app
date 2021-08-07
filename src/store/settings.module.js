@@ -51,5 +51,10 @@ export const settings = {
       });
       await dispatch("loadSettings");
     },
+    cleanFilemanHistory: async function ({ dispatch }) {
+      await Storage.remove({ key: "history" });
+      await Storage.remove({ key: "filemanLastPath" });
+      await dispatch("loadSettings");
+    },
   },
 };

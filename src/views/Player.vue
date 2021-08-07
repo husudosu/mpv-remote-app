@@ -146,10 +146,6 @@ export default {
       return store.state.mpvsocket.playerData.filename ? true : false;
     });
     const newFileName = ref("");
-    const onChangeFileClicked = () => {
-      console.log("Change file clicked");
-      store.state.mpvsocket.socket.emit("openFile", newFileName.value);
-    };
 
     const onFileBrowserClicked = async () => {
       const modal = await modalController.create({
@@ -162,10 +158,7 @@ export default {
       modal.onDidDismiss().then((response) => {
         if (response.data) {
           console.log(`Data from modal: ${JSON.stringify(response.data)}`);
-          store.state.mpvsocket.socket.emit("openFile", {
-            filename: response.data,
-            appendToPlaylist: true,
-          });
+          store.state.mpvsocket.socket.emit("openFile", response.data);
         }
       });
       return modal.present();
@@ -263,7 +256,6 @@ export default {
       connectedState,
       isPlayerActive,
       route,
-      onChangeFileClicked,
       changeVolume,
       serverConfigured,
       volumeHighOutline,

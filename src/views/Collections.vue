@@ -29,6 +29,9 @@
             <h2>{{ collection.name }}</h2>
             <p>{{ getCollectionType(collection.type) }}</p>
           </ion-label>
+          <ion-button @click="onEditCollectionClicked(collection)">
+            <ion-icon slot="icon-only" :icon="options"></ion-icon>
+          </ion-button>
           <ion-button @click="onDeleteCollectionClicked(collection)">
             <ion-icon slot="icon-only" :icon="trashBin"></ion-icon>
           </ion-button>
@@ -55,21 +58,15 @@ import {
   IonLabel,
   modalController,
 } from "@ionic/vue";
-import { addOutline, trashBin } from "ionicons/icons";
-
+import { addOutline, trashBin, options } from "ionicons/icons";
+import { apiInstance } from "../api";
 import { useStore } from "vuex";
-import axios from "axios";
-
 import addCollectionModal from "../components/addCollectionModal.vue";
 
 export default {
   setup() {
-    const store = useStore();
     const collections = ref([]);
-    const apiInstance = axios.create({
-      baseURL: `http://${store.state.settings.settings.server.server_ip}:${store.state.settings.settings.server.server_port}`,
-      timeout: 10000,
-    });
+    const store = useStore();
 
     apiInstance
       .get("/collections")
@@ -86,8 +83,7 @@ export default {
         if (response.data) {
           apiInstance
             .post(`/collections/`, response.data)
-            .then((response) => collections.value.push(response.data))
-            .catch((err) => console.log(err));
+            .then((response) => collections.value.push(response.data));
         }
       });
       return await modal.present();
@@ -97,8 +93,32 @@ export default {
       if (confirm(`Delete collection: ${item.name}?`)) {
         apiInstance.delete(`/collections/${item.id}`).then(() => {
           collections.value.splice(collections.value.indexOf(item), 1);
+          store.dispatch("settings/cleanFilemanHistory");
         });
       }
+    };
+
+    const onEditCollectionClicked = async (item) => {
+      const modal = await modalController.create({
+        component: addCollectionModal,
+        componentProps: {
+          modalController: modalController,
+          collection: item.id,
+        },
+      });
+      modal.onDidDismiss().then((response) => {
+        if (response.data) {
+          apiInstance
+            .patch(`/collections/${response.data.id}`, response.data)
+            .then((response) => {
+              Object.assign(
+                collections.value[collections.value.indexOf(item)],
+                response.data
+              );
+            });
+        }
+      });
+      await modal.present();
     };
 
     const getCollectionType = (value) => {
@@ -117,9 +137,11 @@ export default {
       onAddNewCollectionClicked,
       onDeleteCollectionClicked,
       getCollectionType,
+      onEditCollectionClicked,
       collections,
       addOutline,
       trashBin,
+      options,
     };
   },
   components: {

@@ -58,6 +58,7 @@ import {
   IonLabel,
   IonInput,
 } from "@ionic/vue";
+import { configureInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
@@ -81,8 +82,13 @@ export default {
       if (value) {
         await store.dispatch("settings/setSetting", { key, value });
         if (shouldReconnect) {
+          await store.dispatch("settings/cleanFilemanHistory");
           await store.dispatch("mpvsocket/clearSocket");
           await store.dispatch("mpvsocket/setupSocket");
+          configureInstance(
+            store.state.settings.settings.server.server_ip,
+            store.state.settings.settings.server.server_port
+          );
         }
       }
     };

@@ -63,6 +63,7 @@ import {
 
 import { useStore } from "vuex";
 import { App } from "@capacitor/app";
+import { configureInstance } from "./api";
 
 export default defineComponent({
   name: "App",
@@ -150,6 +151,10 @@ export default defineComponent({
     // First load settings
     store.dispatch("settings/loadSettings").then(() => {
       store.dispatch("mpvsocket/setupSocket");
+      configureInstance(
+        store.state.settings.settings.server.server_ip,
+        store.state.settings.settings.server.server_port
+      );
     });
 
     window.addEventListener("orientationchange", function () {

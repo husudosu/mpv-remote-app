@@ -28,14 +28,33 @@
         :key="index"
         @click="onEntryClicked(entry)"
       >
-        <ion-icon :icon="decideIcon(entry)" slot="start"></ion-icon>
+        <ion-icon
+          slot="start"
+          v-if="entry.mediaStatus && entry.mediaStatus.finished === 0"
+          class="mediaStatusProgress"
+          :icon="decideIcon(entry)"
+        ></ion-icon>
+        <ion-icon
+          slot="start"
+          v-else-if="entry.mediaStatus && entry.mediaStatus.finished === 1"
+          class="mediaStatusFinished"
+          :icon="decideIcon(entry)"
+        ></ion-icon>
+        <ion-icon
+          v-else-if="entry.type === 'subtitle'"
+          class="fileformatSubtitle"
+          :icon="journalOutline"
+          slot="start"
+        ></ion-icon>
+        <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
         {{ entry.name }}
       </ion-item>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
       <ion-button
-        :disabled="!files.prevDir"
+        v-if="action != 'play'"
+        :disabled="!files.cwd"
         @click="onOpenDirectoryClicked"
         color="success"
       >
@@ -48,6 +67,8 @@
 <script>
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
+// import axios from "axios";
+import { apiInstance } from "../api";
 
 import {
   IonPage,
@@ -74,8 +95,6 @@ import {
   film,
   journalOutline,
 } from "ionicons/icons";
-
-import axios from "axios";
 
 export default {
   props: ["modalController", "action"],
@@ -104,10 +123,24 @@ export default {
       return "N/A";
     });
 
-    const apiInstance = axios.create({
-      baseURL: `http://${store.state.settings.settings.server.server_ip}:${store.state.settings.settings.server.server_port}`,
-      timeout: 10000,
-    });
+    const formatTime = (param) => {
+      var sec_num = parseInt(param);
+      var hours = Math.floor(sec_num / 3600);
+      var minutes = Math.floor((sec_num - hours * 3600) / 60);
+      var seconds = sec_num - hours * 3600 - minutes * 60;
+
+      if (hours < 10) {
+        hours = "0" + hours;
+      }
+      if (minutes < 10) {
+        minutes = "0" + minutes;
+      }
+      if (seconds < 10) {
+        seconds = "0" + seconds;
+      }
+      return hours + ":" + minutes + ":" + seconds;
+    };
+
     apiInstance
       .get(`/drivelist`)
       .then((response) => (drives.value = response.data));
@@ -130,10 +163,15 @@ export default {
         value: JSON.stringify(history),
       });
 
-      return store.dispatch("settings/setSetting", {
-        key: "filemanLastPath",
-        value: JSON.stringify(filemanLastPath),
-      });
+      if (
+        filemanLastPath.cwd != null ||
+        filemanLastPath.collection_id != null
+      ) {
+        return store.dispatch("settings/setSetting", {
+          key: "filemanLastPath",
+          value: JSON.stringify(filemanLastPath),
+        });
+      }
     };
 
     const getDirectoryContents = async (path = null, collectionId = null) => {
@@ -182,18 +220,62 @@ export default {
       saveLastPath().then(() => props.modalController.dismiss());
     };
 
-    const onEntryClicked = (entry) => {
+    const onEntryClicked = async (entry) => {
       if (entry.type === "directory") {
         getDirectoryContents(entry.fullPath);
         history.push(files.value.collection_id);
       } else if (
         (props.action === "play" && entry.type === "video") ||
-        entry.type === "audio" ||
-        entry.type === "subtitle"
+        entry.type === "audio"
+        // entry.type === "subtitle"
       ) {
-        saveLastPath().then(() =>
-          props.modalController.dismiss(entry.fullPath)
-        );
+        if (
+          entry.mediaStatus &&
+          entry.mediaStatus.current_time &&
+          entry.mediaStatus.finished === 0
+        ) {
+          const formattedTime = formatTime(entry.mediaStatus.current_time);
+          const actionSheet = await actionSheetController.create({
+            header: "Actions",
+            buttons: [
+              {
+                text: `Continue from ${formattedTime} (Start playing now)`,
+                role: "continue",
+              },
+              {
+                text: "Play from start (Appends to playlist)",
+                role: "play",
+              },
+            ],
+          });
+
+          await actionSheet.present();
+          const { role } = await actionSheet.onDidDismiss();
+
+          if (role === "continue") {
+            console.log("Continue");
+            props.modalController.dismiss({
+              filename: entry.fullPath,
+              seekTo: entry.mediaStatus.current_time,
+            });
+          } else if (role === "play") {
+            saveLastPath().then(() => {
+              props.modalController.dismiss({
+                filename: entry.fullPath,
+                appendToPlaylist: true,
+              });
+              console.log("Play from start");
+            });
+          }
+        } else {
+          saveLastPath().then(() => {
+            props.modalController.dismiss({
+              filename: entry.fullPath,
+              appendToPlaylist: true,
+            });
+            console.log("Play from start");
+          });
+        }
       }
     };
 
@@ -281,6 +363,21 @@ export default {
           return journalOutline;
       }
     };
+    const decideClass = (entry) => {
+      switch (entry.type) {
+        case "subtitle":
+          return "fileformatSubtitle";
+      }
+
+      if (entry.mediaStatus) {
+        if (entry.mediaStatus.finished == 1) {
+          return "mediaStatusFinished";
+        } else {
+          return "mediaStatusProgress";
+        }
+      }
+      return "";
+    };
     return {
       onCancelClicked,
       onPrevDirectoryClicked,
@@ -289,6 +386,7 @@ export default {
       onEntryClicked,
       onSearch,
       decideIcon,
+      decideClass,
       onCollectionsClicked,
       titleText,
       loading,
@@ -300,6 +398,7 @@ export default {
       bookmarksOutline,
       search,
       musicalNotes,
+      journalOutline,
       film,
     };
   },
@@ -328,5 +427,17 @@ ion-footer {
 
 ion-footer ion-button {
   width: 120px;
+}
+
+.fileformatSubtitle {
+  transform: rotate(90deg);
+}
+
+.mediaStatusFinished {
+  color: green;
+}
+
+.mediaStatusProgress {
+  color: yellow;
 }
 </style>

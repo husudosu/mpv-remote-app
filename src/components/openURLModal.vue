@@ -51,12 +51,10 @@ export default {
       appendToPlaylist: true,
     });
     const onAppendClicked = () => {
-      console.log(`Ok, data: ${dialog.value}`);
       props.modalController.dismiss(dialog);
     };
 
     const onCancelClicked = () => {
-      console.log("Cancel");
       props.modalController.dismiss();
     };
     return {

@@ -13,6 +13,7 @@
             placeholder="Name"
             type="text"
             v-model="dialog.name"
+            :value="dialog.name"
           ></ion-input>
         </ion-item>
         <ion-item>
@@ -29,18 +30,25 @@
       <ion-list-header>Paths</ion-list-header>
       <ion-item @click="onAddPathClicked">Add path</ion-item>
       <ion-item v-for="(path, i) in dialog.paths" :key="i">
-        {{ path.path }}
-        <ion-button @click="onDeletePathClicked(path)">Delete</ion-button>
+        <ion-label class="ion-text-wrap">
+          {{ path.path }}
+        </ion-label>
+        <ion-button slot="end" @click="onDeletePathClicked(path)"
+          ><ion-icon slot="icon-only" :icon="trashBin"></ion-icon
+        ></ion-button>
       </ion-item>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Cancel</ion-button>
-      <ion-button color="success" @click="onSubmitClicked">Create</ion-button>
+      <ion-button color="success" @click="onSubmitClicked">{{
+        dialog.id ? "Update" : "Create"
+      }}</ion-button>
     </ion-footer>
   </ion-page>
 </template>
 <script>
-import { ref, computed } from "vue";
+import { computed, ref } from "vue";
+import { trashBin } from "ionicons/icons";
 import {
   IonPage,
   IonHeader,
@@ -56,20 +64,25 @@ import {
   IonButton,
   IonList,
   IonListHeader,
+  IonIcon,
   modalController,
 } from "@ionic/vue";
 import fileBrowserModal from "../components/fileBrowserModal.vue";
+import { apiInstance } from "../api";
 
 export default {
   props: ["modalController", "collection"],
   setup(props) {
-    const dialog = ref({
+    let dialog = ref({
       name: "",
       type: 1,
       paths: [],
     });
-    // TODO: Patch
-    if (props.collection) Object.assign(props.collection, dialog.value);
+    if (props.collection) {
+      apiInstance.get(`collections/${props.collection}`).then((response) => {
+        dialog.value = response.data;
+      });
+    }
 
     const modalTitle = computed(() =>
       props.collection ? "Update collection" : "Create collection"
@@ -80,13 +93,20 @@ export default {
     };
 
     const onSubmitClicked = () => {
+      console.log("Clicked");
+      console.log(dialog.value);
       props.modalController.dismiss(dialog.value);
     };
 
     const onDeletePathClicked = async (item) => {
       if ("id" in item) {
-        // TODO: Delete API level
-        dialog.value.paths.splice(dialog.value.paths.indexOf(item), 1);
+        if (confirm(`Delete path: ${item.path}?`)) {
+          apiInstance
+            .delete(`/collections/entries/${item.id}`)
+            .then(() =>
+              dialog.value.paths.splice(dialog.value.paths.indexOf(item), 1)
+            );
+        }
       } else {
         dialog.value.paths.splice(dialog.value.paths.indexOf(item), 1);
       }
@@ -110,6 +130,7 @@ export default {
       });
     };
     return {
+      trashBin,
       dialog,
       modalTitle,
       onCancelClicked,
@@ -133,6 +154,7 @@ export default {
     IonSelectOption,
     IonList,
     IonListHeader,
+    IonIcon,
   },
 };
 </script>
