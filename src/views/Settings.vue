@@ -29,7 +29,6 @@
           <ion-input
             v-model="server_port"
             @ionBlur="setSetting('server_port')"
-            placeholder="8000"
             type="number"
           ></ion-input>
         </ion-item>
