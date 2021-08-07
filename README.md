@@ -9,7 +9,7 @@ This project under heavy development right now. Some things can break. I use thi
 
 I don't have too much experince with Ionic VUE, Node.JS developmment and want improve.
 
-Kodi not renders properly some ASS/SSA subtitles some anime have overanimated subtitles. Kodi not likes it very much. MPV plays everything fine, but did not find a proper featureful remote app.
+Kodi not renders properly some ASS/SSA subtitles some anime have overanimated subtitles. Kodi not likes it much. MPV plays everything fine, but did not find a proper featureful remote app.
 
 ## Functions
 
