@@ -5,9 +5,9 @@
         <ion-title>Subtitle settings</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding" v-if="subTracks.length > 0">
+    <ion-content class="ion-padding">
       <ion-item>
-        <ion-label>Subtitle</ion-label>
+        <ion-label>Track</ion-label>
         <ion-select
           v-model="selectedTrack"
           @ionChange="onSubtitleTrackChanged"
@@ -29,8 +29,18 @@
         {{ subSettings.subDelay }}
         <ion-button @click="onSubDelayChanged('increase')"> + </ion-button>
       </ion-item>
+      <ion-item>
+        <ion-label>Show subtitle</ion-label>
+        <ion-checkbox
+          v-model="subSettings.subVisibility"
+          @ionChange="changeSubtitleVisibility($event)"
+          slot="end"
+        ></ion-checkbox>
+      </ion-item>
+      <ion-item @click="onAddSubtitleClicked">
+        <ion-label>Add subtitle</ion-label>
+      </ion-item>
     </ion-content>
-    <ion-content v-else> No subtitle found </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
     </ion-footer>
@@ -51,7 +61,10 @@ import {
   IonSelect,
   IonSelectOption,
   IonLabel,
+  IonCheckbox,
+  modalController,
 } from "@ionic/vue";
+import filebrowsermodal from "./fileBrowserModal.vue";
 
 export default {
   props: ["modalController"],
@@ -62,41 +75,70 @@ export default {
     const selectedTrack = ref({});
     const subSettings = ref({
       subDelay: 0,
+      subVisibility: false,
     });
     const store = useStore();
-
-    // get tracks
-    store.state.mpvsocket.socket.emit("tracks", null, function (data) {
-      tracks.value = data.tracks;
-      subTracks.value = data.tracks.filter((el) => el.type === "sub");
-      console.log(tracks.value);
-      if (subTracks.value.length > 0) {
-        activeSubTrackId.value = subTracks.value.find(
-          (el) => el.selected === true
-        ).id;
-        selectedTrack.value = activeSubTrackId.value;
-        console.log(subTracks.value);
-      }
-    });
-
     store.state.mpvsocket.socket.emit("subSettings", null, function (data) {
       subSettings.value = data;
+      console.log(subSettings.value);
     });
+
+    const loadTracks = function () {
+      store.state.mpvsocket.socket.emit("tracks", null, function (data) {
+        tracks.value = data.tracks;
+
+        subTracks.value = data.tracks.filter((el) => el.type === "sub");
+        if (subTracks.value.length > 0) {
+          activeSubTrackId.value = subTracks.value.find(
+            (el) => el.selected === true
+          );
+          if (activeSubTrackId.value)
+            activeSubTrackId.value = activeSubTrackId.value.id;
+          selectedTrack.value = activeSubTrackId.value;
+        }
+      });
+    };
 
     const onAppendClicked = () => {
       props.modalController.dismiss();
     };
 
     const onCancelClicked = () => {
-      console.log("Cancel");
       props.modalController.dismiss();
     };
 
+    const onAddSubtitleClicked = async () => {
+      const modal = await modalController.create({
+        component: filebrowsermodal,
+        componentProps: {
+          modalController: props.modalController,
+          action: "opensub",
+        },
+      });
+      modal.onDidDismiss().then((response) => {
+        if (response.data && response.data.filename) {
+          store.state.mpvsocket.socket.emit(
+            "addSubtitles",
+            response.data.filename
+          );
+          // reload tracks
+          loadTracks();
+        }
+      });
+
+      await modal.present();
+    };
     const onSubtitleTrackChanged = () => {
-      console.log(JSON.stringify(selectedTrack.value));
       store.state.mpvsocket.socket.emit("subReload", selectedTrack.value);
     };
 
+    const changeSubtitleVisibility = (event) => {
+      subSettings.value.subVisibility = event.target.checked;
+      store.state.mpvsocket.socket.emit("setPlayerProp", [
+        "sub-visibility",
+        event.target.checked,
+      ]);
+    };
     const onSubDelayChanged = (order) => {
       switch (order) {
         case "increase":
@@ -115,6 +157,7 @@ export default {
           break;
       }
     };
+    loadTracks();
     return {
       tracks,
       subTracks,
@@ -125,6 +168,8 @@ export default {
       onSubDelayChanged,
       selectedTrack,
       subSettings,
+      onAddSubtitleClicked,
+      changeSubtitleVisibility,
     };
   },
   components: {
@@ -139,6 +184,7 @@ export default {
     IonSelect,
     IonSelectOption,
     IonLabel,
+    IonCheckbox,
   },
 };
 </script>

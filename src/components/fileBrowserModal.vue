@@ -53,7 +53,7 @@
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
       <ion-button
-        v-if="action != 'play'"
+        v-if="showOpenFolder"
         :disabled="!files.cwd"
         @click="onOpenDirectoryClicked"
         color="success"
@@ -67,7 +67,6 @@
 <script>
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
-// import axios from "axios";
 import { apiInstance } from "../api";
 
 import {
@@ -106,7 +105,7 @@ export default {
     const filesBak = ref([]);
     const search = ref("");
     const loading = ref(true);
-
+    const showOpenFolder = ref(props.action === "openFolder");
     const drives = ref([]);
     const filemanLastPath = store.state.settings.settings.filemanLastPath;
     let history = store.state.settings.settings.history || [];
@@ -116,7 +115,6 @@ export default {
         const collection = collections.value.find(
           (el) => el.id === parseInt(files.value.collection_id)
         );
-        console.log(collection);
         if (collection) return collection.name;
         else return "Unknown collection";
       }
@@ -220,54 +218,37 @@ export default {
       saveLastPath().then(() => props.modalController.dismiss());
     };
 
-    const onEntryClicked = async (entry) => {
-      if (entry.type === "directory") {
-        getDirectoryContents(entry.fullPath);
-        history.push(files.value.collection_id);
-      } else if (
-        (props.action === "play" && entry.type === "video") ||
-        entry.type === "audio"
-        // entry.type === "subtitle"
+    const handlePlayAction = async (entry) => {
+      if (
+        entry.mediaStatus &&
+        entry.mediaStatus.current_time &&
+        entry.mediaStatus.finished === 0
       ) {
-        if (
-          entry.mediaStatus &&
-          entry.mediaStatus.current_time &&
-          entry.mediaStatus.finished === 0
-        ) {
-          const formattedTime = formatTime(entry.mediaStatus.current_time);
-          const actionSheet = await actionSheetController.create({
-            header: "Actions",
-            buttons: [
-              {
-                text: `Continue from ${formattedTime} (Start playing now)`,
-                role: "continue",
-              },
-              {
-                text: "Play from start (Appends to playlist)",
-                role: "play",
-              },
-            ],
+        const formattedTime = formatTime(entry.mediaStatus.current_time);
+        const actionSheet = await actionSheetController.create({
+          header: "Actions",
+          buttons: [
+            {
+              text: `Continue from ${formattedTime} (Start playing now)`,
+              role: "continue",
+            },
+            {
+              text: "Play from start (Appends to playlist)",
+              role: "play",
+            },
+          ],
+        });
+
+        await actionSheet.present();
+        const { role } = await actionSheet.onDidDismiss();
+
+        if (role === "continue") {
+          console.log("Continue");
+          props.modalController.dismiss({
+            filename: entry.fullPath,
+            seekTo: entry.mediaStatus.current_time,
           });
-
-          await actionSheet.present();
-          const { role } = await actionSheet.onDidDismiss();
-
-          if (role === "continue") {
-            console.log("Continue");
-            props.modalController.dismiss({
-              filename: entry.fullPath,
-              seekTo: entry.mediaStatus.current_time,
-            });
-          } else if (role === "play") {
-            saveLastPath().then(() => {
-              props.modalController.dismiss({
-                filename: entry.fullPath,
-                appendToPlaylist: true,
-              });
-              console.log("Play from start");
-            });
-          }
-        } else {
+        } else if (role === "play") {
           saveLastPath().then(() => {
             props.modalController.dismiss({
               filename: entry.fullPath,
@@ -276,6 +257,27 @@ export default {
             console.log("Play from start");
           });
         }
+      } else {
+        saveLastPath().then(() => {
+          props.modalController.dismiss({
+            filename: entry.fullPath,
+            appendToPlaylist: true,
+          });
+        });
+      }
+    };
+
+    const onEntryClicked = async (entry) => {
+      if (entry.type === "directory") {
+        getDirectoryContents(entry.fullPath);
+        history.push(files.value.collection_id);
+      } else if (
+        props.action === "play" &&
+        (entry.type === "video" || entry.type === "audio")
+      ) {
+        handlePlayAction(entry);
+      } else if (props.action == "opensub" && entry.type == "subtitle") {
+        props.modalController.dismiss({ filename: entry.fullPath });
       }
     };
 
@@ -363,21 +365,7 @@ export default {
           return journalOutline;
       }
     };
-    const decideClass = (entry) => {
-      switch (entry.type) {
-        case "subtitle":
-          return "fileformatSubtitle";
-      }
 
-      if (entry.mediaStatus) {
-        if (entry.mediaStatus.finished == 1) {
-          return "mediaStatusFinished";
-        } else {
-          return "mediaStatusProgress";
-        }
-      }
-      return "";
-    };
     return {
       onCancelClicked,
       onPrevDirectoryClicked,
@@ -386,8 +374,8 @@ export default {
       onEntryClicked,
       onSearch,
       decideIcon,
-      decideClass,
       onCollectionsClicked,
+      showOpenFolder,
       titleText,
       loading,
       files,

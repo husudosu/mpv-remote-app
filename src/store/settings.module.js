@@ -23,7 +23,7 @@ export const settings = {
   actions: {
     loadSettings: async function ({ commit }) {
       const server_ip = await Storage.get({ key: "server_ip" });
-      const server_port = await Storage.get({ key: "server_port" });
+      let server_port = await Storage.get({ key: "server_port" });
       const filemanLastPath = await Storage.get({ key: "filemanLastPath" });
       const history = await Storage.get({ key: "history" });
 
@@ -32,6 +32,8 @@ export const settings = {
       // Set default value for server_port
       if (!server_port.value)
         await Storage.set({ key: "server_port", value: 8000 });
+      server_port.value = 8000;
+      console.log(server_port.value);
       if (server_ip.value && server_port.value) configured = true;
 
       commit("setAppSettings", {

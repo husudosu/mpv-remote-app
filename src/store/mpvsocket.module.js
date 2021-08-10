@@ -79,16 +79,20 @@ export const mpvsocket = {
       console.log("Setting up Socket IO client.");
       const server_ip = rootState.settings.settings.server.server_ip;
       const server_port = rootState.settings.settings.server.server_port;
-      const socket = SocketIO(`http://${server_ip}:${server_port}`, {
-        reconnection: true,
-        reconnectionDelay: 500,
-        reconnectionDelayMax: 1000,
-        timeout: 1200,
-        upgrade: false,
-      });
-      commit("setSocket", socket);
-      handle_socket();
-      console.log("Socket IO client setup complete");
+      if (server_ip != null && server_port != null) {
+        const socket = SocketIO(`http://${server_ip}:${server_port}`, {
+          reconnection: true,
+          reconnectionDelay: 500,
+          reconnectionDelayMax: 1000,
+          timeout: 1200,
+          upgrade: false,
+        });
+        commit("setSocket", socket);
+        handle_socket();
+        console.log("Socket IO client setup complete");
+      } else {
+        console.log("Server ip or server port missing!");
+      }
     },
     async clearSocket({ commit, state }) {
       if (state.socket) await state.socket.disconnect();
