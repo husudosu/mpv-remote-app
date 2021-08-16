@@ -3,8 +3,8 @@
     <ion-row class="ion-justify-content-end">
       <ion-col size="12" class="videotitle">
         <div class="playbackTime">
-          {{ playerData.playback_time }} /
-          {{ playerData.duration }}
+          {{ formatTime(playerData.position) }} /
+          {{ formatTime(playerData.duration) }}
         </div>
         <input
           id="seekbar"
@@ -12,7 +12,8 @@
           name="rng"
           min="0"
           step="1"
-          :value="playerData.percent_pos"
+          :max="playerData.duration"
+          :value="playerData.position"
           @input="onSeek"
         />
       </ion-col>
@@ -53,11 +54,13 @@ import {
   playSkipBackOutline,
   playSkipForwardOutline,
 } from "ionicons/icons";
-import { seekFlags } from "../tools";
+// import { seekFlags } from "../tools";
+import { formatTime } from "../tools";
+import { apiInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
-    const playerData = computed(() => store.state.mpvsocket.playerData);
+    const playerData = computed(() => store.state.simpleapi.playerData);
     const connectedState = computed(() => store.state.mpvsocket.connected);
     const serverConfigured = computed(() => store.state.settings.configured);
     const isPlayerActive = computed(() => {
@@ -65,19 +68,24 @@ export default {
     });
 
     const onPlayPauseClicked = () => {
-      console.log(
-        `Pause clicked. Current value: ${store.state.mpvsocket.playerData.pause}`
-      );
-      store.state.mpvsocket.socket.emit("setPlayerProp", [
-        "pause",
-        !store.state.mpvsocket.playerData.pause,
-      ]);
+      apiInstance.post("toggle_pause").then((response) => {
+        if (response.data.message == "success") {
+          store.commit("simpleapi/setPlayerDataProperty", {
+            key: "pause",
+            value: !playerData.value.pause,
+          });
+        }
+      });
     };
 
     const onSeek = (e) => {
-      store.state.mpvsocket.socket.emit("seek", {
-        seekTo: e.target.value,
-        flag: seekFlags.ABSOLUTEPERCENT,
+      apiInstance.post(`set_position/${e.target.value}`).then((response) => {
+        if (response.data.message == "success") {
+          store.commit("simpleapi/setPlayerDataProperty", {
+            key: "position",
+            value: e.target.value,
+          });
+        }
       });
     };
 
@@ -108,6 +116,7 @@ export default {
       stopOutline,
       playSkipBackOutline,
       playSkipForwardOutline,
+      formatTime,
     };
   },
   components: {

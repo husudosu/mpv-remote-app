@@ -14,48 +14,27 @@
       <ion-grid style="height: 100%">
         <ion-row class="remoteButtons">
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button
-              :disabled="!connectedState"
-              @click="changeVolume('decrease')"
-            >
+            <ion-button @click="changeVolume('decrease')">
               <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectedState"
-              @click="changeVolume('mute')"
-            >
+            <ion-button @click="changeVolume('mute')">
               <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectedState"
-              @click="changeVolume('increase')"
-            >
+            <ion-button @click="changeVolume('increase')">
               <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button
-              @click="onInfoClicked"
-              :disabled="!connectedState || !isPlayerActive"
-            >
+            <ion-button @click="onInfoClicked">
               <ion-icon slot="icon-only" :icon="informationCircle"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectedState || !isPlayerActive"
-              @click="onFullscreenClicked"
-            >
+            <ion-button @click="onFullscreenClicked">
               <ion-icon slot="icon-only" :icon="scanOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              @click="onAudioSettingsClicked"
-              :disabled="!connectedState || !isPlayerActive"
-            >
+            <ion-button @click="onAudioSettingsClicked">
               <ion-icon slot="icon-only" :icon="earOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              @click="onSubtitleSettingsClicked"
-              :disabled="!connectedState || !isPlayerActive"
-            >
+            <ion-button @click="onSubtitleSettingsClicked">
               <ion-icon
                 class="rotateIcon"
                 slot="icon-only"
@@ -64,20 +43,14 @@
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button
-              :disabled="!connectedState"
-              @click="onFileBrowserClicked"
-            >
+            <ion-button @click="onFileBrowserClicked">
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
+            <ion-button @click="onOpenURLClicked">
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
 
-            <ion-button
-              :disabled="!connectedState || playerData.chapters.length == 0"
-              @click="onChaptersClicked"
-            >
+            <ion-button @click="onChaptersClicked">
               <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
             </ion-button>
           </ion-col>
@@ -99,9 +72,7 @@
         </ion-row>
       </ion-grid>
     </ion-content>
-    <playerController
-      v-if="serverConfigured && isPlayerActive && connectedState"
-    ></playerController>
+    <playerController v-if="serverConfigured"></playerController>
   </ion-page>
 </template>
 

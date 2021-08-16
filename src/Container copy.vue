@@ -62,6 +62,7 @@ import {
 } from "ionicons/icons";
 
 import { useStore } from "vuex";
+import { App } from "@capacitor/app";
 import { configureInstance } from "./api";
 
 export default defineComponent({
@@ -110,23 +111,57 @@ export default defineComponent({
         mdIcon: informationCircleOutline,
       },
     ];
+    let autoDisconnectTimeout = null;
     const path = window.location.pathname.split("folder/")[1];
     if (path !== undefined) {
       selectedIndex.value = appPages.findIndex(
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
+
+    App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        // Refresh orientation
+        store.commit("app/setScreenOrinetation", screen.orientation.type);
+        if (autoDisconnectTimeout) {
+          console.log("Clearing timeout");
+          clearTimeout(autoDisconnectTimeout);
+          // Check if playing
+          if (!store.state.mpvsocket.playerData.pause) {
+            console.log("Activate refresh");
+            store.commit("mpvsocket/setPlaybackRefreshInterval");
+          }
+        }
+        if (store.state.mpvsocket.socket.disconnected) {
+          console.log("App activated and socket disconnected,connecting...");
+          store.state.mpvsocket.socket.connect();
+          console.log("Connected");
+        }
+      } else {
+        // Battery saving stuff
+        console.log("Disconnect in 3 minute");
+        store.commit("mpvsocket/clearPlaybackRefreshInterval");
+        if (store.state.mpvsocket.socket.connected) {
+          autoDisconnectTimeout = setTimeout(() => {
+            store.state.mpvsocket.socket.disconnect();
+            console.log("Disconnected from socket");
+          }, 180000);
+        }
+      }
+    });
+
     // First load settings
     store.dispatch("settings/loadSettings").then(() => {
+      store.dispatch("mpvsocket/setupSocket");
       configureInstance(
         store.state.settings.settings.server.server_ip,
         store.state.settings.settings.server.server_port
       );
-      store.dispatch("simpleapi/setPlaybackRefreshInterval");
     });
 
     window.addEventListener("orientationchange", function () {
       store.commit("app/setScreenOrinetation", screen.orientation.type);
+      console.log(screen.orientation.type);
     });
 
     return {

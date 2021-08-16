@@ -5,7 +5,7 @@ export let apiInstance = axios.create({
 });
 
 export function configureInstance(host, port) {
-  apiInstance.defaults.baseURL = `http://${host}:${port}`;
+  apiInstance.defaults.baseURL = `http://${host}:${port}/api/`;
 }
 
 apiInstance.interceptors.response.use(
