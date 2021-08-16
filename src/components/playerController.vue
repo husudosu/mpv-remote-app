@@ -53,6 +53,7 @@ import {
   playSkipBackOutline,
   playSkipForwardOutline,
 } from "ionicons/icons";
+import { seekFlags } from "../tools";
 export default {
   setup() {
     const store = useStore();
@@ -74,7 +75,10 @@ export default {
     };
 
     const onSeek = (e) => {
-      store.state.mpvsocket.socket.emit("seek", e.target.value);
+      store.state.mpvsocket.socket.emit("seek", {
+        seekTo: e.target.value,
+        flag: seekFlags.ABSOLUTEPERCENT,
+      });
     };
 
     const onStopClicked = () => {

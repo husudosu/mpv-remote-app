@@ -30,10 +30,10 @@ export const settings = {
       let configured = false;
 
       // Set default value for server_port
-      if (!server_port.value)
+      if (!server_port.value) {
         await Storage.set({ key: "server_port", value: 8000 });
-      server_port.value = 8000;
-      console.log(server_port.value);
+        server_port.value = 8000;
+      }
       if (server_ip.value && server_port.value) configured = true;
 
       commit("setAppSettings", {

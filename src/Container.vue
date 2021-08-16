@@ -5,7 +5,7 @@
         <ion-content>
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
-            <ion-note>0.1 Preview</ion-note>
+            <ion-note>1.0 Beta</ion-note>
 
             <ion-menu-toggle
               auto-hide="false"
@@ -121,6 +121,8 @@ export default defineComponent({
 
     App.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
+        // Refresh orientation
+        store.commit("app/setScreenOrinetation", screen.orientation.type);
         if (autoDisconnectTimeout) {
           console.log("Clearing timeout");
           clearTimeout(autoDisconnectTimeout);

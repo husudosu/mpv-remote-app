@@ -73,11 +73,32 @@
             <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
+
+            <ion-button
+              :disabled="!connectedState || playerData.chapters.length == 0"
+              @click="onChaptersClicked"
+            >
+              <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
+            </ion-button>
           </ion-col>
         </ion-row>
       </ion-grid>
     </ion-content>
-    <ion-content v-else> Server not configued yet. </ion-content>
+    <ion-content v-else>
+      <ion-grid>
+        <ion-row>
+          <ion-col
+            >Server not configued yet.
+            <p>
+              If you need help
+              <a @click="openURL('https://github.com/husudosu/mpv-remote-app')"
+                >check tutorial here</a
+              >
+            </p>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-content>
     <playerController
       v-if="serverConfigured && isPlayerActive && connectedState"
     ></playerController>
@@ -99,6 +120,7 @@ import {
   IonButton,
   IonIcon,
   modalController,
+  actionSheetController,
 } from "@ionic/vue";
 
 import { computed, ref } from "vue";
@@ -114,6 +136,7 @@ import {
   journalOutline,
   earOutline,
   informationCircle,
+  bookOutline,
 } from "ionicons/icons";
 import openURLModal from "../components/openURLModal.vue";
 import audioSettingsModal from "../components/audioSettingsModal.vue";
@@ -121,6 +144,8 @@ import subtitleSettingsModal from "../components/subtitleSettingsModal.vue";
 import fileBrowserModal from "../components/fileBrowserModal.vue";
 import infoModal from "../components/infoModal.vue";
 import playerController from "../components/playerController.vue";
+
+import { formatTime, seekFlags } from "../tools";
 export default {
   setup() {
     const store = useStore();
@@ -146,6 +171,10 @@ export default {
       return store.state.mpvsocket.playerData.filename ? true : false;
     });
     const newFileName = ref("");
+
+    const openURL = (url) => {
+      window.open(url, "_system");
+    };
 
     const onFileBrowserClicked = async () => {
       const modal = await modalController.create({
@@ -238,6 +267,31 @@ export default {
       store.state.mpvsocket.socket.emit("fullscreen");
     };
 
+    const onChaptersClicked = async () => {
+      const buttons = playerData.value.chapters.map((chapter) => {
+        return {
+          role: chapter.time,
+          text: `${chapter.title} (${formatTime(chapter.time)})`,
+        };
+      });
+
+      const actionSheet = await actionSheetController.create({
+        header: "Select chapter",
+        buttons,
+      });
+
+      await actionSheet.present();
+
+      const { role } = await actionSheet.onDidDismiss();
+
+      if (role !== "backdrop") {
+        store.state.mpvsocket.socket.emit("seek", {
+          seekTo: role,
+          flag: seekFlags.ABSOLUTE,
+        });
+      }
+    };
+
     const onInfoClicked = async () => {
       const modal = await modalController.create({
         component: infoModal,
@@ -262,6 +316,7 @@ export default {
       volumeLowOutline,
       volumeMuteOutline,
       logoYoutube,
+      bookOutline,
       folder,
       scanOutline,
       journalOutline,
@@ -275,6 +330,8 @@ export default {
       screenOrientation,
       onFullscreenClicked,
       onInfoClicked,
+      openURL,
+      onChaptersClicked,
     };
   },
 

@@ -47,6 +47,7 @@ export const mpvsocket = {
       state.playerData.playback_time = "00:00:00";
       state.playerData.percent_pos = 0;
       state.playerData.media_title = null;
+      state.playerData.chapters = [];
     },
     setProp(state, value) {
       console.log(

@@ -33,7 +33,10 @@
           ></ion-input>
         </ion-item>
 
-        <ion-item :router-link="{ name: 'folder.settings.collections' }">
+        <ion-item
+          :disabled="!connectedState"
+          :router-link="{ name: 'folder.settings.collections' }"
+        >
           <ion-label>Media collections</ion-label>
         </ion-item>
       </ion-list>
@@ -61,6 +64,7 @@ import { configureInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
+    const connectedState = computed(() => store.state.mpvsocket.connected);
     const currentSettings = computed(() => store.state.settings.server);
     const server_ip = ref(store.state.settings.settings.server.server_ip);
     const server_port = ref(store.state.settings.settings.server.server_port);
@@ -97,6 +101,7 @@ export default {
       setSetting,
       server_ip,
       server_port,
+      connectedState,
     };
   },
   components: {

@@ -6,24 +6,33 @@
       <ion-toolbar>
         <ion-title>{{ titleText }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="onChangeDriveClicked">
+          <ion-button @click="onChangeDriveClicked" :disabled="!connectedState">
             <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
           </ion-button>
-          <ion-button @click="onCollectionsClicked">
+          <ion-button @click="onCollectionsClicked" :disabled="!connectedState">
             <ion-icon :icon="bookmarksOutline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar v-model="search" @ionChange="onSearch"></ion-searchbar>
+        <ion-searchbar
+          :disabled="!connectedState"
+          v-model="search"
+          @ionChange="onSearch"
+        ></ion-searchbar>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
+      <ion-item
+        @click="onPrevDirectoryClicked"
+        v-if="files.prevDir"
+        :disabled="!connectedState"
+      >
         <ion-icon :icon="folder" slot="start"></ion-icon>
         ...
       </ion-item>
       <ion-item
+        :disabled="!connectedState"
         v-for="(entry, index) in files.content"
         :key="index"
         @click="onEntryClicked(entry)"
@@ -68,6 +77,7 @@
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
 import { apiInstance } from "../api";
+import { formatTime } from "../tools";
 
 import {
   IonPage,
@@ -99,6 +109,8 @@ export default {
   props: ["modalController", "action"],
   setup(props) {
     const store = useStore();
+    // Get connected state
+    const connectedState = computed(() => store.state.mpvsocket.connected);
 
     const files = ref({});
     const collections = ref([]);
@@ -110,6 +122,7 @@ export default {
     const filemanLastPath = store.state.settings.settings.filemanLastPath;
     let history = store.state.settings.settings.history || [];
     const titleText = computed(() => {
+      if (!connectedState.value) return "Disconnected";
       if (files.value.dirname) return files.value.dirname;
       else if (files.value.collection_id) {
         const collection = collections.value.find(
@@ -120,24 +133,6 @@ export default {
       }
       return "N/A";
     });
-
-    const formatTime = (param) => {
-      var sec_num = parseInt(param);
-      var hours = Math.floor(sec_num / 3600);
-      var minutes = Math.floor((sec_num - hours * 3600) / 60);
-      var seconds = sec_num - hours * 3600 - minutes * 60;
-
-      if (hours < 10) {
-        hours = "0" + hours;
-      }
-      if (minutes < 10) {
-        minutes = "0" + minutes;
-      }
-      if (seconds < 10) {
-        seconds = "0" + seconds;
-      }
-      return hours + ":" + minutes + ":" + seconds;
-    };
 
     apiInstance
       .get(`/drivelist`)
@@ -375,6 +370,7 @@ export default {
       onSearch,
       decideIcon,
       onCollectionsClicked,
+      connectedState,
       showOpenFolder,
       titleText,
       loading,

@@ -16,6 +16,7 @@
         </ion-toolbar>
       </ion-header>
       <ion-button
+        :disabled="!connectedState"
         @click="onAddNewCollectionClicked"
         fill="clear"
         color="success"
@@ -29,10 +30,16 @@
             <h2>{{ collection.name }}</h2>
             <p>{{ getCollectionType(collection.type) }}</p>
           </ion-label>
-          <ion-button @click="onEditCollectionClicked(collection)">
+          <ion-button
+            :disabled="!connectedState"
+            @click="onEditCollectionClicked(collection)"
+          >
             <ion-icon slot="icon-only" :icon="options"></ion-icon>
           </ion-button>
-          <ion-button @click="onDeleteCollectionClicked(collection)">
+          <ion-button
+            :disabled="!connectedState"
+            @click="onDeleteCollectionClicked(collection)"
+          >
             <ion-icon slot="icon-only" :icon="trashBin"></ion-icon>
           </ion-button>
         </ion-item>
@@ -42,7 +49,7 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import {
   IonButtons,
   IonContent,
@@ -67,6 +74,7 @@ export default {
   setup() {
     const collections = ref([]);
     const store = useStore();
+    const connectedState = computed(() => store.state.mpvsocket.connected);
 
     apiInstance
       .get("/collections")
@@ -138,6 +146,7 @@ export default {
       onDeleteCollectionClicked,
       getCollectionType,
       onEditCollectionClicked,
+      connectedState,
       collections,
       addOutline,
       trashBin,
