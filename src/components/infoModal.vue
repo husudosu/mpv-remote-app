@@ -23,7 +23,7 @@
         <ion-item>
           <ion-label class="ion-text-wrap">
             <h2>Duration</h2>
-            <p>{{ playerData.duration }}</p>
+            <p>{{ formatTime(playerData.duration) }}</p>
           </ion-label>
         </ion-item>
       </ion-list>
@@ -36,7 +36,7 @@
           <ion-item>
             <ion-label class="ion-text-wrap">
               <h2>Size</h2>
-              <p>{{ track.demuxW }}x{{ track.demuxH }}</p>
+              <p>{{ track["demux-w"] }}x{{ track["demux-h"] }}</p>
             </ion-label>
           </ion-item>
           <ion-item>
@@ -68,13 +68,13 @@
           <ion-item>
             <ion-label class="ion-text-wrap">
               <h2>Channel count</h2>
-              <p>{{ track.demuxChannelCount }}</p>
+              <p>{{ track["demux-channel-count"] }}</p>
             </ion-label>
           </ion-item>
           <ion-item>
             <ion-label class="ion-text-wrap">
               <h2>Sample rate</h2>
-              <p>{{ track.demuxSamplerate }}</p>
+              <p>{{ track["demux-samplerate"] }}</p>
             </ion-label>
           </ion-item>
         </ion-list>
@@ -113,9 +113,9 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { useStore } from "vuex";
-
+import { formatTime } from "../tools";
 import {
   IonPage,
   IonHeader,
@@ -134,35 +134,28 @@ export default {
   props: ["modalController"],
   setup(props) {
     const store = useStore();
-    const playerData = computed(() => store.state.mpvsocket.playerData);
+    const playerData = computed(() => store.state.simpleapi.playerData);
 
     const audioTracks = computed(() =>
-      playerData.value.currentTracks.filter((el) => el.type == "audio")
+      playerData.value["track-list"].filter((el) => el.type == "audio")
     );
     const videoTracks = computed(() =>
-      playerData.value.currentTracks.filter((el) => el.type == "video")
+      playerData.value["track-list"].filter((el) => el.type == "video")
     );
     const subtitleTracks = computed(() =>
-      playerData.value.currentTracks.filter((el) => el.type == "sub")
+      playerData.value["track-list"].filter((el) => el.type == "sub")
     );
-
-    console.log(subtitleTracks);
-
-    const dialog = ref({
-      filename: null,
-      appendToPlaylist: true,
-    });
     const onCancelClicked = () => {
       console.log("Cancel");
       props.modalController.dismiss();
     };
     return {
-      dialog,
       playerData,
       audioTracks,
       videoTracks,
       subtitleTracks,
       onCancelClicked,
+      formatTime,
     };
   },
   components: {

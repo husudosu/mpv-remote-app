@@ -29,7 +29,7 @@
   </ion-page>
 </template>
 <script>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useStore } from "vuex";
 
 import {
@@ -45,6 +45,7 @@ import {
   IonSelectOption,
   IonLabel,
 } from "@ionic/vue";
+// import { apiInstance } from "../api";
 
 export default {
   props: ["modalController"],
@@ -54,24 +55,28 @@ export default {
     const activeAudioTrackId = ref();
     const selectedTrack = ref();
     const store = useStore();
+    const playerData = computed(() => store.state.simpleapi.playerData);
 
-    // get tracks
-    store.state.mpvsocket.socket.emit("tracks", null, function (data) {
-      tracks.value = data.tracks;
-      audioTracks.value = data.tracks.filter((el) => el.type === "audio");
-      activeAudioTrackId.value = audioTracks.value.find(
-        (el) => el.selected === true
-      ).id;
-      selectedTrack.value = activeAudioTrackId.value;
-    });
+    audioTracks.value = playerData.value["track-list"].filter(
+      (el) => el.type === "audio"
+    );
+    activeAudioTrackId.value = audioTracks.value.find(
+      (el) => el.selected === true
+    ).id;
+    selectedTrack.value = activeAudioTrackId.value;
 
     const onCancelClicked = () => {
       props.modalController.dismiss();
     };
 
     const onSwitchAudioClicked = () => {
-      console.log(`Selected audio track: ${selectedTrack.value}`);
-      store.state.mpvsocket.socket.emit("audioReload", selectedTrack.value);
+      console.log(selectedTrack);
+
+      // TODO !
+      console.log("Audio select track by ID not supported by simple mpv api");
+      // console.log(`Selected audio track: ${selectedTrack.value}`);
+      // store.state.mpvsocket.socket.emit("audioReload", selectedTrack.value);
+      // apiInstance.post(`/api/set/:name/:value`)
     };
 
     return {

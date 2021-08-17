@@ -54,14 +54,13 @@ import {
   playSkipBackOutline,
   playSkipForwardOutline,
 } from "ionicons/icons";
-// import { seekFlags } from "../tools";
 import { formatTime } from "../tools";
 import { apiInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
     const playerData = computed(() => store.state.simpleapi.playerData);
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const connectedState = computed(() => store.state.simpleapi.connected);
     const serverConfigured = computed(() => store.state.settings.configured);
     const isPlayerActive = computed(() => {
       return store.state.mpvsocket.playerData.filename ? true : false;
@@ -90,15 +89,16 @@ export default {
     };
 
     const onStopClicked = () => {
-      store.state.mpvsocket.socket.emit("stopPlayback");
+      console.log("Stop command not supported on MPV-simpleapi");
+      // store.state.mpvsocket.socket.emit("stopPlayback");
     };
 
     const onPrevClicked = () => {
-      store.state.mpvsocket.socket.emit("playlistPrev");
+      apiInstance.post("playlist_prev");
     };
 
     const onNextClicked = () => {
-      store.state.mpvsocket.socket.emit("playlistNext");
+      apiInstance.post("playlist_next");
     };
 
     return {

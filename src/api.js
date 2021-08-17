@@ -3,6 +3,7 @@ import { toastController } from "@ionic/core";
 export let apiInstance = axios.create({
   timeout: 10000,
 });
+import { store } from "./store";
 
 export function configureInstance(host, port) {
   apiInstance.defaults.baseURL = `http://${host}:${port}/api/`;
@@ -10,10 +11,24 @@ export function configureInstance(host, port) {
 
 apiInstance.interceptors.response.use(
   (response) => {
+    if (!store.state.simpleapi.connected) {
+      store.commit("simpleapi/setConnectedState", true);
+    }
     return response;
   },
   (error) => {
-    openToast(JSON.stringify(error.message));
+    // If error has response it means we have connection to server.
+    if (error.response) {
+      if (error.response.status != 503)
+        openToast(JSON.stringify(error.message));
+      if (!store.state.simpleapi.connected) {
+        store.commit("simpleapi/setConnectedState", true);
+      }
+    } else {
+      if (store.state.simpleapi.connected) {
+        store.commit("simpleapi/setConnectedState", false);
+      }
+    }
     return Promise.reject(error);
   }
 );

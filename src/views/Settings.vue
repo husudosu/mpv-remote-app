@@ -86,12 +86,12 @@ export default {
         await store.dispatch("settings/setSetting", { key, value });
         if (shouldReconnect) {
           await store.dispatch("settings/cleanFilemanHistory");
-          await store.dispatch("mpvsocket/clearSocket");
-          await store.dispatch("mpvsocket/setupSocket");
+          store.commit("simpleapi/clearPlaybackRefreshInterval");
           configureInstance(
             store.state.settings.settings.server.server_ip,
             store.state.settings.settings.server.server_port
           );
+          store.dispatch("simpleapi/setPlaybackRefreshInterval");
         }
       }
     };

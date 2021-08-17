@@ -43,14 +43,16 @@
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button @click="onFileBrowserClicked">
+            <ion-button :disabled=true @click="onFileBrowserClicked">
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
             </ion-button>
             <ion-button @click="onOpenURLClicked">
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
-
-            <ion-button @click="onChaptersClicked">
+            <ion-button
+              :disabled="playerData.chapters == 0"
+              @click="onChaptersClicked"
+            >
               <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
             </ion-button>
           </ion-col>
@@ -117,12 +119,13 @@ import infoModal from "../components/infoModal.vue";
 import playerController from "../components/playerController.vue";
 
 import { formatTime, seekFlags } from "../tools";
+import { apiInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
     const route = useRoute();
-    const playerData = computed(() => store.state.mpvsocket.playerData);
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const playerData = computed(() => store.state.simpleapi.playerData);
+    const connectedState = computed(() => store.state.simpleapi.connected);
     const screenOrientation = computed(() => store.state.app.screenOrientation);
     const serverConfigured = computed(
       () => store.state.settings.settings.configured
@@ -168,25 +171,34 @@ export default {
       // TODO: Handle push & hold button somehow
       switch (action) {
         case "mute":
-          store.state.mpvsocket.socket.emit("setPlayerProp", [
-            "mute",
-            !store.state.mpvsocket.playerData.mute,
-          ]);
+          // store.state.mpvsocket.socket.emit("setPlayerProp", [
+          //   "mute",
+          //   !store.state.mpvsocket.playerData.mute,
+          // ]);
+          console.log("Mute TOOD");
           break;
         case "increase":
           if (playerData.value.volume < 100) {
-            store.state.mpvsocket.socket.emit("setPlayerProp", [
-              "volume",
-              store.state.mpvsocket.playerData.volume + 5,
-            ]);
+            apiInstance
+              .post(`set_volume/${playerData.value.volume + 5}`)
+              .then(() =>
+                store.commit("simpleapi/setPlayerDataProperty", {
+                  key: "volume",
+                  value: playerData.value.volume + 5,
+                })
+              );
           }
           break;
         case "decrease":
           if (playerData.value.volume > 0) {
-            store.state.mpvsocket.socket.emit("setPlayerProp", [
-              "volume",
-              store.state.mpvsocket.playerData.volume - 5,
-            ]);
+            apiInstance
+              .post(`set_volume/${playerData.value.volume - 5}`)
+              .then(() =>
+                store.commit("simpleapi/setPlayerDataProperty", {
+                  key: "volume",
+                  value: playerData.value.volume - 5,
+                })
+              );
           }
           break;
       }
@@ -202,10 +214,14 @@ export default {
 
       modal.onDidDismiss().then((response) => {
         if (response.data) {
-          console.log(
-            `Data from modal: ${JSON.stringify(response.data.value)}`
+          const mode = response.data.value.appendToPlaylist
+            ? "append-play"
+            : "replace";
+          apiInstance.post(
+            `loadfile/${encodeURIComponent(
+              response.data.value.filename
+            )}/${mode}`
           );
-          store.state.mpvsocket.socket.emit("openFile", response.data.value);
         }
       });
       return modal.present();
@@ -235,11 +251,11 @@ export default {
     };
 
     const onFullscreenClicked = () => {
-      store.state.mpvsocket.socket.emit("fullscreen");
+      apiInstance.post("fullscreen");
     };
 
     const onChaptersClicked = async () => {
-      const buttons = playerData.value.chapters.map((chapter) => {
+      const buttons = playerData.value["chapter-list"].map((chapter) => {
         return {
           role: chapter.time,
           text: `${chapter.title} (${formatTime(chapter.time)})`,
