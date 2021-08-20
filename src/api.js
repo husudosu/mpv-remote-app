@@ -20,13 +20,18 @@ apiInstance.interceptors.response.use(
     // If error has response it means we have connection to server.
     if (error.response) {
       if (error.response.status != 503)
-        openToast(JSON.stringify(error.message));
+        openToast(
+          JSON.stringify(
+            error.response.data ? error.response.data : error.response.message
+          )
+        );
       if (!store.state.simpleapi.connected) {
         store.commit("simpleapi/setConnectedState", true);
       }
     } else {
       if (store.state.simpleapi.connected) {
         store.commit("simpleapi/setConnectedState", false);
+        store.commit("simpleapi/clearPlayerData");
       }
     }
     return Promise.reject(error);

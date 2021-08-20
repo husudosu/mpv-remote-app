@@ -20,7 +20,7 @@ const initialState = {
     "sub-delay": 0, // <-- milliseconds
     "track-list": [],
     volume: 0,
-    "volume-max": 130,
+    "volume-max": 100,
   },
   playbackRefreshInterval: null,
   connected: false,
@@ -43,7 +43,11 @@ export const simpleapi = {
       if (state.playbackRefreshInterval != null) {
         console.log("Store playbackRefreshInterval should be cleared.");
         clearInterval(state.playbackRefreshInterval);
+        state.playbackRefreshInterval = null;
       }
+    },
+    clearPlayerData(state) {
+      state.playerData = { ...initialState.playerData };
     },
   },
   actions: {
@@ -51,7 +55,6 @@ export const simpleapi = {
       if (state.playbackRefreshInterval == null) {
         state.playbackRefreshInterval = setInterval(() => {
           apiInstance.get("/status").then((response) => {
-            console.log(response.data);
             commit("setPlayerData", response.data);
           });
         }, 1500);

@@ -34,7 +34,11 @@
           ></ion-icon>
           <ion-label class="ion-text-wrap">
             <p>
-              {{ item.title || item.filename }}
+              {{
+                item.current
+                  ? playerData.metadata.TITLE || item.filename
+                  : item.filename
+              }}
             </p>
           </ion-label>
           <ion-button
@@ -75,16 +79,17 @@ import { play, add, remove, trashBin } from "ionicons/icons";
 import { computed } from "vue";
 import { useStore } from "vuex";
 import playerController from "../components/playerController.vue";
+import { apiInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const connectedState = computed(() => store.state.simpleapi.connected);
     const serverConfigured = computed(
       () => store.state.settings.settings.configured
     );
-    const playerData = computed(() => store.state.mpvsocket.playerData);
+    const playerData = computed(() => store.state.simpleapi.playerData);
     const isPlayerActive = computed(() => {
-      return store.state.mpvsocket.playerData.filename ? true : false;
+      return store.state.simpleapi.playerData.filename ? true : false;
     });
     const DOUBLE_CLICK_THRESHOLD = 500;
     let lastOnStart = 0;
@@ -92,44 +97,17 @@ export default {
     const doReorder = async (event) => {
       let fromIndex = event.detail.from;
       let toIndex = event.detail.to;
-
-      const itemIndex = playerData.value.playlist[event.detail.from].index;
-      console.log(itemIndex);
-
-      console.log(`Move element from ${fromIndex} to ${toIndex}`);
-
       // We moving element down.
       if (toIndex > fromIndex) {
         toIndex += 2;
       }
-
-      store.state.mpvsocket.socket.emit(
-        "playlistMove",
-        { fromIndex, toIndex },
-        function (data) {
-          console.log(`${JSON.stringify(data)}`);
-          store.commit("mpvsocket/setProp", {
-            property: "playlist",
-            value: data.playlist,
-          });
+      apiInstance
+        .post(`playlist_move/${fromIndex}/${toIndex}`)
+        .then((response) => {
+          console.log(response.data);
           event.detail.complete(true);
-          console.log(
-            `Callback done, updated playlist: ${JSON.stringify(data.playlist)}`
-          );
-        }
-      );
-    };
-
-    const onPreLoadPlaylistClicked = () => {
-      // Loads few playlist item for testing.
-      store.state.mpvsocket.socket.emit("openFile", {
-        filename: "/home/sudosu/test.webm",
-        appendToPlaylist: true,
-      });
-      store.state.mpvsocket.socket.emit("openFile", {
-        filename: "/home/sudosu/test1.mkv",
-        appendToPlaylist: true,
-      });
+        })
+        .catch(() => event.detail.complete(false));
     };
 
     const onClearPlaylistClicked = () => {
@@ -142,14 +120,19 @@ export default {
 
     const onItemClicked = (item) => {
       /* TODO: Create double tap gesture somehow for ion-item.
-            https://ionicframework.com/docs/utilities/gestures
-            I'm using my own shitty solution for this, because dunno how to add all ion-item elements to gesture.
-            But it works :-)*/
+        https://ionicframework.com/docs/utilities/gestures
+        I'm using my own shitty solution for this, because dunno how to add all ion-item elements to gesture.
+        But it works :-)*/
       const now = Date.now();
 
       if (Math.abs(now - lastOnStart) <= DOUBLE_CLICK_THRESHOLD) {
-        console.log("Double clicked");
-        store.state.mpvsocket.socket.emit("playlistPlayIndex", item.index);
+        const index = playerData.value.playlist.findIndex(
+          (el) => el.id == item.id
+        );
+
+        if (index > -1) {
+          apiInstance.post(`/playlist_jump/${index}`);
+        }
         lastOnStart = 0;
       } else {
         lastOnStart = now;
@@ -167,7 +150,6 @@ export default {
       isPlayerActive,
       doReorder,
       onItemClicked,
-      onPreLoadPlaylistClicked,
       onRemoveItemClicked,
       onClearPlaylistClicked,
     };

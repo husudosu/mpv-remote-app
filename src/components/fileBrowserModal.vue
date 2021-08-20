@@ -6,7 +6,10 @@
       <ion-toolbar>
         <ion-title>{{ titleText }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="onChangeDriveClicked" :disabled="!connectedState">
+          <ion-button
+            @click="onServerDirectoriesClicked"
+            :disabled="!connectedState"
+          >
             <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
           </ion-button>
           <ion-button @click="onCollectionsClicked" :disabled="!connectedState">
@@ -77,7 +80,8 @@
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
 import { apiInstance } from "../api";
-import { formatTime } from "../tools";
+import { formatTime, getFileName, getPrevDir } from "../tools";
+import { detectFileType } from "../fileformats";
 
 import {
   IonPage,
@@ -110,20 +114,29 @@ export default {
   setup(props) {
     const store = useStore();
     // Get connected state
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const connectedState = computed(() => store.state.simpleapi.connected);
 
-    const files = ref({});
-    const collections = ref([]);
+    const loading = ref(true);
+    const files = ref({
+      content: [],
+      dirname: "",
+      prevDir: "",
+      cwd: "",
+    });
     const filesBak = ref([]);
     const search = ref("");
-    const loading = ref(true);
+
+    const collections = ref([]);
+    const serverDirectories = ref([]);
+
     const showOpenFolder = ref(props.action === "openFolder");
-    const drives = ref([]);
     const filemanLastPath = store.state.settings.settings.filemanLastPath;
+
+    let cwd = ref("");
     let history = store.state.settings.settings.history || [];
     const titleText = computed(() => {
       if (!connectedState.value) return "Disconnected";
-      if (files.value.dirname) return files.value.dirname;
+      if (cwd.value) return cwd.value;
       else if (files.value.collection_id) {
         const collection = collections.value.find(
           (el) => el.id === parseInt(files.value.collection_id)
@@ -135,11 +148,8 @@ export default {
     });
 
     apiInstance
-      .get(`/drivelist`)
-      .then((response) => (drives.value = response.data));
-    apiInstance
       .get(`/collections`)
-      .then((response) => (collections.value = response.data));
+      .then((response) => (serverDirectories.value = response.data));
 
     const saveLastPath = async () => {
       let filemanLastPath = {};
@@ -168,21 +178,53 @@ export default {
     };
 
     const getDirectoryContents = async (path = null, collectionId = null) => {
-      let params = {};
-      if (path) params.path = path;
-      if (collectionId) params.collection = collectionId;
+      console.log(collectionId);
       // Save to history
-      // Render spinner if loading takes more than 150 msec
+      // Render spinner if loading takes more than 200 msec
+      // Had to increase timeout because we need to do post-processing on frontend
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
-      }, 150);
-
-      return apiInstance
-        .get(`/fileman`, { params })
+      }, 200);
+      apiInstance
+        .get(`/collections/${encodeURIComponent(path)}`)
         .then((response) => {
-          files.value = response.data;
-          filesBak.value = response.data;
+          cwd.value = path;
+          let resp = response.data.filter((el) => {
+            let type = el["is-directory"]
+              ? "directory"
+              : detectFileType(el.path.split(".").pop());
+            if (type != "file") {
+              return el;
+            }
+          });
+          resp = resp
+            .map((el) => {
+              let type = el["is-directory"]
+                ? "directory"
+                : detectFileType(el.path.split(".").pop());
+              return {
+                path: el.path,
+                name: getFileName(el.path),
+                type,
+                priorty: el["is-directory"] ? 1 : 2,
+              };
+            })
+            .sort((a, b) => {
+              return (
+                a.priorty - b.priorty ||
+                a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+              );
+            });
+
+          // This were handled by node backend, I hope it will work here with new very limited Lua backend.
+          files.value.cwd = path;
+          files.value.prevDir = getPrevDir(path);
+          files.value.dirname = getFileName(path);
+          files.value.content = resp;
+          filesBak.value = resp;
+
           search.value = "";
+          console.log(files.value);
         })
         .finally(() => {
           clearTimeout(loadingTimeout);
@@ -214,6 +256,7 @@ export default {
     };
 
     const handlePlayAction = async (entry) => {
+      console.log(`Entry ${JSON.stringify(entry)}`);
       if (
         entry.mediaStatus &&
         entry.mediaStatus.current_time &&
@@ -240,13 +283,14 @@ export default {
         if (role === "continue") {
           console.log("Continue");
           props.modalController.dismiss({
-            filename: entry.fullPath,
+            filename: entry.path,
             seekTo: entry.mediaStatus.current_time,
           });
         } else if (role === "play") {
+          console.log(entry.path);
           saveLastPath().then(() => {
             props.modalController.dismiss({
-              filename: entry.fullPath,
+              filename: entry.path,
               appendToPlaylist: true,
             });
             console.log("Play from start");
@@ -255,7 +299,7 @@ export default {
       } else {
         saveLastPath().then(() => {
           props.modalController.dismiss({
-            filename: entry.fullPath,
+            filename: entry.path,
             appendToPlaylist: true,
           });
         });
@@ -264,7 +308,7 @@ export default {
 
     const onEntryClicked = async (entry) => {
       if (entry.type === "directory") {
-        getDirectoryContents(entry.fullPath);
+        getDirectoryContents(entry.path);
         history.push(files.value.collection_id);
       } else if (
         props.action === "play" &&
@@ -289,29 +333,49 @@ export default {
       console.log(`New history: ${history}`);
     };
 
-    const onChangeDriveClicked = async () => {
-      const buttons = drives.value.map((drive) => {
+    const onServerDirectoriesClicked = async () => {
+      const buttons = serverDirectories.value.map((dir) => {
         return {
-          text: drive._mounted,
-          role: drive._mounted,
+          text: dir.path,
+          role: dir.path,
         };
       });
       const actionSheet = await actionSheetController.create({
-        header: "Select drive",
+        header: "Select direcotry",
         buttons,
       });
 
       await actionSheet.present();
 
       const { role } = await actionSheet.onDidDismiss();
-      console.log(`Value:${role}`);
 
       if (role !== "backdrop") {
         getDirectoryContents(role);
-        // Clear history
-        history = [];
       }
     };
+    // const onChangeDriveClicked = async () => {
+    //   const buttons = drives.value.map((drive) => {
+    //     return {
+    //       text: drive._mounted,
+    //       role: drive._mounted,
+    //     };
+    //   });
+    //   const actionSheet = await actionSheetController.create({
+    //     header: "Select drive",
+    //     buttons,
+    //   });
+
+    //   await actionSheet.present();
+
+    //   const { role } = await actionSheet.onDidDismiss();
+    //   console.log(`Value:${role}`);
+
+    //   if (role !== "backdrop") {
+    //     getDirectoryContents(role);
+    //     // Clear history
+    //     history = [];
+    //   }
+    // };
 
     const onCollectionsClicked = async () => {
       let buttons = collections.value.map((collection) => {
@@ -337,7 +401,7 @@ export default {
     };
 
     const onSearch = () => {
-      files.value = Object.assign({}, filesBak.value);
+      files.value.content = Object.assign([], filesBak.value);
       files.value.content = files.value.content.filter(
         (el) => el.name.toLowerCase().indexOf(search.value.toLowerCase()) > -1
       );
@@ -349,7 +413,7 @@ export default {
     const decideIcon = (entry) => {
       switch (entry.type) {
         case "file":
-          return files;
+          return document;
         case "directory":
           return folder;
         case "video":
@@ -365,11 +429,12 @@ export default {
       onCancelClicked,
       onPrevDirectoryClicked,
       onOpenDirectoryClicked,
-      onChangeDriveClicked,
       onEntryClicked,
       onSearch,
       decideIcon,
       onCollectionsClicked,
+      onServerDirectoriesClicked,
+      cwd,
       connectedState,
       showOpenFolder,
       titleText,

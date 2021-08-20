@@ -47,7 +47,7 @@
   </ion-page>
 </template>
 <script>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useStore } from "vuex";
 import {
   IonPage,
@@ -73,30 +73,25 @@ export default {
     const subTracks = ref([]);
     const activeSubTrackId = ref();
     const selectedTrack = ref({});
+    const playerData = computed(() => store.state.simpleapi.playerData);
     const subSettings = ref({
       subDelay: 0,
       subVisibility: false,
     });
     const store = useStore();
-    store.state.mpvsocket.socket.emit("subSettings", null, function (data) {
-      subSettings.value = data;
-      console.log(subSettings.value);
-    });
 
     const loadTracks = function () {
-      store.state.mpvsocket.socket.emit("tracks", null, function (data) {
-        tracks.value = data.tracks;
-
-        subTracks.value = data.tracks.filter((el) => el.type === "sub");
-        if (subTracks.value.length > 0) {
-          activeSubTrackId.value = subTracks.value.find(
-            (el) => el.selected === true
-          );
-          if (activeSubTrackId.value)
-            activeSubTrackId.value = activeSubTrackId.value.id;
-          selectedTrack.value = activeSubTrackId.value;
-        }
-      });
+      subTracks.value = playerData.value["track-list"].filter(
+        (el) => el.type === "sub"
+      );
+      if (subTracks.value.length > 0) {
+        activeSubTrackId.value = subTracks.value.find(
+          (el) => el.selected === true
+        );
+        if (activeSubTrackId.value)
+          activeSubTrackId.value = activeSubTrackId.value.id;
+        selectedTrack.value = activeSubTrackId.value;
+      }
     };
 
     const onAppendClicked = () => {

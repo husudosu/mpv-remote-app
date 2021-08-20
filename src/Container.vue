@@ -60,9 +60,9 @@ import {
   listOutline,
   informationCircleOutline,
 } from "ionicons/icons";
-
+import { App } from "@capacitor/app";
 import { useStore } from "vuex";
-import { configureInstance } from "./api";
+import { configureInstance, apiInstance } from "./api";
 
 export default defineComponent({
   name: "App",
@@ -122,11 +122,30 @@ export default defineComponent({
         store.state.settings.settings.server.server_ip,
         store.state.settings.settings.server.server_port
       );
+      apiInstance.get("/status").then((response) => {
+        console.log(response.data);
+        store.commit("simpleapi/setPlayerData", response.data);
+      });
+
       store.dispatch("simpleapi/setPlaybackRefreshInterval");
     });
 
     window.addEventListener("orientationchange", function () {
       store.commit("app/setScreenOrinetation", screen.orientation.type);
+    });
+
+    App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        apiInstance.get("/status").then((response) => {
+          store.commit("simpleapi/setPlayerData", response.data);
+        });
+        if (!store.state.simpleapi.playbackRefreshInterval) {
+          store.dispatch("simpleapi/setPlaybackRefreshInterval");
+        }
+      } else {
+        // Battery saving stuff
+        store.commit("simpleapi/clearPlaybackRefreshInterval");
+      }
     });
 
     return {

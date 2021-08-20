@@ -43,7 +43,7 @@
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button :disabled=true @click="onFileBrowserClicked">
+            <ion-button @click="onFileBrowserClicked">
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
             </ion-button>
             <ion-button @click="onOpenURLClicked">
@@ -161,7 +161,12 @@ export default {
       modal.onDidDismiss().then((response) => {
         if (response.data) {
           console.log(`Data from modal: ${JSON.stringify(response.data)}`);
-          store.state.mpvsocket.socket.emit("openFile", response.data);
+          const mode = response.data.appendToPlaylist
+            ? "append-play"
+            : "replace";
+          apiInstance.post(
+            `loadfile/${encodeURIComponent(response.data.filename)}/${mode}`
+          );
         }
       });
       return modal.present();
