@@ -36,7 +36,7 @@
             <p>
               {{
                 item.current
-                  ? playerData.metadata.TITLE || item.filename
+                  ? playerData["media-title"] || item.filename
                   : item.filename
               }}
             </p>
@@ -102,9 +102,8 @@ export default {
         toIndex += 2;
       }
       apiInstance
-        .post(`playlist_move/${fromIndex}/${toIndex}`)
-        .then((response) => {
-          console.log(response.data);
+        .post("playlist/move", null, { params: { fromIndex, toIndex } })
+        .then(() => {
           event.detail.complete(true);
         })
         .catch(() => event.detail.complete(false));
@@ -115,6 +114,7 @@ export default {
     };
 
     const onRemoveItemClicked = (item) => {
+      apiInstance.post(`/playlist/remove/${item.index}`);
       store.state.mpvsocket.socket.emit("playlistRemove", item.index);
     };
 
@@ -131,7 +131,7 @@ export default {
         );
 
         if (index > -1) {
-          apiInstance.post(`/playlist_jump/${index}`);
+          apiInstance.post(`/playlist/play/${index}`);
         }
         lastOnStart = 0;
       } else {

@@ -45,42 +45,35 @@ import {
   IonSelectOption,
   IonLabel,
 } from "@ionic/vue";
-// import { apiInstance } from "../api";
+import { apiInstance } from "../api";
 
 export default {
   props: ["modalController"],
   setup(props) {
-    const tracks = ref([]);
-    const audioTracks = ref([]);
-    const activeAudioTrackId = ref();
     const selectedTrack = ref();
     const store = useStore();
     const playerData = computed(() => store.state.simpleapi.playerData);
 
-    audioTracks.value = playerData.value["track-list"].filter(
-      (el) => el.type === "audio"
-    );
-    activeAudioTrackId.value = audioTracks.value.find(
-      (el) => el.selected === true
-    ).id;
+    // Get audio tracks from store
+    const audioTracks = computed(() => {
+      return playerData.value["track-list"].filter((el) => el.type == "audio");
+    });
+    const activeAudioTrackId = computed(() => {
+      if (audioTracks.value) {
+        return audioTracks.value.find((el) => el.selected).id;
+      }
+      return "N/A";
+    });
     selectedTrack.value = activeAudioTrackId.value;
-
     const onCancelClicked = () => {
       props.modalController.dismiss();
     };
 
     const onSwitchAudioClicked = () => {
-      console.log(selectedTrack);
-
-      // TODO !
-      console.log("Audio select track by ID not supported by simple mpv api");
-      // console.log(`Selected audio track: ${selectedTrack.value}`);
-      // store.state.mpvsocket.socket.emit("audioReload", selectedTrack.value);
-      // apiInstance.post(`/api/set/:name/:value`)
+      apiInstance.post(`/tracks/audio/reload/${selectedTrack.value}`);
     };
 
     return {
-      tracks,
       audioTracks,
       activeAudioTrackId,
       selectedTrack,

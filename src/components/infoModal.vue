@@ -5,13 +5,13 @@
         <ion-title>File info</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content class="ion-padding" v-if="playerData.filename">
       <ion-list-header>Basic Info</ion-list-header>
       <ion-list>
-        <ion-item v-if="playerData.media_title != playerData.filename">
+        <ion-item v-if="playerData['media-title'] != playerData.filename">
           <ion-label class="ion-text-wrap">
             <h2>Title</h2>
-            <p>{{ playerData.media_title }}</p>
+            <p>{{ playerData["media-title"] }}</p>
           </ion-label>
         </ion-item>
         <ion-item>
@@ -106,6 +106,9 @@
         </ion-list>
       </template>
     </ion-content>
+    <ion-content class="ion-padding" v-else>
+      <p>Playback not active.</p>
+    </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
     </ion-footer>
@@ -113,7 +116,7 @@
 </template>
 
 <script>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useStore } from "vuex";
 import { formatTime } from "../tools";
 import {
@@ -129,24 +132,29 @@ import {
   IonItem,
   IonList,
 } from "@ionic/vue";
+import { apiInstance } from "../api";
 
 export default {
   props: ["modalController"],
   setup(props) {
     const store = useStore();
     const playerData = computed(() => store.state.simpleapi.playerData);
+    const tracks = ref([]);
+
+    apiInstance
+      .get("/tracks")
+      .then((response) => (tracks.value = response.data));
 
     const audioTracks = computed(() =>
-      playerData.value["track-list"].filter((el) => el.type == "audio")
+      tracks.value.filter((el) => el.type == "audio")
     );
     const videoTracks = computed(() =>
-      playerData.value["track-list"].filter((el) => el.type == "video")
+      tracks.value.filter((el) => el.type == "video")
     );
     const subtitleTracks = computed(() =>
-      playerData.value["track-list"].filter((el) => el.type == "sub")
+      tracks.value.filter((el) => el.type == "sub")
     );
     const onCancelClicked = () => {
-      console.log("Cancel");
       props.modalController.dismiss();
     };
     return {

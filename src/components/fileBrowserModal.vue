@@ -6,36 +6,24 @@
       <ion-toolbar>
         <ion-title>{{ titleText }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button
-            @click="onServerDirectoriesClicked"
-            :disabled="!connectedState"
-          >
+          <ion-button @click="onChangeDriveClicked">
             <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
           </ion-button>
-          <ion-button @click="onCollectionsClicked" :disabled="!connectedState">
+          <ion-button @click="onCollectionsClicked">
             <ion-icon :icon="bookmarksOutline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar
-          :disabled="!connectedState"
-          v-model="search"
-          @ionChange="onSearch"
-        ></ion-searchbar>
+        <ion-searchbar v-model="search" @ionChange="onSearch"></ion-searchbar>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-item
-        @click="onPrevDirectoryClicked"
-        v-if="files.prevDir"
-        :disabled="!connectedState"
-      >
+      <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
         <ion-icon :icon="folder" slot="start"></ion-icon>
         ...
       </ion-item>
       <ion-item
-        :disabled="!connectedState"
         v-for="(entry, index) in files.content"
         :key="index"
         @click="onEntryClicked(entry)"
@@ -80,8 +68,6 @@
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
 import { apiInstance } from "../api";
-import { formatTime, getFileName, getPrevDir } from "../tools";
-import { detectFileType } from "../fileformats";
 
 import {
   IonPage,
@@ -108,35 +94,24 @@ import {
   film,
   journalOutline,
 } from "ionicons/icons";
+import { formatTime } from "../tools";
 
 export default {
   props: ["modalController", "action"],
   setup(props) {
     const store = useStore();
-    // Get connected state
-    const connectedState = computed(() => store.state.simpleapi.connected);
 
-    const loading = ref(true);
-    const files = ref({
-      content: [],
-      dirname: "",
-      prevDir: "",
-      cwd: "",
-    });
+    const files = ref({});
+    const collections = ref([]);
     const filesBak = ref([]);
     const search = ref("");
-
-    const collections = ref([]);
-    const serverDirectories = ref([]);
-
+    const loading = ref(true);
     const showOpenFolder = ref(props.action === "openFolder");
+    const drives = ref([]);
     const filemanLastPath = store.state.settings.settings.filemanLastPath;
-
-    let cwd = ref("");
     let history = store.state.settings.settings.history || [];
     const titleText = computed(() => {
-      if (!connectedState.value) return "Disconnected";
-      if (cwd.value) return cwd.value;
+      if (files.value.dirname) return files.value.dirname;
       else if (files.value.collection_id) {
         const collection = collections.value.find(
           (el) => el.id === parseInt(files.value.collection_id)
@@ -148,8 +123,11 @@ export default {
     });
 
     apiInstance
-      .get(`/collections`)
-      .then((response) => (serverDirectories.value = response.data));
+      .get("filebrowser/paths")
+      .then((response) => (drives.value = response.data));
+    // apiInstance
+    //   .get(`/collections`)
+    //   .then((response) => (collections.value = response.data));
 
     const saveLastPath = async () => {
       let filemanLastPath = {};
@@ -178,53 +156,22 @@ export default {
     };
 
     const getDirectoryContents = async (path = null, collectionId = null) => {
-      console.log(collectionId);
+      let data = {};
+      if (path) data.path = path;
+      if (collectionId) data.collection = collectionId;
+      console.log(data);
       // Save to history
-      // Render spinner if loading takes more than 200 msec
-      // Had to increase timeout because we need to do post-processing on frontend
+      // Render spinner if loading takes more than 150 msec
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
-      }, 200);
-      apiInstance
-        .get(`/collections/${encodeURIComponent(path)}`)
+      }, 150);
+
+      return apiInstance
+        .post("filebrowser/browse", data)
         .then((response) => {
-          cwd.value = path;
-          let resp = response.data.filter((el) => {
-            let type = el["is-directory"]
-              ? "directory"
-              : detectFileType(el.path.split(".").pop());
-            if (type != "file") {
-              return el;
-            }
-          });
-          resp = resp
-            .map((el) => {
-              let type = el["is-directory"]
-                ? "directory"
-                : detectFileType(el.path.split(".").pop());
-              return {
-                path: el.path,
-                name: getFileName(el.path),
-                type,
-                priorty: el["is-directory"] ? 1 : 2,
-              };
-            })
-            .sort((a, b) => {
-              return (
-                a.priorty - b.priorty ||
-                a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-              );
-            });
-
-          // This were handled by node backend, I hope it will work here with new very limited Lua backend.
-          files.value.cwd = path;
-          files.value.prevDir = getPrevDir(path);
-          files.value.dirname = getFileName(path);
-          files.value.content = resp;
-          filesBak.value = resp;
-
+          files.value = response.data;
+          filesBak.value = response.data;
           search.value = "";
-          console.log(files.value);
         })
         .finally(() => {
           clearTimeout(loadingTimeout);
@@ -256,7 +203,6 @@ export default {
     };
 
     const handlePlayAction = async (entry) => {
-      console.log(`Entry ${JSON.stringify(entry)}`);
       if (
         entry.mediaStatus &&
         entry.mediaStatus.current_time &&
@@ -283,14 +229,13 @@ export default {
         if (role === "continue") {
           console.log("Continue");
           props.modalController.dismiss({
-            filename: entry.path,
+            filename: entry.fullPath,
             seekTo: entry.mediaStatus.current_time,
           });
         } else if (role === "play") {
-          console.log(entry.path);
           saveLastPath().then(() => {
             props.modalController.dismiss({
-              filename: entry.path,
+              filename: entry.fullPath,
               appendToPlaylist: true,
             });
             console.log("Play from start");
@@ -299,7 +244,7 @@ export default {
       } else {
         saveLastPath().then(() => {
           props.modalController.dismiss({
-            filename: entry.path,
+            filename: entry.fullPath,
             appendToPlaylist: true,
           });
         });
@@ -308,7 +253,7 @@ export default {
 
     const onEntryClicked = async (entry) => {
       if (entry.type === "directory") {
-        getDirectoryContents(entry.path);
+        getDirectoryContents(entry.fullPath);
         history.push(files.value.collection_id);
       } else if (
         props.action === "play" &&
@@ -333,49 +278,29 @@ export default {
       console.log(`New history: ${history}`);
     };
 
-    const onServerDirectoriesClicked = async () => {
-      const buttons = serverDirectories.value.map((dir) => {
+    const onChangeDriveClicked = async () => {
+      const buttons = drives.value.map((drive) => {
         return {
-          text: dir.path,
-          role: dir.path,
+          text: drive.path,
+          role: drive.path,
         };
       });
       const actionSheet = await actionSheetController.create({
-        header: "Select direcotry",
+        header: "Select path",
         buttons,
       });
 
       await actionSheet.present();
 
       const { role } = await actionSheet.onDidDismiss();
+      console.log(`Value:${role}`);
 
       if (role !== "backdrop") {
         getDirectoryContents(role);
+        // Clear history
+        history = [];
       }
     };
-    // const onChangeDriveClicked = async () => {
-    //   const buttons = drives.value.map((drive) => {
-    //     return {
-    //       text: drive._mounted,
-    //       role: drive._mounted,
-    //     };
-    //   });
-    //   const actionSheet = await actionSheetController.create({
-    //     header: "Select drive",
-    //     buttons,
-    //   });
-
-    //   await actionSheet.present();
-
-    //   const { role } = await actionSheet.onDidDismiss();
-    //   console.log(`Value:${role}`);
-
-    //   if (role !== "backdrop") {
-    //     getDirectoryContents(role);
-    //     // Clear history
-    //     history = [];
-    //   }
-    // };
 
     const onCollectionsClicked = async () => {
       let buttons = collections.value.map((collection) => {
@@ -401,7 +326,7 @@ export default {
     };
 
     const onSearch = () => {
-      files.value.content = Object.assign([], filesBak.value);
+      files.value = Object.assign({}, filesBak.value);
       files.value.content = files.value.content.filter(
         (el) => el.name.toLowerCase().indexOf(search.value.toLowerCase()) > -1
       );
@@ -413,7 +338,7 @@ export default {
     const decideIcon = (entry) => {
       switch (entry.type) {
         case "file":
-          return document;
+          return files;
         case "directory":
           return folder;
         case "video":
@@ -429,13 +354,11 @@ export default {
       onCancelClicked,
       onPrevDirectoryClicked,
       onOpenDirectoryClicked,
+      onChangeDriveClicked,
       onEntryClicked,
       onSearch,
       decideIcon,
       onCollectionsClicked,
-      onServerDirectoriesClicked,
-      cwd,
-      connectedState,
       showOpenFolder,
       titleText,
       loading,

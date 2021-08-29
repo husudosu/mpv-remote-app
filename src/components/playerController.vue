@@ -54,7 +54,7 @@ import {
   playSkipBackOutline,
   playSkipForwardOutline,
 } from "ionicons/icons";
-import { formatTime } from "../tools";
+import { formatTime, seekFlags } from "../tools";
 import { apiInstance } from "../api";
 export default {
   setup() {
@@ -63,11 +63,11 @@ export default {
     const connectedState = computed(() => store.state.simpleapi.connected);
     const serverConfigured = computed(() => store.state.settings.configured);
     const isPlayerActive = computed(() => {
-      return store.state.mpvsocket.playerData.filename ? true : false;
+      return store.state.simpleapi.playerData.filename ? true : false;
     });
 
     const onPlayPauseClicked = () => {
-      apiInstance.post("toggle_pause").then((response) => {
+      apiInstance.post("/controls/play-pause").then((response) => {
         if (response.data.message == "success") {
           store.commit("simpleapi/setPlayerDataProperty", {
             key: "pause",
@@ -78,27 +78,31 @@ export default {
     };
 
     const onSeek = (e) => {
-      apiInstance.post(`set_position/${e.target.value}`).then((response) => {
-        if (response.data.message == "success") {
-          store.commit("simpleapi/setPlayerDataProperty", {
-            key: "position",
-            value: e.target.value,
-          });
-        }
-      });
+      apiInstance
+        .post("controls/seek", {
+          target: e.target.value,
+          flag: seekFlags.ABSOLUTE,
+        })
+        .then((response) => {
+          if (response.data.message == "success") {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "position",
+              value: e.target.value,
+            });
+          }
+        });
     };
 
     const onStopClicked = () => {
-      console.log("Stop command not supported on MPV-simpleapi");
-      // store.state.mpvsocket.socket.emit("stopPlayback");
+      apiInstance.post("controls/stop");
     };
 
     const onPrevClicked = () => {
-      apiInstance.post("playlist_prev");
+      apiInstance.post("controls/prev");
     };
 
     const onNextClicked = () => {
-      apiInstance.post("playlist_next");
+      apiInstance.post("controls/next");
     };
 
     return {

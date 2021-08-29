@@ -6,7 +6,7 @@ export let apiInstance = axios.create({
 import { store } from "./store";
 
 export function configureInstance(host, port) {
-  apiInstance.defaults.baseURL = `http://${host}:${port}/api/`;
+  apiInstance.defaults.baseURL = `http://${host}:${port}/api/v1/`;
 }
 
 apiInstance.interceptors.response.use(
@@ -22,7 +22,9 @@ apiInstance.interceptors.response.use(
       if (error.response.status != 503)
         openToast(
           JSON.stringify(
-            error.response.data ? error.response.data : error.response.message
+            error.response.data
+              ? error.response.data.message
+              : error.response.message
           )
         );
       if (!store.state.simpleapi.connected) {
@@ -44,6 +46,7 @@ apiInstance.interceptors.request.use(
   },
   (error) => {
     openToast(JSON.stringify(error));
+
     Promise.reject(error);
   }
 );

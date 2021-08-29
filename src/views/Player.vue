@@ -50,7 +50,7 @@
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="playerData.chapters == 0"
+              :disabled="playerData['chapter-list'].length == 0"
               @click="onChaptersClicked"
             >
               <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
@@ -96,7 +96,7 @@ import {
   actionSheetController,
 } from "@ionic/vue";
 
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import {
@@ -111,6 +111,7 @@ import {
   informationCircle,
   bookOutline,
 } from "ionicons/icons";
+
 import openURLModal from "../components/openURLModal.vue";
 import audioSettingsModal from "../components/audioSettingsModal.vue";
 import subtitleSettingsModal from "../components/subtitleSettingsModal.vue";
@@ -133,7 +134,7 @@ export default {
     const playerTitle = computed(() => {
       if (connectedState.value) {
         return (
-          playerData.value.media_title ||
+          playerData.value["media-title"] ||
           playerData.value.filename ||
           "Connected (No playback)"
         );
@@ -142,9 +143,8 @@ export default {
       }
     });
     const isPlayerActive = computed(() => {
-      return store.state.mpvsocket.playerData.filename ? true : false;
+      return store.state.simpleapi.playerData.filename ? true : false;
     });
-    const newFileName = ref("");
 
     const openURL = (url) => {
       window.open(url, "_system");
@@ -164,9 +164,10 @@ export default {
           const mode = response.data.appendToPlaylist
             ? "append-play"
             : "replace";
-          apiInstance.post(
-            `loadfile/${encodeURIComponent(response.data.filename)}/${mode}`
-          );
+          apiInstance.post("playlist", {
+            filename: response.data.filename,
+            flag: mode,
+          });
         }
       });
       return modal.present();
@@ -176,16 +177,17 @@ export default {
       // TODO: Handle push & hold button somehow
       switch (action) {
         case "mute":
-          // store.state.mpvsocket.socket.emit("setPlayerProp", [
-          //   "mute",
-          //   !store.state.mpvsocket.playerData.mute,
-          // ]);
-          console.log("Mute TOOD");
+          apiInstance.post("controls/mute").then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "mute",
+              value: !playerData.value.mute,
+            });
+          });
           break;
         case "increase":
           if (playerData.value.volume < 100) {
             apiInstance
-              .post(`set_volume/${playerData.value.volume + 5}`)
+              .post(`controls/volume/${playerData.value.volume + 5}`)
               .then(() =>
                 store.commit("simpleapi/setPlayerDataProperty", {
                   key: "volume",
@@ -197,7 +199,7 @@ export default {
         case "decrease":
           if (playerData.value.volume > 0) {
             apiInstance
-              .post(`set_volume/${playerData.value.volume - 5}`)
+              .post(`controls/volume/${playerData.value.volume - 5}`)
               .then(() =>
                 store.commit("simpleapi/setPlayerDataProperty", {
                   key: "volume",
@@ -222,11 +224,10 @@ export default {
           const mode = response.data.value.appendToPlaylist
             ? "append-play"
             : "replace";
-          apiInstance.post(
-            `loadfile/${encodeURIComponent(
-              response.data.value.filename
-            )}/${mode}`
-          );
+          apiInstance.post("playlist", {
+            filename: response.data.value.filename,
+            flag: mode,
+          });
         }
       });
       return modal.present();
@@ -256,7 +257,7 @@ export default {
     };
 
     const onFullscreenClicked = () => {
-      apiInstance.post("fullscreen");
+      apiInstance.post("controls/fullscreen");
     };
 
     const onChaptersClicked = async () => {
@@ -277,8 +278,8 @@ export default {
       const { role } = await actionSheet.onDidDismiss();
 
       if (role !== "backdrop") {
-        store.state.mpvsocket.socket.emit("seek", {
-          seekTo: role,
+        apiInstance.post("/controls/seek", {
+          target: role,
           flag: seekFlags.ABSOLUTE,
         });
       }
@@ -298,7 +299,6 @@ export default {
     return {
       playerData,
       playerTitle,
-      newFileName,
       connectedState,
       isPlayerActive,
       route,
