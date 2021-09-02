@@ -14,27 +14,48 @@
       <ion-grid style="height: 100%">
         <ion-row class="remoteButtons">
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button @click="changeVolume('decrease')">
+            <ion-button
+              :disabled="!connectedState || !playerData.filename"
+              @click="changeVolume('decrease')"
+            >
               <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
             </ion-button>
-            <ion-button @click="changeVolume('mute')">
+            <ion-button
+              :disabled="!connectedState || !playerData.filename"
+              @click="changeVolume('mute')"
+            >
               <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
             </ion-button>
-            <ion-button @click="changeVolume('increase')">
+            <ion-button
+              :disabled="!connectedState || !playerData.filename"
+              @click="changeVolume('increase')"
+            >
               <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button @click="onInfoClicked">
+            <ion-button
+              :disabled="!connectedState || !playerData.filename"
+              @click="onInfoClicked"
+            >
               <ion-icon slot="icon-only" :icon="informationCircle"></ion-icon>
             </ion-button>
-            <ion-button @click="onFullscreenClicked">
+            <ion-button
+              :disabled="!connectedState || !playerData.filename"
+              @click="onFullscreenClicked"
+            >
               <ion-icon slot="icon-only" :icon="scanOutline"></ion-icon>
             </ion-button>
-            <ion-button @click="onAudioSettingsClicked">
+            <ion-button
+              :disabled="!connectedState || !playerData.filename"
+              @click="onAudioSettingsClicked"
+            >
               <ion-icon slot="icon-only" :icon="earOutline"></ion-icon>
             </ion-button>
-            <ion-button @click="onSubtitleSettingsClicked">
+            <ion-button
+              :disabled="!connectedState || !playerData.filename"
+              @click="onSubtitleSettingsClicked"
+            >
               <ion-icon
                 class="rotateIcon"
                 slot="icon-only"
@@ -43,10 +64,13 @@
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button @click="onFileBrowserClicked">
+            <ion-button
+              :disabled="!connectedState"
+              @click="onFileBrowserClicked"
+            >
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
             </ion-button>
-            <ion-button @click="onOpenURLClicked">
+            <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
             <ion-button
@@ -74,7 +98,9 @@
         </ion-row>
       </ion-grid>
     </ion-content>
-    <playerController v-if="serverConfigured"></playerController>
+    <playerController
+      v-if="serverConfigured && playerData.filename"
+    ></playerController>
   </ion-page>
 </template>
 
@@ -119,7 +145,7 @@ import fileBrowserModal from "../components/fileBrowserModal.vue";
 import infoModal from "../components/infoModal.vue";
 import playerController from "../components/playerController.vue";
 
-import { formatTime, seekFlags } from "../tools";
+import { formatTime, seekFlags, openURL } from "../tools";
 import { apiInstance } from "../api";
 export default {
   setup() {
@@ -142,13 +168,6 @@ export default {
         return "Disconnected";
       }
     });
-    const isPlayerActive = computed(() => {
-      return store.state.simpleapi.playerData.filename ? true : false;
-    });
-
-    const openURL = (url) => {
-      window.open(url, "_system");
-    };
 
     const onFileBrowserClicked = async () => {
       const modal = await modalController.create({
@@ -167,6 +186,7 @@ export default {
           apiInstance.post("playlist", {
             filename: response.data.filename,
             flag: mode,
+            seekTo: response.data.seekTo,
           });
         }
       });
@@ -300,7 +320,6 @@ export default {
       playerData,
       playerTitle,
       connectedState,
-      isPlayerActive,
       route,
       changeVolume,
       serverConfigured,

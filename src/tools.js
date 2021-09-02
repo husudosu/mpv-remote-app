@@ -16,26 +16,8 @@ export function formatTime(param) {
   return hours + ":" + minutes + ":" + seconds;
 }
 
-export function splitPath(path) {
-  return path.split("\\").pop().split("/");
-}
-
-export function getFileName(path) {
-  return splitPath(path).pop();
-}
-
-export function getPrevDir(path) {
-  /*
-  Unix path sep / should work on Windows too:
-  https://stackoverflow.com/questions/125813/how-to-determine-the-os-path-separator-in-javascript/35246221
-  */
-
-  let spl = splitPath(path);
-  spl.pop();
-  if (spl[0].length == 0) {
-    spl.shift();
-  }
-  return path[0] == "/" ? "/" + spl.join("/") : spl.join("/");
+export function openURL(url) {
+  window.open(url, "_system");
 }
 
 export const seekFlags = {

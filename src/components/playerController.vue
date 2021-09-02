@@ -78,18 +78,17 @@ export default {
     };
 
     const onSeek = (e) => {
+      console.log(e);
       apiInstance
         .post("controls/seek", {
           target: e.target.value,
           flag: seekFlags.ABSOLUTE,
         })
-        .then((response) => {
-          if (response.data.message == "success") {
-            store.commit("simpleapi/setPlayerDataProperty", {
-              key: "position",
-              value: e.target.value,
-            });
-          }
+        .then(() => {
+          store.commit("simpleapi/setPlayerDataProperty", {
+            key: "position",
+            value: e.target.value,
+          });
         });
     };
 

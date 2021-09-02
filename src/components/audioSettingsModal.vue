@@ -5,7 +5,7 @@
         <ion-title>Audio settings</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content v-if="playerData.filename" class="ion-padding">
       <ion-item>
         <ion-label>Audio track</ion-label>
         <ion-select
@@ -22,6 +22,9 @@
           </ion-select-option>
         </ion-select>
       </ion-item>
+    </ion-content>
+    <ion-content class="ion-padding" v-else>
+      <p>No playback.</p>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
@@ -53,16 +56,19 @@ export default {
     const selectedTrack = ref();
     const store = useStore();
     const playerData = computed(() => store.state.simpleapi.playerData);
-
     // Get audio tracks from store
     const audioTracks = computed(() => {
-      return playerData.value["track-list"].filter((el) => el.type == "audio");
+      if (playerData.value["track-list"].length > 0)
+        return playerData.value["track-list"].filter(
+          (el) => el.type == "audio"
+        );
+      else return [];
     });
     const activeAudioTrackId = computed(() => {
-      if (audioTracks.value) {
+      if (audioTracks.value.length > 0) {
         return audioTracks.value.find((el) => el.selected).id;
       }
-      return "N/A";
+      return null;
     });
     selectedTrack.value = activeAudioTrackId.value;
     const onCancelClicked = () => {
@@ -79,6 +85,7 @@ export default {
       selectedTrack,
       onCancelClicked,
       onSwitchAudioClicked,
+      playerData,
     };
   },
   components: {

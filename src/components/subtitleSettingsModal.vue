@@ -5,7 +5,7 @@
         <ion-title>Subtitle settings</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content v-if="playerData.filename" class="ion-padding">
       <ion-item>
         <ion-label>Track</ion-label>
         <ion-select
@@ -26,13 +26,13 @@
       <ion-item class="subtitleDelay">
         <ion-label>Delay</ion-label>
         <ion-button @click="onSubDelayChanged('decrease')"> - </ion-button>
-        {{ subSettings.subDelay }}
+        {{ playerData["sub-delay"] }}
         <ion-button @click="onSubDelayChanged('increase')"> + </ion-button>
       </ion-item>
       <ion-item>
         <ion-label>Show subtitle</ion-label>
         <ion-checkbox
-          v-model="subSettings.subVisibility"
+          :checked="playerData['sub-visibility']"
           @ionChange="changeSubtitleVisibility($event)"
           slot="end"
         ></ion-checkbox>
@@ -40,6 +40,9 @@
       <ion-item @click="onAddSubtitleClicked">
         <ion-label>Add subtitle</ion-label>
       </ion-item>
+    </ion-content>
+    <ion-content class="ion-padding" v-else>
+      <p>No playback.</p>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
@@ -65,6 +68,7 @@ import {
   modalController,
 } from "@ionic/vue";
 import filebrowsermodal from "./fileBrowserModal.vue";
+import { apiInstance } from "../api";
 
 export default {
   props: ["modalController"],
@@ -73,12 +77,8 @@ export default {
     const subTracks = ref([]);
     const activeSubTrackId = ref();
     const selectedTrack = ref({});
-    const playerData = computed(() => store.state.simpleapi.playerData);
-    const subSettings = ref({
-      subDelay: 0,
-      subVisibility: false,
-    });
     const store = useStore();
+    const playerData = computed(() => store.state.simpleapi.playerData);
 
     const loadTracks = function () {
       subTracks.value = playerData.value["track-list"].filter(
@@ -112,11 +112,9 @@ export default {
       });
       modal.onDidDismiss().then((response) => {
         if (response.data && response.data.filename) {
-          store.state.mpvsocket.socket.emit(
-            "addSubtitles",
-            response.data.filename
-          );
-          // reload tracks
+          apiInstance.post("tracks/sub/add", {
+            filename: response.data.filename,
+          });
           loadTracks();
         }
       });
@@ -124,31 +122,37 @@ export default {
       await modal.present();
     };
     const onSubtitleTrackChanged = () => {
-      store.state.mpvsocket.socket.emit("subReload", selectedTrack.value);
+      apiInstance.post(`tracks/sub/reload/${selectedTrack.value}`);
     };
 
     const changeSubtitleVisibility = (event) => {
-      subSettings.value.subVisibility = event.target.checked;
-      store.state.mpvsocket.socket.emit("setPlayerProp", [
-        "sub-visibility",
-        event.target.checked,
-      ]);
+      apiInstance
+        .post(`tracks/sub/visibility/${event.target.checked}`)
+        .then(() => {
+          store.commit("simpleapi/setPlayerDataProperty", {
+            key: "sub-visibility",
+            value: event.target.checked,
+          });
+        });
     };
     const onSubDelayChanged = (order) => {
+      let newDelay = 0;
       switch (order) {
         case "increase":
-          subSettings.value.subDelay += 1;
-          store.state.mpvsocket.socket.emit(
-            "adjustSubtitleTiming",
-            subSettings.value.subDelay
-          );
+          newDelay = playerData.value["sub-delay"] + 1;
+          store.commit("simpleapi/setPlayerDataProperty", {
+            key: "sub-delay",
+            value: newDelay,
+          });
+          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {});
           break;
         case "decrease":
-          subSettings.value.subDelay -= 1;
-          store.state.mpvsocket.socket.emit(
-            "adjustSubtitleTiming",
-            subSettings.value.subDelay
-          );
+          newDelay = playerData.value["sub-delay"] - 1;
+          store.commit("simpleapi/setPlayerDataProperty", {
+            key: "sub-delay",
+            value: newDelay,
+          });
+          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {});
           break;
       }
     };
@@ -162,9 +166,9 @@ export default {
       onSubtitleTrackChanged,
       onSubDelayChanged,
       selectedTrack,
-      subSettings,
       onAddSubtitleClicked,
       changeSubtitleVisibility,
+      playerData,
     };
   },
   components: {

@@ -18,15 +18,23 @@ apiInstance.interceptors.response.use(
   },
   (error) => {
     // If error has response it means we have connection to server.
-    if (error.response) {
-      if (error.response.status != 503)
-        openToast(
-          JSON.stringify(
-            error.response.data
-              ? error.response.data.message
-              : error.response.message
-          )
-        );
+    // Ignore 403 if getting drives
+    if (error.message == "Network Error") {
+      return Promise.reject(error);
+    } else if (
+      error.response.config &&
+      error.response.config.url.includes("drives") &&
+      error.response.status == 403
+    ) {
+      return Promise.reject(error);
+    } else if (error.response) {
+      openToast(
+        JSON.stringify(
+          error.response.data
+            ? error.response.data.message
+            : error.response.message
+        )
+      );
       if (!store.state.simpleapi.connected) {
         store.commit("simpleapi/setConnectedState", true);
       }

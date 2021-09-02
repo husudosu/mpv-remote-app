@@ -64,7 +64,7 @@ import { configureInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const connectedState = computed(() => store.state.simpleapi.connected);
     const currentSettings = computed(() => store.state.settings.server);
     const server_ip = ref(store.state.settings.settings.server.server_ip);
     const server_port = ref(store.state.settings.settings.server.server_port);

@@ -74,10 +74,10 @@ export default {
   setup() {
     const collections = ref([]);
     const store = useStore();
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const connectedState = computed(() => store.state.simpleapi.connected);
 
     apiInstance
-      .get("/collections")
+      .get("collections")
       .then((response) => (collections.value = response.data));
 
     const onAddNewCollectionClicked = async () => {

@@ -31,7 +31,7 @@
         <ion-item>
           <ion-label class="ion-text-wrap">
             <h2>Version</h2>
-            <p>0.1 Preview</p>
+            <p>1.0</p>
           </ion-label>
         </ion-item>
       </ion-list>

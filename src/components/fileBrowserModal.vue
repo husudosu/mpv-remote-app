@@ -125,9 +125,13 @@ export default {
     apiInstance
       .get("filebrowser/paths")
       .then((response) => (drives.value = response.data));
-    // apiInstance
-    //   .get(`/collections`)
-    //   .then((response) => (collections.value = response.data));
+    apiInstance
+      .get("/collections")
+      .then((response) => (collections.value = response.data));
+    // If unsafe file browsing enabled
+    apiInstance.get("/drives").then((response) => {
+      drives.value = response.data;
+    });
 
     const saveLastPath = async () => {
       let filemanLastPath = {};
@@ -159,7 +163,6 @@ export default {
       let data = {};
       if (path) data.path = path;
       if (collectionId) data.collection = collectionId;
-      console.log(data);
       // Save to history
       // Render spinner if loading takes more than 150 msec
       let loadingTimeout = setTimeout(() => {
@@ -228,9 +231,11 @@ export default {
 
         if (role === "continue") {
           console.log("Continue");
-          props.modalController.dismiss({
-            filename: entry.fullPath,
-            seekTo: entry.mediaStatus.current_time,
+          saveLastPath().then(() => {
+            props.modalController.dismiss({
+              filename: entry.fullPath,
+              seekTo: entry.mediaStatus.current_time,
+            });
           });
         } else if (role === "play") {
           saveLastPath().then(() => {

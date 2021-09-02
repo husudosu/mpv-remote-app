@@ -2,7 +2,6 @@ import { apiInstance } from "../api";
 const initialState = {
   playerData: {
     "audio-delay": 0, // <-- milliseconds
-    "audio-devices": [],
     chapter: 0, // <-- current chapter
     chapters: 0, // <-- chapters count
     "chapter-list": [],
@@ -18,7 +17,11 @@ const initialState = {
     remaining: 0.0, // <-- seconds
     speed: 1, // <-- multiplier
     "sub-delay": 0, // <-- milliseconds
-    "track-list": [],
+    "track-list": [
+      {
+        id: null,
+      },
+    ],
     volume: 0,
     "volume-max": 100,
   },
@@ -59,6 +62,7 @@ export const simpleapi = {
           });
         }, 1500);
       }
+      // Also setup local notifcations
     },
   },
 };

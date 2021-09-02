@@ -107,7 +107,7 @@
       </template>
     </ion-content>
     <ion-content class="ion-padding" v-else>
-      <p>Playback not active.</p>
+      <p>No playback.</p>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
@@ -116,7 +116,7 @@
 </template>
 
 <script>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useStore } from "vuex";
 import { formatTime } from "../tools";
 import {
@@ -132,27 +132,21 @@ import {
   IonItem,
   IonList,
 } from "@ionic/vue";
-import { apiInstance } from "../api";
 
 export default {
   props: ["modalController"],
   setup(props) {
     const store = useStore();
     const playerData = computed(() => store.state.simpleapi.playerData);
-    const tracks = ref([]);
-
-    apiInstance
-      .get("/tracks")
-      .then((response) => (tracks.value = response.data));
 
     const audioTracks = computed(() =>
-      tracks.value.filter((el) => el.type == "audio")
+      playerData.value["track-list"].filter((el) => el.type == "audio")
     );
     const videoTracks = computed(() =>
-      tracks.value.filter((el) => el.type == "video")
+      playerData.value["track-list"].filter((el) => el.type == "video")
     );
     const subtitleTracks = computed(() =>
-      tracks.value.filter((el) => el.type == "sub")
+      playerData.value["track-list"].filter((el) => el.type == "sub")
     );
     const onCancelClicked = () => {
       props.modalController.dismiss();
