@@ -22,6 +22,12 @@
           </ion-select-option>
         </ion-select>
       </ion-item>
+      <ion-item class="audioDelay">
+        <ion-label>Delay</ion-label>
+        <ion-button @click="onAudioDelayChanged('decrease')"> - </ion-button>
+        {{ playerData["audio-delay"] }}
+        <ion-button @click="onAudioDelayChanged('increase')"> + </ion-button>
+      </ion-item>
     </ion-content>
     <ion-content class="ion-padding" v-else>
       <p>No playback.</p>
@@ -79,6 +85,30 @@ export default {
       apiInstance.post(`/tracks/audio/reload/${selectedTrack.value}`);
     };
 
+    const onAudioDelayChanged = (order) => {
+      let newDelay = 0;
+      switch (order) {
+        case "increase":
+          newDelay = playerData.value["audio-delay"] + 1;
+          apiInstance.post(`tracks/audio/timing/${newDelay}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "audio-delay",
+              value: newDelay,
+            });
+          });
+          break;
+        case "decrease":
+          newDelay = playerData.value["audio-delay"] - 1;
+          apiInstance.post(`tracks/audio/timing/${newDelay}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "audio-delay",
+              value: newDelay,
+            });
+          });
+          break;
+      }
+    };
+
     return {
       audioTracks,
       activeAudioTrackId,
@@ -86,6 +116,7 @@ export default {
       onCancelClicked,
       onSwitchAudioClicked,
       playerData,
+      onAudioDelayChanged,
     };
   },
   components: {
@@ -112,5 +143,11 @@ ion-footer {
 
 ion-footer ion-button {
   width: 120px;
+}
+
+.audioDelay ion-button {
+  width: 26px;
+  height: 26px;
+  margin: 10px;
 }
 </style>

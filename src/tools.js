@@ -28,3 +28,17 @@ export const seekFlags = {
   KEYFRAMES: "keyframes",
   EXACT: "exact",
 };
+
+/*
+no:	Render subtitles as specified by the subtitle scripts, without overrides.
+yes:	Apply all the --sub-ass-* style override options. Changing the default for any of these options can lead to incorrect subtitle rendering (default).
+force:	Like yes, but also force all --sub-* options. Can break rendering easily.
+scale:	Like yes, but also apply --sub-scale.
+strip:	Radically strip all ASS tags and styles from the subtitle. This is equivalent to the old --no-ass / --no-sub-ass options.
+*/
+export const assOverride = {
+  NO: "no",
+  YES: "yes",
+  FORCE: "force",
+  SCALE: "scale",
+};

@@ -110,12 +110,11 @@ export default {
     };
 
     const onClearPlaylistClicked = () => {
-      store.state.mpvsocket.socket.emit("playlistClear");
+      apiInstance.post("/playlist/clear");
     };
 
     const onRemoveItemClicked = (item) => {
       apiInstance.post(`/playlist/remove/${item.index}`);
-      store.state.mpvsocket.socket.emit("playlistRemove", item.index);
     };
 
     const onItemClicked = (item) => {

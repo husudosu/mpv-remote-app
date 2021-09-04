@@ -87,7 +87,7 @@ export default {
         if (shouldReconnect) {
           await store.dispatch("settings/cleanFilemanHistory");
           store.commit("simpleapi/clearPlaybackRefreshInterval");
-          configureInstance(
+          await configureInstance(
             store.state.settings.settings.server.server_ip,
             store.state.settings.settings.server.server_port
           );

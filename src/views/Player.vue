@@ -79,6 +79,9 @@
             >
               <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
             </ion-button>
+            <ion-button :disabled="!connectedState" @click="onShutdownClicked">
+              <ion-icon slot="icon-only" :icon="power"></ion-icon>
+            </ion-button>
           </ion-col>
         </ion-row>
       </ion-grid>
@@ -136,6 +139,7 @@ import {
   earOutline,
   informationCircle,
   bookOutline,
+  power,
 } from "ionicons/icons";
 
 import openURLModal from "../components/openURLModal.vue";
@@ -316,6 +320,30 @@ export default {
       return await modal.present();
     };
 
+    const onShutdownClicked = async () => {
+      const actionSheet = await actionSheetController.create({
+        header: "Computer actions",
+        buttons: [
+          {
+            role: "shutdown",
+            text: "Shutdown",
+          },
+          {
+            role: "reboot",
+            text: "Reboot",
+          },
+        ],
+      });
+
+      await actionSheet.present();
+
+      const { role } = await actionSheet.onDidDismiss();
+
+      if (role != "backdrop") {
+        apiInstance.post(`/computer/${role}`);
+      }
+    };
+
     return {
       playerData,
       playerTitle,
@@ -329,6 +357,7 @@ export default {
       logoYoutube,
       bookOutline,
       folder,
+      power,
       scanOutline,
       journalOutline,
       modalController,
@@ -343,6 +372,7 @@ export default {
       onInfoClicked,
       openURL,
       onChaptersClicked,
+      onShutdownClicked,
     };
   },
 

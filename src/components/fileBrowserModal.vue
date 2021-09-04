@@ -18,7 +18,7 @@
         <ion-searchbar v-model="search" @ionChange="onSearch"></ion-searchbar>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content class="ion-padding" v-if="files.cwd || files.collection_id">
       <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
         <ion-icon :icon="folder" slot="start"></ion-icon>
         ...
@@ -49,6 +49,9 @@
         <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
         {{ entry.name }}
       </ion-item>
+    </ion-content>
+    <ion-content v-else>
+      <p>Select a directory, drive or collection!</p>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
@@ -105,7 +108,7 @@ export default {
     const collections = ref([]);
     const filesBak = ref([]);
     const search = ref("");
-    const loading = ref(true);
+    const loading = ref(false);
     const showOpenFolder = ref(props.action === "openFolder");
     const drives = ref([]);
     const filemanLastPath = store.state.settings.settings.filemanLastPath;
@@ -165,6 +168,7 @@ export default {
       if (collectionId) data.collection = collectionId;
       // Save to history
       // Render spinner if loading takes more than 150 msec
+
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
       }, 150);
@@ -182,23 +186,16 @@ export default {
         });
     };
 
-    // FIXME: Duplication of code, come up with better solution!
     if (filemanLastPath) {
       if (filemanLastPath.type == "collection") {
-        getDirectoryContents(null, filemanLastPath.collection_id).catch(
-          (err) => {
-            console.log(err);
-            getDirectoryContents();
-          }
-        );
+        getDirectoryContents(null, filemanLastPath.collection_id).catch(() => {
+          getDirectoryContents();
+        });
       } else if (filemanLastPath.type == "directory") {
-        getDirectoryContents(filemanLastPath.cwd).catch((err) => {
-          console.log(err);
+        getDirectoryContents(filemanLastPath.cwd).catch(() => {
           getDirectoryContents();
         });
       }
-    } else {
-      getDirectoryContents();
     }
 
     const onCancelClicked = () => {

@@ -22,12 +22,21 @@
           </ion-select-option>
         </ion-select>
       </ion-item>
+      <ion-item @click="onAddSubtitleClicked">
+        <ion-label>Add subtitle</ion-label>
+      </ion-item>
 
       <ion-item class="subtitleDelay">
         <ion-label>Delay</ion-label>
         <ion-button @click="onSubDelayChanged('decrease')"> - </ion-button>
         {{ playerData["sub-delay"] }}
         <ion-button @click="onSubDelayChanged('increase')"> + </ion-button>
+      </ion-item>
+      <ion-item class="subtitleDelay">
+        <ion-label>Font size</ion-label>
+        <ion-button @click="onSubFontSizeChanged('decrease')"> - </ion-button>
+        {{ playerData["sub-font-size"] }}
+        <ion-button @click="onSubFontSizeChanged('increase')"> + </ion-button>
       </ion-item>
       <ion-item>
         <ion-label>Show subtitle</ion-label>
@@ -37,8 +46,22 @@
           slot="end"
         ></ion-checkbox>
       </ion-item>
-      <ion-item @click="onAddSubtitleClicked">
-        <ion-label>Add subtitle</ion-label>
+
+      <ion-item>
+        <ion-label>ASS Override</ion-label>
+
+        <ion-select
+          @ionChange="onAssOverridechanged"
+          :value="currentAssOverride"
+        >
+          <ion-select-option
+            v-for="(item, index) in assOverride"
+            :key="index"
+            :value="item"
+          >
+            {{ item }}
+          </ion-select-option>
+        </ion-select>
       </ion-item>
     </ion-content>
     <ion-content class="ion-padding" v-else>
@@ -69,7 +92,7 @@ import {
 } from "@ionic/vue";
 import filebrowsermodal from "./fileBrowserModal.vue";
 import { apiInstance } from "../api";
-
+import { assOverride } from "../tools";
 export default {
   props: ["modalController"],
   setup(props) {
@@ -77,9 +100,12 @@ export default {
     const subTracks = ref([]);
     const activeSubTrackId = ref();
     const selectedTrack = ref({});
+    const selectedAssOverride = ref("");
     const store = useStore();
     const playerData = computed(() => store.state.simpleapi.playerData);
-
+    const currentAssOverride = computed(
+      () => playerData.value["sub-ass-override"]
+    );
     const loadTracks = function () {
       subTracks.value = playerData.value["track-list"].filter(
         (el) => el.type === "sub"
@@ -93,7 +119,7 @@ export default {
         selectedTrack.value = activeSubTrackId.value;
       }
     };
-
+    console.log(playerData.value["sub-ass-override"]);
     const onAppendClicked = () => {
       props.modalController.dismiss();
     };
@@ -140,22 +166,53 @@ export default {
       switch (order) {
         case "increase":
           newDelay = playerData.value["sub-delay"] + 1;
-          store.commit("simpleapi/setPlayerDataProperty", {
-            key: "sub-delay",
-            value: newDelay,
+          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-delay",
+              value: newDelay,
+            });
           });
-          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {});
           break;
         case "decrease":
           newDelay = playerData.value["sub-delay"] - 1;
-          store.commit("simpleapi/setPlayerDataProperty", {
-            key: "sub-delay",
-            value: newDelay,
+          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-delay",
+              value: newDelay,
+            });
           });
-          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {});
           break;
       }
     };
+    const onSubFontSizeChanged = (order) => {
+      let newSize = 0;
+      switch (order) {
+        case "increase":
+          newSize = playerData.value["sub-font-size"] + 1;
+          apiInstance.post(`tracks/sub/font-size/${newSize}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-font-size",
+              value: newSize,
+            });
+          });
+          break;
+        case "decrease":
+          newSize = playerData.value["sub-font-size"] - 1;
+          apiInstance.post(`tracks/sub/font-size/${newSize}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-font-size",
+              value: newSize,
+            });
+          });
+          break;
+      }
+    };
+    const onAssOverridechanged = (event) => {
+      apiInstance
+        .post(`/sub/ass-override/${event.target.value}`)
+        .then(() => console.log("changed"));
+    };
+
     loadTracks();
     return {
       tracks,
@@ -167,7 +224,12 @@ export default {
       onSubDelayChanged,
       selectedTrack,
       onAddSubtitleClicked,
+      onSubFontSizeChanged,
+      onAssOverridechanged,
       changeSubtitleVisibility,
+      currentAssOverride,
+      selectedAssOverride,
+      assOverride,
       playerData,
     };
   },

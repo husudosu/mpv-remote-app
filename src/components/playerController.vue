@@ -78,7 +78,6 @@ export default {
     };
 
     const onSeek = (e) => {
-      console.log(e);
       apiInstance
         .post("controls/seek", {
           target: e.target.value,
