@@ -136,6 +136,8 @@ export default defineComponent({
 
     App.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
+        // Set screen orientation if active
+        store.commit("app/setScreenOrinetation", screen.orientation.type);
         apiInstance.get("/status").then((response) => {
           store.commit("simpleapi/setPlayerData", response.data);
         });

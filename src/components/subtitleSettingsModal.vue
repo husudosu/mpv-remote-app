@@ -18,7 +18,7 @@
             v-for="sub in subTracks"
             :key="sub.id"
           >
-            {{ sub.lang || sub.external_filename }}
+            {{ sub.lang || sub["external-filename"] }}
           </ion-select-option>
         </ion-select>
       </ion-item>

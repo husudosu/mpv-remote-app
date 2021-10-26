@@ -18,7 +18,7 @@
             v-for="audio in audioTracks"
             :key="audio.id"
           >
-            {{ audio.lang }}
+            {{ audio.lang || `unknown${audio.id}` }}
           </ion-select-option>
         </ion-select>
       </ion-item>

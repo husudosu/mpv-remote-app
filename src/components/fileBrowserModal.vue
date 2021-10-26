@@ -15,7 +15,11 @@
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar v-model="search" @ionChange="onSearch"></ion-searchbar>
+        <ion-searchbar
+          :disabled="Object.keys(files).length === 0"
+          v-model="search"
+          @ionChange="onSearch"
+        ></ion-searchbar>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding" v-if="files.cwd || files.collection_id">
@@ -50,8 +54,28 @@
         {{ entry.name }}
       </ion-item>
     </ion-content>
-    <ion-content v-else>
-      <p>Select a directory, drive or collection!</p>
+    <ion-content v-else-if="!loading">
+      <ion-list-header>Collections</ion-list-header>
+      <ion-list>
+        <ion-item
+          @click="getDirectoryContents(null, collection.id)"
+          v-for="(collection, i) in collections"
+          :key="i"
+        >
+          {{ collection.name }}
+        </ion-item>
+      </ion-list>
+
+      <ion-list-header>Drives</ion-list-header>
+      <ion-list>
+        <ion-item
+          @click="getDirectoryContents(drive.path)"
+          v-for="(drive, i) in drives"
+          :key="i"
+        >
+          {{ drive.path }}
+        </ion-item>
+      </ion-list>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
@@ -85,6 +109,8 @@ import {
   IonButtons,
   IonSearchbar,
   IonLoading,
+  IonList,
+  IonListHeader,
   actionSheetController,
 } from "@ionic/vue";
 import {
@@ -108,7 +134,7 @@ export default {
     const collections = ref([]);
     const filesBak = ref([]);
     const search = ref("");
-    const loading = ref(false);
+    const loading = ref(true);
     const showOpenFolder = ref(props.action === "openFolder");
     const drives = ref([]);
     const filemanLastPath = store.state.settings.settings.filemanLastPath;
@@ -122,7 +148,7 @@ export default {
         if (collection) return collection.name;
         else return "Unknown collection";
       }
-      return "N/A";
+      return "Filebrowser";
     });
 
     apiInstance
@@ -361,6 +387,7 @@ export default {
       onSearch,
       decideIcon,
       onCollectionsClicked,
+      getDirectoryContents,
       showOpenFolder,
       titleText,
       loading,
@@ -374,6 +401,8 @@ export default {
       musicalNotes,
       journalOutline,
       film,
+      collections,
+      drives,
     };
   },
   components: {
@@ -389,6 +418,8 @@ export default {
     IonButtons,
     IonSearchbar,
     IonLoading,
+    IonList,
+    IonListHeader,
   },
 };
 </script>
