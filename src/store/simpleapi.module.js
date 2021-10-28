@@ -27,6 +27,15 @@ const initialState = {
   },
   playbackRefreshInterval: null,
   connected: false,
+  MPVInfo: {
+    "ffmpeg-version": "N/A",
+    "mpv-version": "N/A",
+    "libass-version": "N/A",
+    mpvremoteConfig: {
+      unsafefilebrowsing: false,
+      uselocaldb: false,
+    },
+  },
 };
 
 export const simpleapi = {
@@ -41,6 +50,9 @@ export const simpleapi = {
     },
     setConnectedState(state, value) {
       state.connected = value;
+    },
+    setMPVInfo(state, value) {
+      state.MPVInfo = value;
     },
     clearPlaybackRefreshInterval(state) {
       if (state.playbackRefreshInterval != null) {

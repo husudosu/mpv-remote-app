@@ -34,6 +34,10 @@ apiInstance.interceptors.response.use(
   (response) => {
     if (!store.state.simpleapi.connected) {
       store.commit("simpleapi/setConnectedState", true);
+      // Get MPV Info
+      apiInstance.get("mpvinfo").then((response) => {
+        store.commit("simpleapi/setMPVInfo", response.data);
+      });
     }
     callsPending--;
     return response;

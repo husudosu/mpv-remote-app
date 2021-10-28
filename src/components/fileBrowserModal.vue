@@ -189,6 +189,7 @@ export default {
     };
 
     const getDirectoryContents = async (path = null, collectionId = null) => {
+      console.log("Get directory contents");
       let data = {};
       if (path) data.path = path;
       if (collectionId) data.collection = collectionId;
@@ -198,7 +199,7 @@ export default {
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
       }, 150);
-
+      console.log(data);
       return apiInstance
         .post("filebrowser/browse", data)
         .then((response) => {
