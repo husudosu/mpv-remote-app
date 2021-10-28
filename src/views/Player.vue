@@ -65,7 +65,7 @@
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
-              :disabled="!connectedState"
+              :disabled="!connectedState || !filebrowserEnabled"
               @click="onFileBrowserClicked"
             >
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
@@ -158,6 +158,12 @@ export default {
     const playerData = computed(() => store.state.simpleapi.playerData);
     const connectedState = computed(() => store.state.simpleapi.connected);
     const screenOrientation = computed(() => store.state.app.screenOrientation);
+    const filebrowserEnabled = computed(() => {
+      return (
+        store.state.simpleapi.MPVInfo.mpvremoteConfig.unsafefilebrowsing ||
+        store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb
+      );
+    });
     const serverConfigured = computed(
       () => store.state.settings.settings.configured
     );
@@ -373,6 +379,7 @@ export default {
       openURL,
       onChaptersClicked,
       onShutdownClicked,
+      filebrowserEnabled,
     };
   },
 

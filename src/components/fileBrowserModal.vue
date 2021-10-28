@@ -6,10 +6,22 @@
       <ion-toolbar>
         <ion-title>{{ titleText }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="onChangeDriveClicked">
+          <ion-button
+            :disabled="Object.keys(files).length === 0"
+            @click="onSortByClicked"
+          >
+            <ion-icon :icon="funnelOutline" slot="icon-only"></ion-icon>
+          </ion-button>
+          <ion-button
+            :disabled="!serverConfig.unsafefilebrowsing"
+            @click="onChangeDriveClicked"
+          >
             <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
           </ion-button>
-          <ion-button @click="onCollectionsClicked">
+          <ion-button
+            :disabled="!serverConfig.uselocaldb"
+            @click="onCollectionsClicked"
+          >
             <ion-icon :icon="bookmarksOutline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -22,7 +34,10 @@
         ></ion-searchbar>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding" v-if="files.cwd || files.collection_id">
+    <ion-content
+      class="ion-padding"
+      v-if="(files.cwd || files.collection_id) && connectedState"
+    >
       <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
         <ion-icon :icon="folder" slot="start"></ion-icon>
         ...
@@ -53,6 +68,9 @@
         <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
         {{ entry.name }}
       </ion-item>
+    </ion-content>
+    <ion-content v-else-if="!connectedState">
+      Lost connection to server.
     </ion-content>
     <ion-content v-else-if="!loading">
       <ion-list-header>Collections</ion-list-header>
@@ -122,6 +140,7 @@ import {
   musicalNotes,
   film,
   journalOutline,
+  funnelOutline,
 } from "ionicons/icons";
 import { formatTime } from "../tools";
 
@@ -129,7 +148,10 @@ export default {
   props: ["modalController", "action"],
   setup(props) {
     const store = useStore();
-
+    const connectedState = computed(() => store.state.simpleapi.connected);
+    const serverConfig = computed(
+      () => store.state.simpleapi.MPVInfo.mpvremoteConfig
+    );
     const files = ref({});
     const collections = ref([]);
     const filesBak = ref([]);
@@ -151,16 +173,23 @@ export default {
       return "Filebrowser";
     });
 
-    apiInstance
-      .get("filebrowser/paths")
-      .then((response) => (drives.value = response.data));
-    apiInstance
-      .get("/collections")
-      .then((response) => (collections.value = response.data));
-    // If unsafe file browsing enabled
-    apiInstance.get("/drives").then((response) => {
-      drives.value = response.data;
-    });
+    // Get paths or drives
+    if (store.state.simpleapi.MPVInfo.mpvremoteConfig.unsafefilebrowsing) {
+      apiInstance.get("/drives").then((response) => {
+        drives.value = response.data;
+      });
+    } else {
+      apiInstance
+        .get("filebrowser/paths")
+        .then((response) => (drives.value = response.data));
+    }
+
+    // Get collections.
+    if (store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb) {
+      apiInstance
+        .get("/collections")
+        .then((response) => (collections.value = response.data));
+    }
 
     const saveLastPath = async () => {
       let filemanLastPath = {};
@@ -223,6 +252,8 @@ export default {
           getDirectoryContents();
         });
       }
+    } else {
+      loading.value = false;
     }
 
     const onCancelClicked = () => {
@@ -364,6 +395,10 @@ export default {
       saveLastPath().then(() => props.modalController.dismiss(files.value.cwd));
     };
 
+    const onSortByClicked = () => {
+      alert("TODO");
+    };
+
     const decideIcon = (entry) => {
       switch (entry.type) {
         case "file":
@@ -404,6 +439,10 @@ export default {
       film,
       collections,
       drives,
+      connectedState,
+      serverConfig,
+      funnelOutline,
+      onSortByClicked,
     };
   },
   components: {
