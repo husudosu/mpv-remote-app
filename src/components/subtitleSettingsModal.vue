@@ -93,6 +93,7 @@ import {
 import filebrowsermodal from "./fileBrowserModal.vue";
 import { apiInstance } from "../api";
 import { assOverride } from "../tools";
+import { FileBrowserActions } from "../enums";
 export default {
   props: ["modalController"],
   setup(props) {
@@ -133,7 +134,7 @@ export default {
         component: filebrowsermodal,
         componentProps: {
           modalController: props.modalController,
-          action: "opensub",
+          action: FileBrowserActions.OPENSUB,
         },
       });
       modal.onDidDismiss().then((response) => {

@@ -130,6 +130,7 @@ import {
   IonList,
   IonListHeader,
   actionSheetController,
+  alertController,
 } from "@ionic/vue";
 import {
   folder,
@@ -143,6 +144,11 @@ import {
   funnelOutline,
 } from "ionicons/icons";
 import { formatTime } from "../tools";
+import {
+  FileBrowserSortBy,
+  FileBrowserActions,
+  FileBrowserEntryTypes,
+} from "../enums";
 
 export default {
   props: ["modalController", "action"],
@@ -157,9 +163,11 @@ export default {
     const filesBak = ref([]);
     const search = ref("");
     const loading = ref(true);
-    const showOpenFolder = ref(props.action === "openFolder");
+    const showOpenFolder = ref(props.action === FileBrowserActions.OPENFOLDER);
     const drives = ref([]);
     const filemanLastPath = store.state.settings.settings.filemanLastPath;
+    const sortBy = ref(FileBrowserSortBy.NAME);
+
     let history = store.state.settings.settings.history || [];
     const titleText = computed(() => {
       if (files.value.dirname) return files.value.dirname;
@@ -312,21 +320,27 @@ export default {
     };
 
     const onEntryClicked = async (entry) => {
+      sortBy.value = FileBrowserSortBy.NAME;
       if (entry.type === "directory") {
         getDirectoryContents(entry.fullPath);
         history.push(files.value.collection_id);
       } else if (
-        props.action === "play" &&
-        (entry.type === "video" || entry.type === "audio")
+        props.action === FileBrowserActions.PLAY &&
+        (entry.type === FileBrowserEntryTypes.VIDEO ||
+          entry.type === FileBrowserEntryTypes.AUDIO)
       ) {
         handlePlayAction(entry);
-      } else if (props.action == "opensub" && entry.type == "subtitle") {
+      } else if (
+        props.action == FileBrowserActions.OPENSUB &&
+        entry.type == FileBrowserEntryTypes.SUBTITLE
+      ) {
         props.modalController.dismiss({ filename: entry.fullPath });
       }
     };
 
     const onPrevDirectoryClicked = () => {
       // Get collection
+      sortBy.value = FileBrowserSortBy.NAME;
       const collectionId = history.pop();
 
       if (collectionId !== undefined && collectionId !== null) {
@@ -395,8 +409,64 @@ export default {
       saveLastPath().then(() => props.modalController.dismiss(files.value.cwd));
     };
 
-    const onSortByClicked = () => {
-      alert("TODO");
+    const doSort = () => {
+      let loadingTimeout = setTimeout(() => {
+        loading.value = true;
+      }, 150);
+
+      switch (sortBy.value) {
+        case FileBrowserSortBy.LASTMODIFIED:
+          files.value.cotent = files.value.content.sort((a, b) => {
+            return (
+              a.priority - b.priority ||
+              new Date(b.lastModified) - new Date(a.lastModified)
+            );
+          });
+          break;
+        case FileBrowserSortBy.NAME:
+          files.value.content = files.value.content.sort((a, b) => {
+            return (
+              a.priority - b.priority ||
+              a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+            );
+          });
+          break;
+      }
+
+      clearInterval(loadingTimeout);
+    };
+    const onSortByClicked = async () => {
+      const alert = await alertController.create({
+        header: "Sort by",
+        inputs: [
+          {
+            type: "radio",
+            label: "Name",
+            value: FileBrowserSortBy.NAME,
+            checked: sortBy.value === FileBrowserSortBy.NAME,
+          },
+          {
+            type: "radio",
+            label: "Last modified",
+            value: FileBrowserSortBy.LASTMODIFIED,
+            checked: sortBy.value === FileBrowserSortBy.LASTMODIFIED,
+          },
+        ],
+        buttons: [
+          {
+            text: "Cancel",
+            role: "cancel",
+          },
+          {
+            text: "Ok",
+            handler: (data) => {
+              sortBy.value = data;
+              doSort();
+            },
+          },
+        ],
+      });
+      await alert.present();
     };
 
     const decideIcon = (entry) => {

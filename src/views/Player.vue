@@ -151,6 +151,7 @@ import playerController from "../components/playerController.vue";
 
 import { formatTime, seekFlags, openURL } from "../tools";
 import { apiInstance } from "../api";
+import { FileBrowserActions } from "../enums";
 export default {
   setup() {
     const store = useStore();
@@ -184,7 +185,7 @@ export default {
         component: fileBrowserModal,
         componentProps: {
           modalController: modalController,
-          action: "play",
+          action: FileBrowserActions.PLAY,
         },
       });
       modal.onDidDismiss().then((response) => {

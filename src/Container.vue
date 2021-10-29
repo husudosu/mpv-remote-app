@@ -63,7 +63,7 @@ import {
 import { App } from "@capacitor/app";
 import { useStore } from "vuex";
 import { configureInstance, apiInstance } from "./api";
-
+import { LocalNotifications } from "@capacitor/local-notifications";
 export default defineComponent({
   name: "App",
   components: {
@@ -149,7 +149,32 @@ export default defineComponent({
         store.commit("simpleapi/clearPlaybackRefreshInterval");
       }
     });
+    LocalNotifications.checkPermissions().then((resp) => console.log(resp));
+    // LocalNotifications.createChannel({
+    //   id: 1,
+    //   importance: 2,
+    // });
 
+    LocalNotifications.createChannel({
+      id: "mediaControl",
+      importance: 2,
+      lights: false,
+      name: "Media control",
+      visibility: -1000,
+    }).then(() => {
+      LocalNotifications.listChannels().then((resp) => console.log(resp));
+      LocalNotifications.schedule({
+        notifications: [
+          {
+            channelId: "mediaControl",
+            id: 1,
+            title: "Test",
+            body: "Test1234",
+            importance: 4,
+          },
+        ],
+      });
+    });
     return {
       selectedIndex,
       appPages,

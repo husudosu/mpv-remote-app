@@ -69,6 +69,7 @@ import {
 } from "@ionic/vue";
 import fileBrowserModal from "../components/fileBrowserModal.vue";
 import { apiInstance } from "../api";
+import { FileBrowserActions } from "../enums";
 
 export default {
   props: ["modalController", "collection"],
@@ -116,7 +117,7 @@ export default {
         component: fileBrowserModal,
         componentProps: {
           modalController: modalController,
-          action: "openFolder",
+          action: FileBrowserActions.OPENFOLDER,
         },
       });
 

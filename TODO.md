@@ -1,10 +1,4 @@
-- Improve launch time speed
 - Create "branding" for app like logo, app info etc...
-- Basic error rendering
-
-MPV-simpleapi issues:
-
-- Stop command not exists
 
 ## Info
 
