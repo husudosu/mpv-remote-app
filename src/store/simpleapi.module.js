@@ -1,4 +1,5 @@
 import { apiInstance } from "../api";
+import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 const initialState = {
   playerData: {
     "audio-delay": 0, // <-- milliseconds
@@ -24,6 +25,7 @@ const initialState = {
     ],
     volume: 0,
     "volume-max": 100,
+    "media-title": null,
   },
   playbackRefreshInterval: null,
   connected: false,
@@ -36,7 +38,44 @@ const initialState = {
       uselocaldb: false,
     },
   },
+  musicControlsActive: false,
+  musicControlStatus: {
+    artist: "",
+    isPlaying: false,
+    filename: "",
+    "media-title": "",
+  },
 };
+
+function events(action) {
+  const message = JSON.parse(action).message;
+  switch (message) {
+    case "music-controls-next":
+      apiInstance.post("controls/next");
+      break;
+    case "music-controls-previous":
+      apiInstance.post("controls/prev");
+      break;
+    case "music-controls-pause":
+      // Do something
+      console.log("MusicController: Pause");
+      musicControls.updateIsPlaying(false);
+      apiInstance.post("/controls/play-pause");
+      break;
+    case "music-controls-play":
+      // Do something
+      console.log("MusicController: Play");
+      apiInstance.post("/controls/play-pause");
+      musicControls.updateIsPlaying(true);
+      break;
+    case "music-controls-destroy":
+      // Do something
+      console.log("Destroy music controls");
+      break;
+    default:
+      break;
+  }
+}
 
 export const simpleapi = {
   namespaced: true,
@@ -44,6 +83,41 @@ export const simpleapi = {
   mutations: {
     setPlayerData(state, value) {
       state.playerData = value;
+
+      // If music controls enabled
+      if (state.connected && state.playerData.filename) {
+        if (!state.musicControlsActive) {
+          musicControls.create(
+            {
+              artist:
+                state.playerData["media-title"] || state.playerData.filename,
+              dismissable: false,
+            },
+            () => {
+              state.musicControlsActive = true;
+            }
+          );
+          state.musicControlStatus["media-title"] =
+            state.playerData["media-title"];
+          state.musicControlStatus.filename = state.playerData.filename;
+
+          musicControls.updateIsPlaying(!state.playerData.pause);
+          musicControls.subscribe(events);
+          musicControls.listen();
+        } else {
+          // Media have changed.
+          if (
+            state.musicControlStatus["media-title"] !=
+              state.playerData["media-title"] ||
+            state.musicControlStatus.filename != state.playerData.filename
+          ) {
+            musicControls.destroy();
+            state.musicControlsActive = false;
+          } else {
+            musicControls.updateIsPlaying(!state.playerData.pause);
+          }
+        }
+      }
     },
     setPlayerDataProperty(state, value) {
       state.playerData[value.key] = value.value;
