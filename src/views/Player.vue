@@ -339,6 +339,10 @@ export default {
             role: "reboot",
             text: "Reboot",
           },
+          {
+            role: "quit",
+            text: "Quit",
+          },
         ],
       });
 

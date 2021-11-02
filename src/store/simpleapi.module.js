@@ -47,6 +47,24 @@ const initialState = {
   },
 };
 
+// async function postData(url = "", data = {}) {
+//   // Default options are marked with *
+//   const response = await fetch(url, {
+//     method: "POST", // *GET, POST, PUT, DELETE, etc.
+//     mode: "cors", // no-cors, *cors, same-origin
+//     cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+//     credentials: "same-origin", // include, *same-origin, omit
+//     headers: {
+//       "Content-Type": "application/json",
+//       // 'Content-Type': 'application/x-www-form-urlencoded',
+//     },
+//     redirect: "follow", // manual, *follow, error
+//     referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+//     body: JSON.stringify(data), // body data type must match "Content-Type" header
+//   });
+//   return response.json(); // parses JSON response into native JavaScript objects
+// }
+
 function events(action) {
   const message = JSON.parse(action).message;
   switch (message) {
@@ -59,14 +77,31 @@ function events(action) {
     case "music-controls-pause":
       // Do something
       console.log("MusicController: Pause");
-      musicControls.updateIsPlaying(false);
-      apiInstance.post("/controls/play-pause");
+      // musicControls.updateIsPlaying(false);
+      // postData("http://192.168.88.4:8000/api/v1/controls/play-pause").then(() =>
+      //   console.log("Play-pause finished")
+      // );
+      // apiInstance
+      //   .post("/controls/play-pause")
+      //   .then(() => console.log("Play-Pause"));
       break;
     case "music-controls-play":
       // Do something
       console.log("MusicController: Play");
-      apiInstance.post("/controls/play-pause");
-      musicControls.updateIsPlaying(true);
+      console.log("API Instance OBJ:");
+      console.log(apiInstance.toString());
+      console.log(apiInstance.defaults);
+      // Try fetch API
+      // postData("http://192.168.88.4:8000/api/v1/controls/play-pause").then(() =>
+      //   console.log("Play-pause finished")
+      // );
+      // apiInstance
+      //   .post("/controls/play-pause")
+      //   .then(() => console.log("Play-Pause"))
+      //   .finally(() => "Play-pause ran");
+
+      // musicControls.updateIsPlaying(true);
+      console.log("MusicController: Play Finished");
       break;
     case "music-controls-destroy":
       // Do something
@@ -113,9 +148,10 @@ export const simpleapi = {
           ) {
             musicControls.destroy();
             state.musicControlsActive = false;
-          } else {
-            musicControls.updateIsPlaying(!state.playerData.pause);
-          }
+          // } else {
+          //   console.log("T");
+          //   // musicControls.updateIsPlaying(!state.playerData.pause);
+          // }
         }
       }
     },
