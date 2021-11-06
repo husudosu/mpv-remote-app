@@ -1,30 +1,80 @@
 import axios from "axios";
 import { toastController } from "@ionic/core";
+
+import { store } from "./store";
+
 export let apiInstance = axios.create({
   timeout: 10000,
 });
+let cancelSource = axios.CancelToken.source();
+let callsPending = 0;
 
-export function configureInstance(host, port) {
-  apiInstance.defaults.baseURL = `http://${host}:${port}`;
+function requestOnFulfilled(config) {
+  config.cancelToken = cancelSource.token;
+  callsPending++;
+  return config;
+}
+
+function requestOnRejected(error) {
+  openToast(JSON.stringify(error));
+  Promise.reject(error);
+}
+
+export async function configureInstance(host, port) {
+  if (callsPending > 0) {
+    callsPending = 0;
+    cancelSource.cancel("API reconfigure");
+    cancelSource = axios.CancelToken.source();
+  }
+  apiInstance.defaults.baseURL = `http://${host}:${port}/api/v1/`;
+  apiInstance.interceptors.request.use(requestOnFulfilled, requestOnRejected);
 }
 
 apiInstance.interceptors.response.use(
   (response) => {
+    if (!store.state.simpleapi.connected) {
+      store.commit("simpleapi/setConnectedState", true);
+      // Get MPV Info
+      apiInstance.get("mpvinfo").then((response) => {
+        store.commit("simpleapi/setMPVInfo", response.data);
+      });
+    }
+    callsPending--;
     return response;
   },
   (error) => {
-    openToast(JSON.stringify(error.message));
+    // If error has response it means we have connection to server.
+    // Ignore 403 if getting drives
+    callsPending--;
+    if (error.message == "Network Error") {
+      store.commit("simpleapi/setConnectedState", false);
+      store.commit("simpleapi/clearPlayerData");
+      return Promise.reject(error);
+    } else if (
+      error.response &&
+      error.response.config &&
+      error.response.config.url.includes("drives") &&
+      error.response.status == 403
+    ) {
+      return Promise.reject(error);
+    } else if (error.response) {
+      openToast(
+        JSON.stringify(
+          error.response.data
+            ? error.response.data.message
+            : error.response.message
+        )
+      );
+      if (!store.state.simpleapi.connected) {
+        store.commit("simpleapi/setConnectedState", true);
+      }
+    } else {
+      if (store.state.simpleapi.connected) {
+        store.commit("simpleapi/setConnectedState", false);
+        store.commit("simpleapi/clearPlayerData");
+      }
+    }
     return Promise.reject(error);
-  }
-);
-
-apiInstance.interceptors.request.use(
-  (config) => {
-    return config;
-  },
-  (error) => {
-    openToast(JSON.stringify(error));
-    Promise.reject(error);
   }
 );
 

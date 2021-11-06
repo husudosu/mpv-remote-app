@@ -34,7 +34,7 @@
         </ion-item>
 
         <ion-item
-          :disabled="!connectedState"
+          :disabled="!connectedState || !uselocaldb"
           :router-link="{ name: 'folder.settings.collections' }"
         >
           <ion-label>Media collections</ion-label>
@@ -64,8 +64,11 @@ import { configureInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const connectedState = computed(() => store.state.simpleapi.connected);
     const currentSettings = computed(() => store.state.settings.server);
+    const uselocaldb = computed(
+      () => store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb
+    );
     const server_ip = ref(store.state.settings.settings.server.server_ip);
     const server_port = ref(store.state.settings.settings.server.server_port);
     const setSetting = async (key) => {
@@ -86,12 +89,12 @@ export default {
         await store.dispatch("settings/setSetting", { key, value });
         if (shouldReconnect) {
           await store.dispatch("settings/cleanFilemanHistory");
-          await store.dispatch("mpvsocket/clearSocket");
-          await store.dispatch("mpvsocket/setupSocket");
-          configureInstance(
+          store.commit("simpleapi/clearPlaybackRefreshInterval");
+          await configureInstance(
             store.state.settings.settings.server.server_ip,
             store.state.settings.settings.server.server_port
           );
+          store.dispatch("simpleapi/setPlaybackRefreshInterval");
         }
       }
     };
@@ -102,6 +105,7 @@ export default {
       server_ip,
       server_port,
       connectedState,
+      uselocaldb,
     };
   },
   components: {

@@ -5,7 +5,7 @@
         <ion-content>
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
-            <ion-note>1.0 Beta</ion-note>
+            <ion-note>1.0.2</ion-note>
 
             <ion-menu-toggle
               auto-hide="false"
@@ -38,6 +38,7 @@
 </template>
 
 <script>
+import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 import {
   IonApp,
   IonContent,
@@ -60,10 +61,11 @@ import {
   listOutline,
   informationCircleOutline,
 } from "ionicons/icons";
+import { Plugins } from "@capacitor/core";
+const { App /*BackgroundTask*/ } = Plugins;
 
 import { useStore } from "vuex";
-import { App } from "@capacitor/app";
-import { configureInstance } from "./api";
+import { configureInstance, apiInstance } from "./api";
 
 export default defineComponent({
   name: "App",
@@ -82,6 +84,7 @@ export default defineComponent({
     IonSplitPane,
   },
   setup() {
+    musicControls.destroy();
     const selectedIndex = ref(0);
     const store = useStore();
     const route = useRoute();
@@ -111,57 +114,45 @@ export default defineComponent({
         mdIcon: informationCircleOutline,
       },
     ];
-    let autoDisconnectTimeout = null;
     const path = window.location.pathname.split("folder/")[1];
     if (path !== undefined) {
       selectedIndex.value = appPages.findIndex(
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
-
-    App.addListener("appStateChange", ({ isActive }) => {
-      if (isActive) {
-        // Refresh orientation
-        store.commit("app/setScreenOrinetation", screen.orientation.type);
-        if (autoDisconnectTimeout) {
-          console.log("Clearing timeout");
-          clearTimeout(autoDisconnectTimeout);
-          // Check if playing
-          if (!store.state.mpvsocket.playerData.pause) {
-            console.log("Activate refresh");
-            store.commit("mpvsocket/setPlaybackRefreshInterval");
-          }
-        }
-        if (store.state.mpvsocket.socket.disconnected) {
-          console.log("App activated and socket disconnected,connecting...");
-          store.state.mpvsocket.socket.connect();
-          console.log("Connected");
-        }
-      } else {
-        // Battery saving stuff
-        console.log("Disconnect in 3 minute");
-        store.commit("mpvsocket/clearPlaybackRefreshInterval");
-        if (store.state.mpvsocket.socket.connected) {
-          autoDisconnectTimeout = setTimeout(() => {
-            store.state.mpvsocket.socket.disconnect();
-            console.log("Disconnected from socket");
-          }, 180000);
-        }
-      }
-    });
-
     // First load settings
     store.dispatch("settings/loadSettings").then(() => {
-      store.dispatch("mpvsocket/setupSocket");
       configureInstance(
         store.state.settings.settings.server.server_ip,
         store.state.settings.settings.server.server_port
       );
+      apiInstance.get("/status").then((response) => {
+        console.log(response.data);
+        store.commit("simpleapi/setPlayerData", response.data);
+      });
+
+      store.dispatch("simpleapi/setPlaybackRefreshInterval");
     });
 
     window.addEventListener("orientationchange", function () {
       store.commit("app/setScreenOrinetation", screen.orientation.type);
-      console.log(screen.orientation.type);
+    });
+
+    App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        // Set screen orientation if active
+        store.commit("app/setScreenOrinetation", screen.orientation.type);
+        apiInstance.get("/status").then((response) => {
+          store.commit("simpleapi/setPlayerData", response.data);
+        });
+        if (!store.state.simpleapi.playbackRefreshInterval) {
+          store.dispatch("simpleapi/setPlaybackRefreshInterval");
+        }
+      } else {
+        // Battery saving stuff
+        store.commit("simpleapi/clearPlaybackRefreshInterval");
+        musicControls.updateDismissable(true);
+      }
     });
 
     return {

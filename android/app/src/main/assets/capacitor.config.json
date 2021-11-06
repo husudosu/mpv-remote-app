@@ -2,5 +2,10 @@
 	"appId": "mpvremote.nfdevel.hu",
 	"appName": "mpvRemote",
 	"webDir": "dist",
-	"bundledWebRuntime": false
+	"bundledWebRuntime": false,
+	"plugins": {
+		"LocalNotifications": {
+			"iconColor": "#488AFF"
+		}
+	}
 }

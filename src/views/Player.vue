@@ -15,19 +15,19 @@
         <ion-row class="remoteButtons">
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
-              :disabled="!connectedState"
+              :disabled="!connectedState || !playerData.filename"
               @click="changeVolume('decrease')"
             >
               <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState"
+              :disabled="!connectedState || !playerData.filename"
               @click="changeVolume('mute')"
             >
               <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState"
+              :disabled="!connectedState || !playerData.filename"
               @click="changeVolume('increase')"
             >
               <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
@@ -35,26 +35,26 @@
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
+              :disabled="!connectedState || !playerData.filename"
               @click="onInfoClicked"
-              :disabled="!connectedState || !isPlayerActive"
             >
               <ion-icon slot="icon-only" :icon="informationCircle"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState || !isPlayerActive"
+              :disabled="!connectedState || !playerData.filename"
               @click="onFullscreenClicked"
             >
               <ion-icon slot="icon-only" :icon="scanOutline"></ion-icon>
             </ion-button>
             <ion-button
+              :disabled="!connectedState || !playerData.filename"
               @click="onAudioSettingsClicked"
-              :disabled="!connectedState || !isPlayerActive"
             >
               <ion-icon slot="icon-only" :icon="earOutline"></ion-icon>
             </ion-button>
             <ion-button
+              :disabled="!connectedState || !playerData.filename"
               @click="onSubtitleSettingsClicked"
-              :disabled="!connectedState || !isPlayerActive"
             >
               <ion-icon
                 class="rotateIcon"
@@ -65,7 +65,7 @@
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
-              :disabled="!connectedState"
+              :disabled="!connectedState || !filebrowserEnabled"
               @click="onFileBrowserClicked"
             >
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
@@ -73,12 +73,14 @@
             <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
-
             <ion-button
-              :disabled="!connectedState || playerData.chapters.length == 0"
+              :disabled="playerData['chapter-list'].length == 0"
               @click="onChaptersClicked"
             >
               <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
+            </ion-button>
+            <ion-button :disabled="!connectedState" @click="onShutdownClicked">
+              <ion-icon slot="icon-only" :icon="power"></ion-icon>
             </ion-button>
           </ion-col>
         </ion-row>
@@ -100,7 +102,7 @@
       </ion-grid>
     </ion-content>
     <playerController
-      v-if="serverConfigured && isPlayerActive && connectedState"
+      v-if="serverConfigured && playerData.filename"
     ></playerController>
   </ion-page>
 </template>
@@ -123,7 +125,7 @@ import {
   actionSheetController,
 } from "@ionic/vue";
 
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 import {
@@ -137,7 +139,9 @@ import {
   earOutline,
   informationCircle,
   bookOutline,
+  power,
 } from "ionicons/icons";
+
 import openURLModal from "../components/openURLModal.vue";
 import audioSettingsModal from "../components/audioSettingsModal.vue";
 import subtitleSettingsModal from "../components/subtitleSettingsModal.vue";
@@ -145,21 +149,29 @@ import fileBrowserModal from "../components/fileBrowserModal.vue";
 import infoModal from "../components/infoModal.vue";
 import playerController from "../components/playerController.vue";
 
-import { formatTime, seekFlags } from "../tools";
+import { formatTime, seekFlags, openURL } from "../tools";
+import { apiInstance } from "../api";
+import { FileBrowserActions } from "../enums";
 export default {
   setup() {
     const store = useStore();
     const route = useRoute();
-    const playerData = computed(() => store.state.mpvsocket.playerData);
-    const connectedState = computed(() => store.state.mpvsocket.connected);
+    const playerData = computed(() => store.state.simpleapi.playerData);
+    const connectedState = computed(() => store.state.simpleapi.connected);
     const screenOrientation = computed(() => store.state.app.screenOrientation);
+    const filebrowserEnabled = computed(() => {
+      return (
+        store.state.simpleapi.MPVInfo.mpvremoteConfig.unsafefilebrowsing ||
+        store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb
+      );
+    });
     const serverConfigured = computed(
       () => store.state.settings.settings.configured
     );
     const playerTitle = computed(() => {
       if (connectedState.value) {
         return (
-          playerData.value.media_title ||
+          playerData.value["media-title"] ||
           playerData.value.filename ||
           "Connected (No playback)"
         );
@@ -167,27 +179,26 @@ export default {
         return "Disconnected";
       }
     });
-    const isPlayerActive = computed(() => {
-      return store.state.mpvsocket.playerData.filename ? true : false;
-    });
-    const newFileName = ref("");
-
-    const openURL = (url) => {
-      window.open(url, "_system");
-    };
 
     const onFileBrowserClicked = async () => {
       const modal = await modalController.create({
         component: fileBrowserModal,
         componentProps: {
           modalController: modalController,
-          action: "play",
+          action: FileBrowserActions.PLAY,
         },
       });
       modal.onDidDismiss().then((response) => {
         if (response.data) {
           console.log(`Data from modal: ${JSON.stringify(response.data)}`);
-          store.state.mpvsocket.socket.emit("openFile", response.data);
+          const mode = response.data.appendToPlaylist
+            ? "append-play"
+            : "replace";
+          apiInstance.post("playlist", {
+            filename: response.data.filename,
+            flag: mode,
+            seekTo: response.data.seekTo,
+          });
         }
       });
       return modal.present();
@@ -197,25 +208,35 @@ export default {
       // TODO: Handle push & hold button somehow
       switch (action) {
         case "mute":
-          store.state.mpvsocket.socket.emit("setPlayerProp", [
-            "mute",
-            !store.state.mpvsocket.playerData.mute,
-          ]);
+          apiInstance.post("controls/mute").then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "mute",
+              value: !playerData.value.mute,
+            });
+          });
           break;
         case "increase":
           if (playerData.value.volume < 100) {
-            store.state.mpvsocket.socket.emit("setPlayerProp", [
-              "volume",
-              store.state.mpvsocket.playerData.volume + 5,
-            ]);
+            apiInstance
+              .post(`controls/volume/${playerData.value.volume + 5}`)
+              .then(() =>
+                store.commit("simpleapi/setPlayerDataProperty", {
+                  key: "volume",
+                  value: playerData.value.volume + 5,
+                })
+              );
           }
           break;
         case "decrease":
           if (playerData.value.volume > 0) {
-            store.state.mpvsocket.socket.emit("setPlayerProp", [
-              "volume",
-              store.state.mpvsocket.playerData.volume - 5,
-            ]);
+            apiInstance
+              .post(`controls/volume/${playerData.value.volume - 5}`)
+              .then(() =>
+                store.commit("simpleapi/setPlayerDataProperty", {
+                  key: "volume",
+                  value: playerData.value.volume - 5,
+                })
+              );
           }
           break;
       }
@@ -231,10 +252,13 @@ export default {
 
       modal.onDidDismiss().then((response) => {
         if (response.data) {
-          console.log(
-            `Data from modal: ${JSON.stringify(response.data.value)}`
-          );
-          store.state.mpvsocket.socket.emit("openFile", response.data.value);
+          const mode = response.data.value.appendToPlaylist
+            ? "append-play"
+            : "replace";
+          apiInstance.post("playlist", {
+            filename: response.data.value.filename,
+            flag: mode,
+          });
         }
       });
       return modal.present();
@@ -264,11 +288,11 @@ export default {
     };
 
     const onFullscreenClicked = () => {
-      store.state.mpvsocket.socket.emit("fullscreen");
+      apiInstance.post("controls/fullscreen");
     };
 
     const onChaptersClicked = async () => {
-      const buttons = playerData.value.chapters.map((chapter) => {
+      const buttons = playerData.value["chapter-list"].map((chapter) => {
         return {
           role: chapter.time,
           text: `${chapter.title} (${formatTime(chapter.time)})`,
@@ -285,8 +309,8 @@ export default {
       const { role } = await actionSheet.onDidDismiss();
 
       if (role !== "backdrop") {
-        store.state.mpvsocket.socket.emit("seek", {
-          seekTo: role,
+        apiInstance.post("/controls/seek", {
+          target: role,
           flag: seekFlags.ABSOLUTE,
         });
       }
@@ -303,12 +327,38 @@ export default {
       return await modal.present();
     };
 
+    const onShutdownClicked = async () => {
+      const actionSheet = await actionSheetController.create({
+        header: "Computer actions",
+        buttons: [
+          {
+            role: "shutdown",
+            text: "Shutdown",
+          },
+          {
+            role: "reboot",
+            text: "Reboot",
+          },
+          {
+            role: "quit",
+            text: "Quit",
+          },
+        ],
+      });
+
+      await actionSheet.present();
+
+      const { role } = await actionSheet.onDidDismiss();
+
+      if (role != "backdrop") {
+        apiInstance.post(`/computer/${role}`);
+      }
+    };
+
     return {
       playerData,
       playerTitle,
-      newFileName,
       connectedState,
-      isPlayerActive,
       route,
       changeVolume,
       serverConfigured,
@@ -318,6 +368,7 @@ export default {
       logoYoutube,
       bookOutline,
       folder,
+      power,
       scanOutline,
       journalOutline,
       modalController,
@@ -332,6 +383,8 @@ export default {
       onInfoClicked,
       openURL,
       onChaptersClicked,
+      onShutdownClicked,
+      filebrowserEnabled,
     };
   },
 

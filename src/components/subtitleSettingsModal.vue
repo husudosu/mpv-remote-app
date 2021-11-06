@@ -5,7 +5,7 @@
         <ion-title>Subtitle settings</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding">
+    <ion-content v-if="playerData.filename" class="ion-padding">
       <ion-item>
         <ion-label>Track</ion-label>
         <ion-select
@@ -18,28 +18,54 @@
             v-for="sub in subTracks"
             :key="sub.id"
           >
-            {{ sub.lang || sub.external_filename }}
+            {{ sub.lang || sub["external-filename"] }}
           </ion-select-option>
         </ion-select>
+      </ion-item>
+      <ion-item @click="onAddSubtitleClicked">
+        <ion-label>Add subtitle</ion-label>
       </ion-item>
 
       <ion-item class="subtitleDelay">
         <ion-label>Delay</ion-label>
         <ion-button @click="onSubDelayChanged('decrease')"> - </ion-button>
-        {{ subSettings.subDelay }}
+        {{ playerData["sub-delay"] }}
         <ion-button @click="onSubDelayChanged('increase')"> + </ion-button>
+      </ion-item>
+      <ion-item class="subtitleDelay">
+        <ion-label>Font size</ion-label>
+        <ion-button @click="onSubFontSizeChanged('decrease')"> - </ion-button>
+        {{ playerData["sub-font-size"] }}
+        <ion-button @click="onSubFontSizeChanged('increase')"> + </ion-button>
       </ion-item>
       <ion-item>
         <ion-label>Show subtitle</ion-label>
         <ion-checkbox
-          v-model="subSettings.subVisibility"
+          :checked="playerData['sub-visibility']"
           @ionChange="changeSubtitleVisibility($event)"
           slot="end"
         ></ion-checkbox>
       </ion-item>
-      <ion-item @click="onAddSubtitleClicked">
-        <ion-label>Add subtitle</ion-label>
+
+      <ion-item>
+        <ion-label>ASS Override</ion-label>
+
+        <ion-select
+          @ionChange="onAssOverridechanged"
+          :value="currentAssOverride"
+        >
+          <ion-select-option
+            v-for="(item, index) in assOverride"
+            :key="index"
+            :value="item"
+          >
+            {{ item }}
+          </ion-select-option>
+        </ion-select>
       </ion-item>
+    </ion-content>
+    <ion-content class="ion-padding" v-else>
+      <p>No playback.</p>
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Close</ion-button>
@@ -47,7 +73,7 @@
   </ion-page>
 </template>
 <script>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useStore } from "vuex";
 import {
   IonPage,
@@ -65,7 +91,9 @@ import {
   modalController,
 } from "@ionic/vue";
 import filebrowsermodal from "./fileBrowserModal.vue";
-
+import { apiInstance } from "../api";
+import { assOverride } from "../tools";
+import { FileBrowserActions } from "../enums";
 export default {
   props: ["modalController"],
   setup(props) {
@@ -73,32 +101,26 @@ export default {
     const subTracks = ref([]);
     const activeSubTrackId = ref();
     const selectedTrack = ref({});
-    const subSettings = ref({
-      subDelay: 0,
-      subVisibility: false,
-    });
+    const selectedAssOverride = ref("");
     const store = useStore();
-    store.state.mpvsocket.socket.emit("subSettings", null, function (data) {
-      subSettings.value = data;
-      console.log(subSettings.value);
-    });
-
+    const playerData = computed(() => store.state.simpleapi.playerData);
+    const currentAssOverride = computed(
+      () => playerData.value["sub-ass-override"]
+    );
     const loadTracks = function () {
-      store.state.mpvsocket.socket.emit("tracks", null, function (data) {
-        tracks.value = data.tracks;
-
-        subTracks.value = data.tracks.filter((el) => el.type === "sub");
-        if (subTracks.value.length > 0) {
-          activeSubTrackId.value = subTracks.value.find(
-            (el) => el.selected === true
-          );
-          if (activeSubTrackId.value)
-            activeSubTrackId.value = activeSubTrackId.value.id;
-          selectedTrack.value = activeSubTrackId.value;
-        }
-      });
+      subTracks.value = playerData.value["track-list"].filter(
+        (el) => el.type === "sub"
+      );
+      if (subTracks.value.length > 0) {
+        activeSubTrackId.value = subTracks.value.find(
+          (el) => el.selected === true
+        );
+        if (activeSubTrackId.value)
+          activeSubTrackId.value = activeSubTrackId.value.id;
+        selectedTrack.value = activeSubTrackId.value;
+      }
     };
-
+    console.log(playerData.value["sub-ass-override"]);
     const onAppendClicked = () => {
       props.modalController.dismiss();
     };
@@ -112,16 +134,14 @@ export default {
         component: filebrowsermodal,
         componentProps: {
           modalController: props.modalController,
-          action: "opensub",
+          action: FileBrowserActions.OPENSUB,
         },
       });
       modal.onDidDismiss().then((response) => {
         if (response.data && response.data.filename) {
-          store.state.mpvsocket.socket.emit(
-            "addSubtitles",
-            response.data.filename
-          );
-          // reload tracks
+          apiInstance.post("tracks/sub/add", {
+            filename: response.data.filename,
+          });
           loadTracks();
         }
       });
@@ -129,34 +149,71 @@ export default {
       await modal.present();
     };
     const onSubtitleTrackChanged = () => {
-      store.state.mpvsocket.socket.emit("subReload", selectedTrack.value);
+      apiInstance.post(`tracks/sub/reload/${selectedTrack.value}`);
     };
 
     const changeSubtitleVisibility = (event) => {
-      subSettings.value.subVisibility = event.target.checked;
-      store.state.mpvsocket.socket.emit("setPlayerProp", [
-        "sub-visibility",
-        event.target.checked,
-      ]);
+      apiInstance
+        .post(`tracks/sub/visibility/${event.target.checked}`)
+        .then(() => {
+          store.commit("simpleapi/setPlayerDataProperty", {
+            key: "sub-visibility",
+            value: event.target.checked,
+          });
+        });
     };
     const onSubDelayChanged = (order) => {
+      let newDelay = 0;
       switch (order) {
         case "increase":
-          subSettings.value.subDelay += 1;
-          store.state.mpvsocket.socket.emit(
-            "adjustSubtitleTiming",
-            subSettings.value.subDelay
-          );
+          newDelay = playerData.value["sub-delay"] + 1;
+          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-delay",
+              value: newDelay,
+            });
+          });
           break;
         case "decrease":
-          subSettings.value.subDelay -= 1;
-          store.state.mpvsocket.socket.emit(
-            "adjustSubtitleTiming",
-            subSettings.value.subDelay
-          );
+          newDelay = playerData.value["sub-delay"] - 1;
+          apiInstance.post(`tracks/sub/timing/${newDelay}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-delay",
+              value: newDelay,
+            });
+          });
           break;
       }
     };
+    const onSubFontSizeChanged = (order) => {
+      let newSize = 0;
+      switch (order) {
+        case "increase":
+          newSize = playerData.value["sub-font-size"] + 1;
+          apiInstance.post(`tracks/sub/font-size/${newSize}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-font-size",
+              value: newSize,
+            });
+          });
+          break;
+        case "decrease":
+          newSize = playerData.value["sub-font-size"] - 1;
+          apiInstance.post(`tracks/sub/font-size/${newSize}`).then(() => {
+            store.commit("simpleapi/setPlayerDataProperty", {
+              key: "sub-font-size",
+              value: newSize,
+            });
+          });
+          break;
+      }
+    };
+    const onAssOverridechanged = (event) => {
+      apiInstance
+        .post(`/tracks/sub/ass-override/${event.target.value}`)
+        .then(() => console.log("changed"));
+    };
+
     loadTracks();
     return {
       tracks,
@@ -167,9 +224,14 @@ export default {
       onSubtitleTrackChanged,
       onSubDelayChanged,
       selectedTrack,
-      subSettings,
       onAddSubtitleClicked,
+      onSubFontSizeChanged,
+      onAssOverridechanged,
       changeSubtitleVisibility,
+      currentAssOverride,
+      selectedAssOverride,
+      assOverride,
+      playerData,
     };
   },
   components: {

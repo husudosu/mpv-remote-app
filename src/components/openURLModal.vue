@@ -23,7 +23,12 @@
     </ion-content>
     <ion-footer>
       <ion-button @click="onCancelClicked">Cancel</ion-button>
-      <ion-button color="success" @click="onAppendClicked">Ok</ion-button>
+      <ion-button
+        :disabled="dialog.filename.length == 0"
+        color="success"
+        @click="onAppendClicked"
+        >Ok</ion-button
+      >
     </ion-footer>
   </ion-page>
 </template>
@@ -47,7 +52,7 @@ export default {
   props: ["modalController"],
   setup(props) {
     const dialog = ref({
-      filename: null,
+      filename: "",
       appendToPlaylist: true,
     });
     const onAppendClicked = () => {

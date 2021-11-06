@@ -26,7 +26,6 @@ import "./theme/variables.css";
 import "./theme/darkmode.css";
 
 document.body.classList.toggle("dark", true);
-
 const app = createApp(Container).use(IonicVue).use(router).use(store);
 
 router.isReady().then(() => {
