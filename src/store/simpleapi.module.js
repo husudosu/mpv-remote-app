@@ -1,5 +1,5 @@
 import { apiInstance } from "../api";
-import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
+// import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 const initialState = {
   playerData: {
     "audio-delay": 0, // <-- milliseconds
@@ -65,52 +65,32 @@ const initialState = {
 //   return response.json(); // parses JSON response into native JavaScript objects
 // }
 
-function events(action) {
-  const message = JSON.parse(action).message;
-  switch (message) {
-    case "music-controls-next":
-      apiInstance.post("controls/next");
-      break;
-    case "music-controls-previous":
-      apiInstance.post("controls/prev");
-      break;
-    case "music-controls-pause":
-      // Do something
-      console.log("MusicController: Pause");
-      // musicControls.updateIsPlaying(false);
-      // postData("http://192.168.88.4:8000/api/v1/controls/play-pause").then(() =>
-      //   console.log("Play-pause finished")
-      // );
-      // apiInstance
-      //   .post("/controls/play-pause")
-      //   .then(() => console.log("Play-Pause"));
-      break;
-    case "music-controls-play":
-      // Do something
-      console.log("MusicController: Play");
-      console.log("API Instance OBJ:");
-      console.log(apiInstance.toString());
-      console.log(apiInstance.defaults);
-      // Try fetch API
-      // postData("http://192.168.88.4:8000/api/v1/controls/play-pause").then(() =>
-      //   console.log("Play-pause finished")
-      // );
-      // apiInstance
-      //   .post("/controls/play-pause")
-      //   .then(() => console.log("Play-Pause"))
-      //   .finally(() => "Play-pause ran");
-
-      // musicControls.updateIsPlaying(true);
-      console.log("MusicController: Play Finished");
-      break;
-    case "music-controls-destroy":
-      // Do something
-      console.log("Destroy music controls");
-      break;
-    default:
-      break;
-  }
-}
+// function events(action) {
+//   const message = JSON.parse(action).message;
+//   switch (message) {
+//     case "music-controls-next":
+//       apiInstance.post("controls/next");
+//       break;
+//     case "music-controls-previous":
+//       apiInstance.post("controls/prev");
+//       break;
+//     case "music-controls-pause":
+//       // Do something
+//       console.log("MusicController: Pause");
+//       musicControls.updateIsPlaying(false);
+//       break;
+//     case "music-controls-play":
+//       console.log("MusicController: Play");
+//       musicControls.updateIsPlaying(true);
+//       break;
+//     case "music-controls-destroy":
+//       // Do something
+//       console.log("Destroy music controls");
+//       break;
+//     default:
+//       break;
+//   }
+// }
 
 export const simpleapi = {
   namespaced: true,
@@ -120,40 +100,41 @@ export const simpleapi = {
       state.playerData = value;
 
       // If music controls enabled
-      if (state.connected && state.playerData.filename) {
-        if (!state.musicControlsActive) {
-          musicControls.create(
-            {
-              artist:
-                state.playerData["media-title"] || state.playerData.filename,
-              dismissable: false,
-            },
-            () => {
-              state.musicControlsActive = true;
-            }
-          );
-          state.musicControlStatus["media-title"] =
-            state.playerData["media-title"];
-          state.musicControlStatus.filename = state.playerData.filename;
+      // if (state.connected && state.playerData.filename) {
+      //   if (!state.musicControlsActive) {
+      //     musicControls.create(
+      //       {
+      //         artist:
+      //           state.playerData["media-title"] || state.playerData.filename,
+      //         dismissable: false,
+      //       },
+      //       () => {
+      //         state.musicControlsActive = true;
+      //       }
+      //     );
+      //     state.musicControlStatus["media-title"] =
+      //       state.playerData["media-title"];
+      //     state.musicControlStatus.filename = state.playerData.filename;
 
-          musicControls.updateIsPlaying(!state.playerData.pause);
-          musicControls.subscribe(events);
-          musicControls.listen();
-        } else {
-          // Media have changed.
-          if (
-            state.musicControlStatus["media-title"] !=
-              state.playerData["media-title"] ||
-            state.musicControlStatus.filename != state.playerData.filename
-          ) {
-            musicControls.destroy();
-            state.musicControlsActive = false;
-          // } else {
-          //   console.log("T");
-          //   // musicControls.updateIsPlaying(!state.playerData.pause);
-          // }
-        }
-      }
+      //     musicControls.updateIsPlaying(!state.playerData.pause);
+      //     musicControls.subscribe(events);
+      //     musicControls.listen();
+      //   } else {
+      //     // Media have changed.
+      //     if (
+      //       state.musicControlStatus["media-title"] !=
+      //         state.playerData["media-title"] ||
+      //       state.musicControlStatus.filename != state.playerData.filename
+      //     ) {
+      //       musicControls.destroy();
+      //       state.musicControlsActive = false;
+      //       // } else {
+      //       //   console.log("T");
+      //       //   // musicControls.updateIsPlaying(!state.playerData.pause);
+      //       // }
+      //     }
+      //   }
+      // }
     },
     setPlayerDataProperty(state, value) {
       state.playerData[value.key] = value.value;

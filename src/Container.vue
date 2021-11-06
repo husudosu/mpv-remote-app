@@ -5,7 +5,7 @@
         <ion-content>
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
-            <ion-note>1.0 Beta</ion-note>
+            <ion-note>1.0.2</ion-note>
 
             <ion-menu-toggle
               auto-hide="false"

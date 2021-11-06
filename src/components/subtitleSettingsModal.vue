@@ -210,7 +210,7 @@ export default {
     };
     const onAssOverridechanged = (event) => {
       apiInstance
-        .post(`/sub/ass-override/${event.target.value}`)
+        .post(`/tracks/sub/ass-override/${event.target.value}`)
         .then(() => console.log("changed"));
     };
 

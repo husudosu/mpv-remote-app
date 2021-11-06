@@ -2,9 +2,6 @@
 
 MPV Remote application for controlling your media player
 
-NOTE:
-This project under heavy development right now. Some things can break. I use this app for my media center setup.
-
 ## Why am I doing this?
 
 I don't have too much experince with Ionic VUE, Node.JS developmment and want improve.
@@ -33,12 +30,6 @@ android/app/release/app-release.apk
 Configure IP & Port in your application and run mpv with --idle flag on your host PC.
 
 The app not available on Google Play yet. I want improve my application before putting it to wider public.
-
-## About project state
-
-There are several things missing like Socket.IO & Express API error message rendering on Android app and connection loss not always handled for example on Filebrowser, media collection handling.
-
-For more missing stuff check TODO here and at plugin repo TODO.
 
 ## Screnshoots (2021-08-07) state
 
