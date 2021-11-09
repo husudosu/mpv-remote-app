@@ -5,7 +5,7 @@
         <ion-content>
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
-            <ion-note>1.0.2</ion-note>
+            <ion-note>{{ version }}</ion-note>
 
             <ion-menu-toggle
               auto-hide="false"
@@ -66,6 +66,7 @@ const { App /*BackgroundTask*/ } = Plugins;
 
 import { useStore } from "vuex";
 import { configureInstance, apiInstance } from "./api";
+import appInfo from "../verinfo";
 
 export default defineComponent({
   name: "App",
@@ -162,6 +163,7 @@ export default defineComponent({
       informationCircleOutline,
       listOutline,
       playCircleOutline,
+      version: appInfo.version,
       isSelected: (url) => (url === route.path ? "selected" : ""),
     };
   },

@@ -1,7 +1,7 @@
 {
 	"appId": "mpvremote.nfdevel.hu",
 	"appName": "mpvRemote",
-	"webDir": "dist",
+	"webDir": "public",
 	"bundledWebRuntime": false,
 	"plugins": {
 		"LocalNotifications": {

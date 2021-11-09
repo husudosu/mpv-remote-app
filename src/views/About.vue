@@ -31,7 +31,7 @@
         <ion-item>
           <ion-label class="ion-text-wrap">
             <h2>Version</h2>
-            <p>1.0</p>
+            <p>{{ version }}</p>
           </ion-label>
         </ion-item>
       </ion-list>
@@ -102,6 +102,7 @@ import {
 import { logoGithub, helpOutline } from "ionicons/icons";
 import { useStore } from "vuex";
 import { computed } from "vue";
+import appInfo from "../../verinfo";
 export default {
   setup() {
     const openURL = (url) => {
@@ -114,6 +115,7 @@ export default {
       helpOutline,
       openURL,
       MPVInfo,
+      version: appInfo.version,
     };
   },
   components: {
