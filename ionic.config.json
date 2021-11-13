@@ -1,5 +1,5 @@
 {
-  "name": "mpvRemote",
+  "name": "MPV Remote",
   "integrations": {
     "capacitor": {}
   },

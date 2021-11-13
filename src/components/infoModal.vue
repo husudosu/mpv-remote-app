@@ -27,6 +27,16 @@
           </ion-label>
         </ion-item>
       </ion-list>
+
+      <ion-list-header> Metadata </ion-list-header>
+      <ion-list>
+        <ion-item v-for="(value, key, i) in playerData.metadata" :key="i">
+          <ion-label class="ion-text-wrap">
+            <h2>{{ key }}</h2>
+            <p>{{ value }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
       <template v-for="track in videoTracks" :key="track.id">
         <ion-list-header
           >Video {{ track.id }}

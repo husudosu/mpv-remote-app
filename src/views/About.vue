@@ -102,7 +102,7 @@ import {
 import { logoGithub, helpOutline } from "ionicons/icons";
 import { useStore } from "vuex";
 import { computed } from "vue";
-import appInfo from "../../verinfo";
+import appInfo from "../verinfo";
 export default {
   setup() {
     const openURL = (url) => {

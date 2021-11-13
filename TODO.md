@@ -1,6 +1,5 @@
-- Create "branding" for app like logo, app info etc...
-- Fix timeout on playlist previous, next
-- Faster handling of musiccontrol
+- Fix splash images resize issue
+- [File/link association](https://github.com/husudosu/mpv-remote-app/issues/2)
 
 ## Info
 

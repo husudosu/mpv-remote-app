@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">mpvRemote</string>
-    <string name="title_activity_main">mpvRemote</string>
-    <string name="package_name">mpvremote.nfdevel.hu</string>
-    <string name="custom_url_scheme">mpvremote.nfdevel.hu</string>
+    <string name="app_name">MPV Remote</string>
+    <string name="title_activity_main">MPV Remote</string>
+    <string name="package_name">io.ionic.starter</string>
+    <string name="custom_url_scheme">io.ionic.starter</string>
 </resources>

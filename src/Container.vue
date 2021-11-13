@@ -38,7 +38,6 @@
 </template>
 
 <script>
-import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 import {
   IonApp,
   IonContent,
@@ -61,12 +60,11 @@ import {
   listOutline,
   informationCircleOutline,
 } from "ionicons/icons";
-import { Plugins } from "@capacitor/core";
-const { App /*BackgroundTask*/ } = Plugins;
+import { App } from "@capacitor/app";
 
 import { useStore } from "vuex";
 import { configureInstance, apiInstance } from "./api";
-import appInfo from "../verinfo";
+import appInfo from "./verinfo";
 
 export default defineComponent({
   name: "App",
@@ -85,7 +83,6 @@ export default defineComponent({
     IonSplitPane,
   },
   setup() {
-    musicControls.destroy();
     const selectedIndex = ref(0);
     const store = useStore();
     const route = useRoute();
@@ -152,7 +149,6 @@ export default defineComponent({
       } else {
         // Battery saving stuff
         store.commit("simpleapi/clearPlaybackRefreshInterval");
-        musicControls.updateDismissable(true);
       }
     });
 

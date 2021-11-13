@@ -12,10 +12,7 @@
           >
             <ion-icon :icon="funnelOutline" slot="icon-only"></ion-icon>
           </ion-button>
-          <ion-button
-            :disabled="!serverConfig.unsafefilebrowsing"
-            @click="onChangeDriveClicked"
-          >
+          <ion-button @click="onChangeDriveClicked">
             <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
           </ion-button>
           <ion-button
@@ -82,6 +79,9 @@
         >
           {{ collection.name }}
         </ion-item>
+        <ion-item v-if="collections.length == 0">
+          No collection created
+        </ion-item>
       </ion-list>
 
       <ion-list-header>Drives</ion-list-header>
@@ -92,6 +92,9 @@
           :key="i"
         >
           {{ drive.path }}
+        </ion-item>
+        <ion-item v-if="drives.length == 0">
+          No available drive/path to browse
         </ion-item>
       </ion-list>
     </ion-content>
@@ -112,7 +115,7 @@
 <script>
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
-import { apiInstance } from "../api";
+import { apiInstance, openToast } from "../api";
 
 import {
   IonPage,
@@ -229,20 +232,24 @@ export default {
       console.log("Get directory contents");
       let data = {};
       if (path) data.path = path;
-      if (collectionId) data.collection = collectionId;
+      if (collectionId) data.collection_id = collectionId;
       // Save to history
       // Render spinner if loading takes more than 150 msec
 
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
       }, 150);
-      console.log(data);
       return apiInstance
         .post("filebrowser/browse", data)
         .then((response) => {
           files.value = response.data;
           filesBak.value = response.data;
           search.value = "";
+
+          // Render IO related errors
+          if (response.data.errors && response.data.errors.length > 0) {
+            openToast(response.data.errors, 3000);
+          }
         })
         .finally(() => {
           clearTimeout(loadingTimeout);
