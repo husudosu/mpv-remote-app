@@ -121,7 +121,7 @@ export default defineComponent({
 
     const AllowedMIMETypes = ["text/plain"];
     const handleIntent = function (intent) {
-      if (AllowedMIMETypes.includes(intent.type)) {
+      if (intent.type && AllowedMIMETypes.includes(intent.type)) {
         intent.clipItems.forEach((el) => {
           // Append elements to playlist.
           apiInstance.post("playlist", {
@@ -144,16 +144,22 @@ export default defineComponent({
 
       store.dispatch("simpleapi/setPlaybackRefreshInterval");
 
-      // Add intent handler
+      // Add intent handler this gonna run at cold start
       document.addEventListener("deviceReady", function () {
         window.plugins.intent.getCordovaIntent(
           function (Intent) {
+            console.log("Cold start");
             handleIntent(Intent);
           },
           function () {
             console.log("Error");
           }
         );
+      });
+
+      window.plugins.intent.setNewIntentHandler(function (Intent) {
+        console.log("Appending");
+        handleIntent(Intent);
       });
     });
 
