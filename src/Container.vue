@@ -118,7 +118,20 @@ export default defineComponent({
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
-    // First load settings
+
+    const AllowedMIMETypes = ["text/plain"];
+    const handleIntent = function (intent) {
+      if (AllowedMIMETypes.includes(intent.type)) {
+        intent.clipItems.forEach((el) => {
+          // Append elements to playlist.
+          apiInstance.post("playlist", {
+            filename: el.text,
+            flag: "append-play",
+          });
+        });
+      }
+    };
+
     store.dispatch("settings/loadSettings").then(() => {
       configureInstance(
         store.state.settings.settings.server.server_ip,
@@ -130,6 +143,18 @@ export default defineComponent({
       });
 
       store.dispatch("simpleapi/setPlaybackRefreshInterval");
+
+      // Add intent handler
+      document.addEventListener("deviceReady", function () {
+        window.plugins.intent.getCordovaIntent(
+          function (Intent) {
+            handleIntent(Intent);
+          },
+          function () {
+            console.log("Error");
+          }
+        );
+      });
     });
 
     window.addEventListener("orientationchange", function () {
