@@ -63,7 +63,7 @@ import {
 import { App } from "@capacitor/app";
 
 import { useStore } from "vuex";
-import { configureInstance, apiInstance } from "./api";
+import { configureInstance, apiInstance, openToast } from "./api";
 import appInfo from "./verinfo";
 
 export default defineComponent({
@@ -118,53 +118,79 @@ export default defineComponent({
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
+    const handleIntent = (intent) => {
+      console.log("Full intent object" + JSON.stringify(intent));
+      console.log("Received Intent: " + JSON.stringify(intent.extras));
+      if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
+        openToast(`Loading: ${intent.extras.title}`, 1500);
 
-    const AllowedMIMETypes = ["text/plain"];
-    const handleIntent = function (intent) {
-      if (intent.type && AllowedMIMETypes.includes(intent.type)) {
-        intent.clipItems.forEach((el) => {
-          // Append elements to playlist.
-          apiInstance.post("playlist", {
-            filename: el.text,
-            flag: "append-play",
-          });
+      let headerStr = "";
+      if (Object.prototype.hasOwnProperty.call(intent.extras, "headers")) {
+        // We recieve headers as array (from Aniyomi for example)
+        // Format headers for MPV
+        intent.extras.headers.forEach((el, index) => {
+          // key
+          console.log(el);
+          if (index % 2 == 0) headerStr += `${el}:`;
+          else headerStr += ` ${el}`;
         });
+        console.log(headerStr);
       }
+      let reqData = {
+        filename: intent.data,
+        flag: "replace",
+      };
+
+      if (headerStr.length > 0)
+        reqData["file-local-options"] = { "http-header-fields": headerStr };
+      console.log(`Request data: ${JSON.stringify(reqData)}`);
+      apiInstance.post("playlist", reqData);
     };
 
-    store.dispatch("settings/loadSettings").then(() => {
-      configureInstance(
-        store.state.settings.settings.server.server_ip,
-        store.state.settings.settings.server.server_port
+    const registerBroadcastReceiver = () => {
+      console.log("Intent listener registered");
+      window.plugins.intentShim.registerBroadcastReceiver(
+        {
+          filterActions: [
+            "com.darryncampbell.cordova.plugin.broadcastIntent.ACTION",
+          ],
+        },
+        (intent) => {
+          //  Broadcast received
+          console.log("Intent recivied");
+          handleIntent(intent);
+        }
       );
-      apiInstance.get("/status").then((response) => {
-        console.log(response.data);
-        store.commit("simpleapi/setPlayerData", response.data);
-      });
+    };
 
-      store.dispatch("simpleapi/setPlaybackRefreshInterval");
+    const unregisterBroadcastReceiver = () => {
+      console.log("Intent listener unregistered");
+      window.plugins.intentShim.unregisterBroadcastReceiver();
+    };
 
-      // Add intent handler this gonna run at cold start
-      document.addEventListener("deviceReady", function () {
-        window.plugins.intent.getCordovaIntent(
-          function (Intent) {
-            console.log("Cold start");
-            handleIntent(Intent);
-          },
-          function () {
-            console.log("Error");
-          }
+    document.addEventListener("deviceReady", () => {
+      store.dispatch("settings/loadSettings").then(() => {
+        configureInstance(
+          store.state.settings.settings.server.server_ip,
+          store.state.settings.settings.server.server_port
         );
+        apiInstance.get("/status").then((response) => {
+          console.log(response.data);
+          store.commit("simpleapi/setPlayerData", response.data);
+        });
+
+        store.dispatch("simpleapi/setPlaybackRefreshInterval");
+
+        // Register intent handling
+        registerBroadcastReceiver();
+        window.plugins.intentShim.onIntent((intent) => {
+          handleIntent(intent);
+        });
       });
 
-      window.plugins.intent.setNewIntentHandler(function (Intent) {
-        console.log("Appending");
-        handleIntent(Intent);
+      window.addEventListener("orientationchange", function () {
+        store.commit("app/setScreenOrinetation", screen.orientation.type);
       });
-    });
-
-    window.addEventListener("orientationchange", function () {
-      store.commit("app/setScreenOrinetation", screen.orientation.type);
     });
 
     App.addListener("appStateChange", ({ isActive }) => {
@@ -177,9 +203,12 @@ export default defineComponent({
         if (!store.state.simpleapi.playbackRefreshInterval) {
           store.dispatch("simpleapi/setPlaybackRefreshInterval");
         }
+
+        registerBroadcastReceiver();
       } else {
         // Battery saving stuff
         store.commit("simpleapi/clearPlaybackRefreshInterval");
+        unregisterBroadcastReceiver();
       }
     });
 
