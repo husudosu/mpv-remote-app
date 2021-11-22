@@ -63,7 +63,7 @@ import {
 import { App } from "@capacitor/app";
 
 import { useStore } from "vuex";
-import { configureInstance, apiInstance, openToast } from "./api";
+import { configureInstance, apiInstance } from "./api";
 import appInfo from "./verinfo";
 
 export default defineComponent({
@@ -118,32 +118,38 @@ export default defineComponent({
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
-    const handleIntent = (intent) => {
+    const handleIntent = async (intent) => {
       console.log("Full intent object" + JSON.stringify(intent));
       console.log("Received Intent: " + JSON.stringify(intent.extras));
-      if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
-        openToast(`Loading: ${intent.extras.title}`, 1500);
+      // if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
+      //   openToast(`Loading: ${intent.extras.title}`, 1500);
+      console.log("Toast finished");
+      let headerArray = [];
 
-      let headerStr = "";
       if (Object.prototype.hasOwnProperty.call(intent.extras, "headers")) {
-        // We recieve headers as array (from Aniyomi for example)
-        // Format headers for MPV
-        intent.extras.headers.forEach((el, index) => {
-          // key
-          console.log(el);
-          if (index % 2 == 0) headerStr += `${el}:`;
-          else headerStr += ` ${el}`;
-        });
-        console.log(headerStr);
+        console.log("Have to do Array");
+        for (var i = 0; i < intent.extras.headers.length - 1; i += 2) {
+          console.log("Loop");
+          headerArray.push(
+            `${intent.extras.headers[i]}: ${intent.extras.headers[i + 1]}`
+          );
+        }
+        console.log(headerArray);
       }
+      console.log("Header object created");
       let reqData = {
         filename: intent.data,
         flag: "replace",
       };
 
-      if (headerStr.length > 0)
-        reqData["file-local-options"] = { "http-header-fields": headerStr };
-      console.log(`Request data: ${JSON.stringify(reqData)}`);
+      if (headerArray.length > 0)
+        reqData["file-local-options"] = {
+          "http-header-fields": headerArray,
+        };
+      if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
+        reqData["file-local-options"]["media-title"] = intent.extras.title;
+
+      console.log("Sending data to API");
       apiInstance.post("playlist", reqData);
     };
 
@@ -174,18 +180,16 @@ export default defineComponent({
           store.state.settings.settings.server.server_ip,
           store.state.settings.settings.server.server_port
         );
-        apiInstance.get("/status").then((response) => {
-          console.log(response.data);
-          store.commit("simpleapi/setPlayerData", response.data);
-        });
-
-        store.dispatch("simpleapi/setPlaybackRefreshInterval");
-
         // Register intent handling
         registerBroadcastReceiver();
         window.plugins.intentShim.onIntent((intent) => {
           handleIntent(intent);
         });
+        apiInstance.get("/status").then((response) => {
+          console.log(response.data);
+          store.commit("simpleapi/setPlayerData", response.data);
+        });
+        store.dispatch("simpleapi/setPlaybackRefreshInterval");
       });
 
       window.addEventListener("orientationchange", function () {

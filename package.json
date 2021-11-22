@@ -10,7 +10,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@capacitor/android": "3.3.1",
+    "@capacitor/android": "^3.3.1",
     "@capacitor/app": "1.0.6",
     "@capacitor/core": "3.3.1",
     "@capacitor/haptics": "1.1.3",
