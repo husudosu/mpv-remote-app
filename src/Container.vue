@@ -120,37 +120,32 @@ export default defineComponent({
     }
     const handleIntent = async (intent) => {
       console.log("Full intent object" + JSON.stringify(intent));
-      console.log("Received Intent: " + JSON.stringify(intent.extras));
       // if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
       //   openToast(`Loading: ${intent.extras.title}`, 1500);
-      console.log("Toast finished");
       let headerArray = [];
 
       if (Object.prototype.hasOwnProperty.call(intent.extras, "headers")) {
-        console.log("Have to do Array");
         for (var i = 0; i < intent.extras.headers.length - 1; i += 2) {
-          console.log("Loop");
           headerArray.push(
             `${intent.extras.headers[i]}: ${intent.extras.headers[i + 1]}`
           );
         }
         console.log(headerArray);
       }
-      console.log("Header object created");
-      let reqData = {
-        filename: intent.data,
-        flag: "replace",
-      };
 
-      if (headerArray.length > 0)
-        reqData["file-local-options"] = {
-          "http-header-fields": headerArray,
+      if (Object.prototype.hasOwnProperty.call(intent, "data")) {
+        let reqData = {
+          filename: intent.data,
+          flag: "replace",
         };
-      if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
-        reqData["file-local-options"]["media-title"] = intent.extras.title;
-
-      console.log("Sending data to API");
-      apiInstance.post("playlist", reqData);
+        reqData["file-local-options"] = {};
+        if (headerArray.length > 0)
+          reqData["file-local-options"]["http-header-fields"] = headerArray;
+        if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
+          reqData["file-local-options"]["force-media-title"] =
+            intent.extras.title;
+        apiInstance.post("playlist", reqData);
+      }
     };
 
     const registerBroadcastReceiver = () => {

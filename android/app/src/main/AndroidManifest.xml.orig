@@ -15,10 +15,13 @@
                 <action android:name="com.darryncampbell.cordova.plugin.intent.ACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- This filter captures protocols without type info -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="rtmp" />
                 <data android:scheme="rtmpe" />
                 <data android:scheme="rtmps" />
@@ -31,10 +34,13 @@
                 <data android:scheme="udp" />
                 <data android:scheme="vlc" />
             </intent-filter>
+            <!-- This filter captures protocols with type info -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:mimeType="video/*" />
                 <data android:mimeType="audio/*" />
                 <data android:scheme="rtmp" />
@@ -50,8 +56,10 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="" />
                 <data android:scheme="file" />
                 <data android:scheme="ftp" />
@@ -86,8 +94,10 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="" />
                 <data android:scheme="file" />
                 <data android:scheme="ftp" />
@@ -95,6 +105,9 @@
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="*" />
+
+                <!-- video -->
+
                 <data android:pathPattern=".*\\.3g2" />
                 <data android:pathPattern=".*\\.3gp" />
                 <data android:pathPattern=".*\\.3gp2" />
@@ -115,6 +128,7 @@
                 <data android:pathPattern=".*\\.m2v" />
                 <data android:pathPattern=".*\\.m2t" />
                 <data android:pathPattern=".*\\.m2ts" />
+                <!-- <data android:pathPattern=".*\\.m3u" /> -->
                 <data android:pathPattern=".*\\.m3u8" />
                 <data android:pathPattern=".*\\.mkv" />
                 <data android:pathPattern=".*\\.mov" />
@@ -173,6 +187,7 @@
                 <data android:pathPattern=".*\\.M2V" />
                 <data android:pathPattern=".*\\.M2T" />
                 <data android:pathPattern=".*\\.M2TS" />
+                <!-- <data android:pathPattern=".*\\.M3U" /> -->
                 <data android:pathPattern=".*\\.M3U8" />
                 <data android:pathPattern=".*\\.MKV" />
                 <data android:pathPattern=".*\\.MOV" />
@@ -211,6 +226,9 @@
                 <data android:pathPattern=".*\\.WMV" />
                 <data android:pathPattern=".*\\.WTV" />
                 <data android:pathPattern=".*\\.XESC" />
+
+                <!-- audio -->
+
                 <data android:pathPattern=".*\\.3ga" />
                 <data android:pathPattern=".*\\.a52" />
                 <data android:pathPattern=".*\\.aac" />
