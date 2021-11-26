@@ -1,6 +1,3 @@
-- Fix splash images resize issue
-- [File/link association](https://github.com/husudosu/mpv-remote-app/issues/2)
-
 ## Info
 
 Build production:

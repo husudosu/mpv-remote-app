@@ -14,3 +14,8 @@ export const FileBrowserEntryTypes = {
   AUDIO: "audio",
   SUBTITLE: "subtitle",
 };
+
+export const AndroindIntentActions = {
+  SEND: "android.intent.action.SEND",
+  VIEW: "android.intent.action.VIEW",
+};

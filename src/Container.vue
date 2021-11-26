@@ -65,6 +65,7 @@ import { App } from "@capacitor/app";
 import { useStore } from "vuex";
 import { configureInstance, apiInstance } from "./api";
 import appInfo from "./verinfo";
+import { AndroindIntentActions } from "./enums";
 
 export default defineComponent({
   name: "App",
@@ -118,19 +119,24 @@ export default defineComponent({
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
-    const handleIntent = async (intent) => {
-      console.log("Full intent object" + JSON.stringify(intent));
-      // if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
-      //   openToast(`Loading: ${intent.extras.title}`, 1500);
-      let headerArray = [];
 
+    const handleSendIntent = async (intent) => {
+      intent.clipItems.forEach((el) => {
+        apiInstance.post("playlist", {
+          filename: el.text,
+          flag: "append-play",
+        });
+      });
+    };
+
+    const handleViewIntent = async (intent) => {
+      let headerArray = [];
       if (Object.prototype.hasOwnProperty.call(intent.extras, "headers")) {
         for (var i = 0; i < intent.extras.headers.length - 1; i += 2) {
           headerArray.push(
             `${intent.extras.headers[i]}: ${intent.extras.headers[i + 1]}`
           );
         }
-        console.log(headerArray);
       }
 
       if (Object.prototype.hasOwnProperty.call(intent, "data")) {
@@ -148,8 +154,23 @@ export default defineComponent({
       }
     };
 
+    const handleIntent = async (intent) => {
+      // console.log("Full intent object" + JSON.stringify(intent));
+      if (Object.prototype.hasOwnProperty.call(intent, "action")) {
+        switch (intent.action) {
+          case AndroindIntentActions.SEND:
+            handleSendIntent(intent);
+            break;
+          case AndroindIntentActions.VIEW:
+            handleViewIntent(intent);
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
     const registerBroadcastReceiver = () => {
-      console.log("Intent listener registered");
       window.plugins.intentShim.registerBroadcastReceiver(
         {
           filterActions: [
@@ -158,14 +179,12 @@ export default defineComponent({
         },
         (intent) => {
           //  Broadcast received
-          console.log("Intent recivied");
           handleIntent(intent);
         }
       );
     };
 
     const unregisterBroadcastReceiver = () => {
-      console.log("Intent listener unregistered");
       window.plugins.intentShim.unregisterBroadcastReceiver();
     };
 
@@ -181,7 +200,6 @@ export default defineComponent({
           handleIntent(intent);
         });
         apiInstance.get("/status").then((response) => {
-          console.log(response.data);
           store.commit("simpleapi/setPlayerData", response.data);
         });
         store.dispatch("simpleapi/setPlaybackRefreshInterval");
