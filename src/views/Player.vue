@@ -216,9 +216,10 @@ export default {
           });
           break;
         case "increase":
-          if (playerData.value.volume < 100) {
+          if (playerData.value.volume < playerData.value["volume-max"]) {
+            const newVolume = Math.min(playerData.value["volume-max"], playerData.value.volume + 5);
             apiInstance
-              .post(`controls/volume/${playerData.value.volume + 5}`)
+              .post(`controls/volume/${newVolume}`)
               .then(() =>
                 store.commit("simpleapi/setPlayerDataProperty", {
                   key: "volume",
@@ -228,9 +229,11 @@ export default {
           }
           break;
         case "decrease":
+          console.log(playerData.value.volume)
           if (playerData.value.volume > 0) {
+            const newVolume = Math.max(0, playerData.value.volume - 5)
             apiInstance
-              .post(`controls/volume/${playerData.value.volume - 5}`)
+              .post(`controls/volume/${newVolume}`)
               .then(() =>
                 store.commit("simpleapi/setPlayerDataProperty", {
                   key: "volume",
