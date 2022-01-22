@@ -26,8 +26,38 @@ import "./theme/variables.css";
 import "./theme/darkmode.css";
 
 document.body.classList.toggle("dark", true);
-const app = createApp(Container).use(IonicVue).use(router).use(store);
 
-router.isReady().then(() => {
-  app.mount("#app");
+import {
+  defineCustomElements as jeepSqlite,
+  applyPolyfills,
+} from "jeep-sqlite/loader";
+
+applyPolyfills().then(() => {
+  jeepSqlite(window);
 });
+window.addEventListener("DOMContentLoaded", async () => {
+  const app = createApp(Container).use(IonicVue).use(router).use(store);
+  await store.dispatch("settings/initDatabaseConn");
+
+  router.isReady().then(() => {
+    app.mount("#app");
+  });
+});
+
+// const app = createApp(Container)
+//   .use(IonicVue, {
+//     platform: {
+//       /** The default `desktop` function returns false for devices with a touchscreen.
+//        * This is not always wanted, so this function tests the User Agent instead.
+//        **/
+//       desktop: (win) => {
+//         const isMobile =
+//           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+//             win.navigator.userAgent
+//           );
+//         return !isMobile;
+//       },
+//     },
+//   })
+//   .use(router)
+//   .use(store);

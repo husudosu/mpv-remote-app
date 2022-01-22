@@ -17,25 +17,10 @@
       </ion-header>
 
       <ion-list>
-        <ion-item>
-          <ion-label position="stacked">Server IP</ion-label>
-          <ion-input
-            v-model="server_ip"
-            @ionBlur="setSetting('server_ip')"
-          ></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-label position="stacked">Server Port</ion-label>
-          <ion-input
-            v-model="server_port"
-            @ionBlur="setSetting('server_port')"
-            type="number"
-          ></ion-input>
-        </ion-item>
-
+        <ion-item :router-link="{ name: 'folder.servers' }"> Servers </ion-item>
         <ion-item
+          :router-link="{ name: 'folder.collections' }"
           :disabled="!connectedState || !uselocaldb"
-          :router-link="{ name: 'folder.settings.collections' }"
         >
           <ion-label>Media collections</ion-label>
         </ion-item>
@@ -45,7 +30,7 @@
 </template>
 
 <script>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useStore } from "vuex";
 import {
   IonButtons,
@@ -58,54 +43,61 @@ import {
   IonList,
   IonItem,
   IonLabel,
-  IonInput,
+  useIonRouter,
 } from "@ionic/vue";
-import { configureInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
+    const router = useIonRouter();
+
     const connectedState = computed(() => store.state.simpleapi.connected);
     const currentSettings = computed(() => store.state.settings.server);
     const uselocaldb = computed(
       () => store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb
     );
-    const server_ip = ref(store.state.settings.settings.server.server_ip);
-    const server_port = ref(store.state.settings.settings.server.server_port);
+
+    const onServersClicked = () => {
+      router.push({ name: "folder.servers" });
+    };
+    const onCollectionsClicked = () => {
+      router.push({ name: "folder.collections" });
+    };
     const setSetting = async (key) => {
-      let value = null;
-      let shouldReconnect = false;
-      switch (key) {
-        case "server_ip":
-          value = server_ip.value;
-          console.log(value);
-          shouldReconnect = true;
-          break;
-        case "server_port":
-          value = server_port.value;
-          shouldReconnect = true;
-          break;
-      }
-      if (value) {
-        await store.dispatch("settings/setSetting", { key, value });
-        if (shouldReconnect) {
-          await store.dispatch("settings/cleanFilemanHistory");
-          store.commit("simpleapi/clearPlaybackRefreshInterval");
-          await configureInstance(
-            store.state.settings.settings.server.server_ip,
-            store.state.settings.settings.server.server_port
-          );
-          store.dispatch("simpleapi/setPlaybackRefreshInterval");
-        }
-      }
+      console.log(key);
+      // let value = null;
+      // let shouldReconnect = false;
+      // switch (key) {
+      //   case "server_ip":
+      //     value = server_ip.value;
+      //     console.log(value);
+      //     shouldReconnect = true;
+      //     break;
+      //   case "server_port":
+      //     value = server_port.value;
+      //     shouldReconnect = true;
+      //     break;
+      // }
+      // if (value) {
+      //   await store.dispatch("settings/setSetting", { key, value });
+      //   if (shouldReconnect) {
+      //     await store.dispatch("settings/cleanFilemanHistory");
+      //     store.commit("simpleapi/clearPlaybackRefreshInterval");
+      //     await configureInstance(
+      //       store.state.settings.settings.server.server_ip,
+      //       store.state.settings.settings.server.server_port
+      //     );
+      //     store.dispatch("simpleapi/setPlaybackRefreshInterval");
+      //   }
+      // }
     };
 
     return {
       currentSettings,
       setSetting,
-      server_ip,
-      server_port,
       connectedState,
       uselocaldb,
+      onServersClicked,
+      onCollectionsClicked,
     };
   },
   components: {
@@ -119,7 +111,6 @@ export default {
     IonList,
     IonItem,
     IonLabel,
-    IonInput,
   },
 };
 </script>

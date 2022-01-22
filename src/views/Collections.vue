@@ -4,6 +4,11 @@
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-back-button></ion-back-button>
+          <ion-button
+            router-direction="back"
+            :router-link="{ name: 'folder.settings' }"
+            >Back</ion-button
+          >
         </ion-buttons>
         <ion-title>Media collections</ion-title>
       </ion-toolbar>
@@ -15,16 +20,17 @@
           <ion-title size="large">Media collections</ion-title>
         </ion-toolbar>
       </ion-header>
-      <ion-button
-        :disabled="!connectedState"
+      <ion-fab
+        vertical="bottom"
+        horizontal="end"
+        slot="fixed"
         @click="onAddNewCollectionClicked"
-        fill="clear"
-        color="success"
       >
-        <ion-icon slot="start" :icon="addOutline"></ion-icon>
-        Add collection
-      </ion-button>
-      <ion-list>
+        <ion-fab-button color="success">
+          <ion-icon :icon="add"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
+      <ion-list v-if="collections.length > 0">
         <ion-item v-for="collection in collections" :key="collection.id">
           <ion-label class="ion-text-wrap">
             <h2>{{ collection.name }}</h2>
@@ -44,6 +50,9 @@
           </ion-button>
         </ion-item>
       </ion-list>
+      <ion-list v-else>
+        <ion-item>No collections</ion-item>
+      </ion-list>
     </ion-content>
   </ion-page>
 </template>
@@ -60,12 +69,14 @@ import {
   IonList,
   IonItem,
   IonBackButton,
-  IonButton,
   IonIcon,
   IonLabel,
+  IonFab,
+  IonFabButton,
+  IonButton,
   modalController,
 } from "@ionic/vue";
-import { addOutline, trashBin, options } from "ionicons/icons";
+import { add, trashBin, options } from "ionicons/icons";
 import { apiInstance } from "../api";
 import { useStore } from "vuex";
 import addCollectionModal from "../components/addCollectionModal.vue";
@@ -148,7 +159,7 @@ export default {
       onEditCollectionClicked,
       connectedState,
       collections,
-      addOutline,
+      add,
       trashBin,
       options,
     };
@@ -163,9 +174,11 @@ export default {
     IonList,
     IonItem,
     IonBackButton,
-    IonButton,
     IonIcon,
     IonLabel,
+    IonFab,
+    IonFabButton,
+    IonButton,
   },
 };
 </script>

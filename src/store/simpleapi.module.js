@@ -1,4 +1,4 @@
-import { apiInstance } from "../api";
+import { apiInstance, configureInstance } from "../api";
 // import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 const initialState = {
   playerData: {
@@ -95,6 +95,9 @@ const initialState = {
 export const simpleapi = {
   namespaced: true,
   state: { ...initialState },
+  getters: {
+    connectionState: (state) => state.connected,
+  },
   mutations: {
     setPlayerData(state, value) {
       state.playerData = value;
@@ -166,6 +169,25 @@ export const simpleapi = {
         }, 1500);
       }
       // Also setup local notifcations
+    },
+    connectToServer: async ({ dispatch, rootState }, id) => {
+      // Find server
+      const server = rootState.settings.settings.servers.find(
+        (el) => el.id === id
+      );
+      if (server) {
+        console.log(`Connecting to server: ${server.host}:${server.port}`);
+        await configureInstance(server.host, server.port);
+
+        if (rootState.settings.currentServerId != server.id)
+          await dispatch(
+            "settings/setSetting",
+            { key: "currentServerId", value: server.id },
+            { root: true }
+          );
+      } else {
+        console.log("Server not found!");
+      }
     },
   },
 };

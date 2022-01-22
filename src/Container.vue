@@ -5,8 +5,22 @@
         <ion-content>
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
-            <ion-note>{{ version }}</ion-note>
-
+            <ion-select
+              class="serverSelect"
+              interface="action-sheet"
+              placeholder="No server selected"
+              :value="currentServerId"
+              @ionChange="setServer"
+            >
+              <ion-select-option
+                v-for="server in servers"
+                :key="server.id"
+                :value="server.id"
+              >
+                {{ server.name }} ({{ server.host }}:{{ server.port }})
+              </ion-select-option>
+            </ion-select>
+            <div class="horizontalLine"></div>
             <ion-menu-toggle
               auto-hide="false"
               v-for="(p, i) in appPages"
@@ -48,11 +62,13 @@ import {
   IonListHeader,
   IonMenu,
   IonMenuToggle,
-  IonNote,
   IonRouterOutlet,
   IonSplitPane,
+  IonSelect,
+  IonSelectOption,
 } from "@ionic/vue";
 import { defineComponent, ref } from "vue";
+
 import { useRoute } from "vue-router";
 import {
   playCircleOutline,
@@ -60,12 +76,16 @@ import {
   listOutline,
   informationCircleOutline,
 } from "ionicons/icons";
+import { getPlatforms } from "@ionic/vue";
 import { App } from "@capacitor/app";
 
 import { useStore } from "vuex";
-import { configureInstance, apiInstance } from "./api";
+import { apiInstance } from "./api";
 import appInfo from "./verinfo";
 import { AndroindIntentActions } from "./enums";
+// import { mapGetters } from "vuex";
+
+// import { getServer } from "./dbcrud";
 
 export default defineComponent({
   name: "App",
@@ -79,14 +99,24 @@ export default defineComponent({
     IonListHeader,
     IonMenu,
     IonMenuToggle,
-    IonNote,
     IonRouterOutlet,
     IonSplitPane,
+    IonSelect,
+    IonSelectOption,
   },
   setup() {
+    // Capacitor SQLite and Jeep init
+    // const app = getCurrentInstance();
+
+    // if (app != null) {
+    //   app.appContext.config.globalProperties.$sqlite = useSQLite();
+    // }
+    // const sqlite = app?.appContext.config.globalProperties.$sqlite;
     const selectedIndex = ref(0);
     const store = useStore();
     const route = useRoute();
+    const platforms = getPlatforms();
+    console.log("Store getters");
     const appPages = [
       {
         title: "Player",
@@ -113,13 +143,14 @@ export default defineComponent({
         mdIcon: informationCircleOutline,
       },
     ];
+
     const path = window.location.pathname.split("folder/")[1];
     if (path !== undefined) {
       selectedIndex.value = appPages.findIndex(
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
-
+    console.log(`Current platforms: ${platforms}`);
     const handleSendIntent = async (intent) => {
       intent.clipItems.forEach((el) => {
         apiInstance.post("playlist", {
@@ -188,17 +219,29 @@ export default defineComponent({
       window.plugins.intentShim.unregisterBroadcastReceiver();
     };
 
-    document.addEventListener("deviceReady", () => {
-      store.dispatch("settings/loadSettings").then(() => {
-        configureInstance(
-          store.state.settings.settings.server.server_ip,
-          store.state.settings.settings.server.server_port
+    const setServer = async (item) => {
+      console.log("Connecting to server:");
+      console.log(item.target);
+      // connect(item.detail.value);
+    };
+
+    const initApp = () => {
+      console.log("Init app");
+      store.dispatch("settings/loadSettings").then(async () => {
+        // await connect(store.state.settings.settings.currentServerId);
+        await store.dispatch(
+          "simpleapi/connectToServer",
+          store.getters["settings/currentServerId"]
         );
         // Register intent handling
-        registerBroadcastReceiver();
-        window.plugins.intentShim.onIntent((intent) => {
-          handleIntent(intent);
-        });
+        // Intent handling only for mobile apps!
+        if (platforms.includes("hybrid")) {
+          console.log("Registering indent");
+          registerBroadcastReceiver();
+          window.plugins.intentShim.onIntent((intent) => {
+            handleIntent(intent);
+          });
+        }
         apiInstance.get("/status").then((response) => {
           store.commit("simpleapi/setPlayerData", response.data);
         });
@@ -208,7 +251,12 @@ export default defineComponent({
       window.addEventListener("orientationchange", function () {
         store.commit("app/setScreenOrinetation", screen.orientation.type);
       });
-    });
+    };
+
+    // we should call initApp also on debug builds
+    if (!platforms.includes("hybrid")) initApp();
+
+    document.addEventListener("deviceReady", () => initApp());
 
     App.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
@@ -220,12 +268,11 @@ export default defineComponent({
         if (!store.state.simpleapi.playbackRefreshInterval) {
           store.dispatch("simpleapi/setPlaybackRefreshInterval");
         }
-
-        registerBroadcastReceiver();
+        if (platforms.includes("hybrid")) registerBroadcastReceiver();
       } else {
         // Battery saving stuff
         store.commit("simpleapi/clearPlaybackRefreshInterval");
-        unregisterBroadcastReceiver();
+        if (platforms.includes("hybrid")) unregisterBroadcastReceiver();
       }
     });
 
@@ -237,6 +284,10 @@ export default defineComponent({
       listOutline,
       playCircleOutline,
       version: appInfo.version,
+      connectionState: store.getters["simpleapi/connectionState"],
+      servers: store.getters["settings/servers"],
+      currentServerId: store.getters["settings/currentServerId"],
+      setServer,
       isSelected: (url) => (url === route.path ? "selected" : ""),
     };
   },
@@ -329,8 +380,8 @@ ion-menu.ios ion-note {
 }
 
 ion-menu.ios ion-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
+  --padding-start: 10px;
+  --padding-end: 10px;
   --min-height: 50px;
 }
 
@@ -366,5 +417,23 @@ ion-note {
 
 ion-item.selected {
   --color: var(--ion-color-primary);
+}
+
+.horizontalLine {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  border-bottom: 1px solid var(--ion-color-step-150, #d7d8da);
+}
+.serverSelect {
+  width: 100%;
+  justify-content: left;
+  padding-left: 10px;
+}
+
+.serverSelect::part(text) {
+  color: #545ca7;
+  padding-left: 0px;
+  margin-left: 0px;
 }
 </style>
