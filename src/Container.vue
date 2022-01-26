@@ -10,7 +10,7 @@
               interface="action-sheet"
               placeholder="No server selected"
               :value="currentServerId"
-              @ionChange="setServer"
+              @ionChange="setCurrentServer($event.target.value)"
             >
               <ion-select-option
                 v-for="server in servers"
@@ -27,13 +27,13 @@
               :key="i"
             >
               <ion-item
-                @click="selectedIndex = i"
+                @click="selectedPageIndex = i"
                 router-direction="root"
                 :router-link="p.url"
                 lines="none"
                 detail="false"
                 class="hydrated"
-                :class="{ selected: selectedIndex === i }"
+                :class="{ selected: selectedPageIndex === i }"
               >
                 <ion-icon
                   slot="start"
@@ -52,6 +52,7 @@
 </template>
 
 <script>
+import { computed } from "vue";
 import {
   IonApp,
   IonContent,
@@ -67,6 +68,7 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/vue";
+/* eslint-disable no-unused-vars */
 import { defineComponent, ref } from "vue";
 
 import { useRoute } from "vue-router";
@@ -83,9 +85,6 @@ import { useStore } from "vuex";
 import { apiInstance } from "./api";
 import appInfo from "./verinfo";
 import { AndroindIntentActions } from "./enums";
-// import { mapGetters } from "vuex";
-
-// import { getServer } from "./dbcrud";
 
 export default defineComponent({
   name: "App",
@@ -105,18 +104,20 @@ export default defineComponent({
     IonSelectOption,
   },
   setup() {
-    // Capacitor SQLite and Jeep init
-    // const app = getCurrentInstance();
-
-    // if (app != null) {
-    //   app.appContext.config.globalProperties.$sqlite = useSQLite();
-    // }
-    // const sqlite = app?.appContext.config.globalProperties.$sqlite;
-    const selectedIndex = ref(0);
+    // // Capacitor SQLite and Jeep init
+    // // const app = getCurrentInstance();
+    // // if (app != null) {
+    // //   app.appContext.config.globalProperties.$sqlite = useSQLite();
+    // // }
+    // // const sqlite = app?.appContext.config.globalProperties.$sqlite;
     const store = useStore();
     const route = useRoute();
     const platforms = getPlatforms();
-    console.log("Store getters");
+    const selectedPageIndex = ref(0);
+
+    /* 
+    Side menu handler
+    */
     const appPages = [
       {
         title: "Player",
@@ -143,153 +144,168 @@ export default defineComponent({
         mdIcon: informationCircleOutline,
       },
     ];
-
     const path = window.location.pathname.split("folder/")[1];
     if (path !== undefined) {
-      selectedIndex.value = appPages.findIndex(
+      selectedPageIndex.value = appPages.findIndex(
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
-    console.log(`Current platforms: ${platforms}`);
-    const handleSendIntent = async (intent) => {
-      intent.clipItems.forEach((el) => {
-        apiInstance.post("playlist", {
-          filename: el.text,
-          flag: "append-play",
-        });
-      });
-    };
 
-    const handleViewIntent = async (intent) => {
-      let headerArray = [];
-      if (Object.prototype.hasOwnProperty.call(intent.extras, "headers")) {
-        for (var i = 0; i < intent.extras.headers.length - 1; i += 2) {
-          headerArray.push(
-            `${intent.extras.headers[i]}: ${intent.extras.headers[i + 1]}`
-          );
-        }
-      }
-
-      if (Object.prototype.hasOwnProperty.call(intent, "data")) {
-        let reqData = {
-          filename: intent.data,
-          flag: "replace",
-        };
-        reqData["file-local-options"] = {};
-        if (headerArray.length > 0)
-          reqData["file-local-options"]["http-header-fields"] = headerArray;
-        if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
-          reqData["file-local-options"]["force-media-title"] =
-            intent.extras.title;
-        apiInstance.post("playlist", reqData);
-      }
-    };
-
-    const handleIntent = async (intent) => {
-      // console.log("Full intent object" + JSON.stringify(intent));
-      if (Object.prototype.hasOwnProperty.call(intent, "action")) {
-        switch (intent.action) {
-          case AndroindIntentActions.SEND:
-            handleSendIntent(intent);
-            break;
-          case AndroindIntentActions.VIEW:
-            handleViewIntent(intent);
-            break;
-          default:
-            break;
-        }
-      }
-    };
-
-    const registerBroadcastReceiver = () => {
-      window.plugins.intentShim.registerBroadcastReceiver(
-        {
-          filterActions: [
-            "com.darryncampbell.cordova.plugin.broadcastIntent.ACTION",
-          ],
-        },
-        (intent) => {
-          //  Broadcast received
-          handleIntent(intent);
-        }
+    /*
+    Initalize app
+    */
+    const initApp = async () => {
+      await store.dispatch(
+        "settings/setCurrentServer",
+        store.getters["settings/currentServerId"]
       );
+      // console.log("Get status");
+      // apiInstance.get("/status").then((response) => {
+      //   store.commit("simpleapi/setPlayerData", response.data);
+      //   console.log(response.data);
+      // });
+      // store.dispatch("simpleapi/setPlaybackRefreshInterval");
     };
 
-    const unregisterBroadcastReceiver = () => {
-      window.plugins.intentShim.unregisterBroadcastReceiver();
-    };
-
-    const setServer = async (item) => {
-      console.log("Connecting to server:");
-      console.log(item.target);
-      // connect(item.detail.value);
-    };
-
-    const initApp = () => {
-      console.log("Init app");
-      store.dispatch("settings/loadSettings").then(async () => {
-        // await connect(store.state.settings.settings.currentServerId);
-        await store.dispatch(
-          "simpleapi/connectToServer",
-          store.getters["settings/currentServerId"]
-        );
-        // Register intent handling
-        // Intent handling only for mobile apps!
-        if (platforms.includes("hybrid")) {
-          console.log("Registering indent");
-          registerBroadcastReceiver();
-          window.plugins.intentShim.onIntent((intent) => {
-            handleIntent(intent);
-          });
-        }
-        apiInstance.get("/status").then((response) => {
-          store.commit("simpleapi/setPlayerData", response.data);
-        });
-        store.dispatch("simpleapi/setPlaybackRefreshInterval");
-      });
-
-      window.addEventListener("orientationchange", function () {
-        store.commit("app/setScreenOrinetation", screen.orientation.type);
-      });
-    };
-
-    // we should call initApp also on debug builds
-    if (!platforms.includes("hybrid")) initApp();
-
-    document.addEventListener("deviceReady", () => initApp());
-
-    App.addListener("appStateChange", ({ isActive }) => {
-      if (isActive) {
-        // Set screen orientation if active
-        store.commit("app/setScreenOrinetation", screen.orientation.type);
-        apiInstance.get("/status").then((response) => {
-          store.commit("simpleapi/setPlayerData", response.data);
-        });
-        if (!store.state.simpleapi.playbackRefreshInterval) {
-          store.dispatch("simpleapi/setPlaybackRefreshInterval");
-        }
-        if (platforms.includes("hybrid")) registerBroadcastReceiver();
-      } else {
-        // Battery saving stuff
-        store.commit("simpleapi/clearPlaybackRefreshInterval");
-        if (platforms.includes("hybrid")) unregisterBroadcastReceiver();
-      }
-    });
-
+    initApp();
     return {
-      selectedIndex,
+      selectedPageIndex,
       appPages,
-      cogOutline,
-      informationCircleOutline,
-      listOutline,
-      playCircleOutline,
-      version: appInfo.version,
-      connectionState: store.getters["simpleapi/connectionState"],
-      servers: store.getters["settings/servers"],
-      currentServerId: store.getters["settings/currentServerId"],
-      setServer,
-      isSelected: (url) => (url === route.path ? "selected" : ""),
+      servers: computed(() => store.getters["settings/servers"]),
+      currentServerId: computed(
+        () => store.getters["settings/currentServerId"]
+      ),
+      setCurrentServer: (serverId) =>
+        store.dispatch("settings/setCurrentServer", serverId),
     };
+
+    // const handleSendIntent = async (intent) => {
+    //   intent.clipItems.forEach((el) => {
+    //     apiInstance.post("playlist", {
+    //       filename: el.text,
+    //       flag: "append-play",
+    //     });
+    //   });
+    // };
+    // const handleViewIntent = async (intent) => {
+    //   let headerArray = [];
+    //   if (Object.prototype.hasOwnProperty.call(intent.extras, "headers")) {
+    //     for (var i = 0; i < intent.extras.headers.length - 1; i += 2) {
+    //       headerArray.push(
+    //         `${intent.extras.headers[i]}: ${intent.extras.headers[i + 1]}`
+    //       );
+    //     }
+    //   }
+    //   if (Object.prototype.hasOwnProperty.call(intent, "data")) {
+    //     let reqData = {
+    //       filename: intent.data,
+    //       flag: "replace",
+    //     };
+    //     reqData["file-local-options"] = {};
+    //     if (headerArray.length > 0)
+    //       reqData["file-local-options"]["http-header-fields"] = headerArray;
+    //     if (Object.prototype.hasOwnProperty.call(intent.extras, "title"))
+    //       reqData["file-local-options"]["force-media-title"] =
+    //         intent.extras.title;
+    //     apiInstance.post("playlist", reqData);
+    //   }
+    // };
+    // const handleIntent = async (intent) => {
+    //   // console.log("Full intent object" + JSON.stringify(intent));
+    //   if (Object.prototype.hasOwnProperty.call(intent, "action")) {
+    //     switch (intent.action) {
+    //       case AndroindIntentActions.SEND:
+    //         handleSendIntent(intent);
+    //         break;
+    //       case AndroindIntentActions.VIEW:
+    //         handleViewIntent(intent);
+    //         break;
+    //       default:
+    //         break;
+    //     }
+    //   }
+    // };
+    // const registerBroadcastReceiver = () => {
+    //   window.plugins.intentShim.registerBroadcastReceiver(
+    //     {
+    //       filterActions: [
+    //         "com.darryncampbell.cordova.plugin.broadcastIntent.ACTION",
+    //       ],
+    //     },
+    //     (intent) => {
+    //       //  Broadcast received
+    //       handleIntent(intent);
+    //     }
+    //   );
+    // };
+    // const unregisterBroadcastReceiver = () => {
+    //   window.plugins.intentShim.unregisterBroadcastReceiver();
+    // };
+    // const setServer = async (item) => {
+    //   console.log("Connecting to server:");
+    //   console.log(item.target);
+    //   // connect(item.detail.value);
+    // };
+    // const initApp = () => {
+    //   console.log("Init app");
+    //   store.dispatch("settings/loadSettings").then(async () => {
+    //     // await connect(store.state.settings.settings.currentServerId);
+    //     await store.dispatch(
+    //       "simpleapi/connectToServer",
+    //       store.getters["settings/currentServerId"]
+    //     );
+    //     // Register intent handling
+    //     // Intent handling only for mobile apps!
+    //     if (platforms.includes("hybrid")) {
+    //       console.log("Registering indent");
+    //       registerBroadcastReceiver();
+    //       window.plugins.intentShim.onIntent((intent) => {
+    //         handleIntent(intent);
+    //       });
+    //     }
+    //     apiInstance.get("/status").then((response) => {
+    //       store.commit("simpleapi/setPlayerData", response.data);
+    //     });
+    //     store.dispatch("simpleapi/setPlaybackRefreshInterval");
+    //   });
+    //   window.addEventListener("orientationchange", function () {
+    //     store.commit("app/setScreenOrinetation", screen.orientation.type);
+    //   });
+    // };
+    // // we should call initApp also on debug builds
+    // if (!platforms.includes("hybrid")) initApp();
+    // document.addEventListener("deviceReady", () => initApp());
+    // App.addListener("appStateChange", ({ isActive }) => {
+    //   if (isActive) {
+    //     // Set screen orientation if active
+    //     store.commit("app/setScreenOrinetation", screen.orientation.type);
+    //     apiInstance.get("/status").then((response) => {
+    //       store.commit("simpleapi/setPlayerData", response.data);
+    //     });
+    //     if (!store.state.simpleapi.playbackRefreshInterval) {
+    //       store.dispatch("simpleapi/setPlaybackRefreshInterval");
+    //     }
+    //     if (platforms.includes("hybrid")) registerBroadcastReceiver();
+    //   } else {
+    //     // Battery saving stuff
+    //     store.commit("simpleapi/clearPlaybackRefreshInterval");
+    //     if (platforms.includes("hybrid")) unregisterBroadcastReceiver();
+    //   }
+    // });
+    // return {
+    //   selectedIndex,
+    //   appPages,
+    //   cogOutline,
+    //   informationCircleOutline,
+    //   listOutline,
+    //   playCircleOutline,
+    //   version: appInfo.version,
+    //   connectionState: store.getters["simpleapi/connectionState"],
+    //   servers: store.getters["settings/servers"],
+    //   currentServerId: store.getters["settings/currentServerId"],
+    //   setServer,
+    //   isSelected: (url) => (url === route.path ? "selected" : ""),
+    // };
   },
 });
 </script>

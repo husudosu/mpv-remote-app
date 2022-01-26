@@ -37,8 +37,8 @@ applyPolyfills().then(() => {
 });
 window.addEventListener("DOMContentLoaded", async () => {
   const app = createApp(Container).use(IonicVue).use(router).use(store);
-  await store.dispatch("settings/initDatabaseConn");
-
+  await store.dispatch("settings/initSQLITE");
+  await store.dispatch("settings/loadSettings");
   router.isReady().then(() => {
     app.mount("#app");
   });

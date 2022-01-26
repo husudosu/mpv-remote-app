@@ -64,31 +64,6 @@ export default {
     };
     const setSetting = async (key) => {
       console.log(key);
-      // let value = null;
-      // let shouldReconnect = false;
-      // switch (key) {
-      //   case "server_ip":
-      //     value = server_ip.value;
-      //     console.log(value);
-      //     shouldReconnect = true;
-      //     break;
-      //   case "server_port":
-      //     value = server_port.value;
-      //     shouldReconnect = true;
-      //     break;
-      // }
-      // if (value) {
-      //   await store.dispatch("settings/setSetting", { key, value });
-      //   if (shouldReconnect) {
-      //     await store.dispatch("settings/cleanFilemanHistory");
-      //     store.commit("simpleapi/clearPlaybackRefreshInterval");
-      //     await configureInstance(
-      //       store.state.settings.settings.server.server_ip,
-      //       store.state.settings.settings.server.server_port
-      //     );
-      //     store.dispatch("simpleapi/setPlaybackRefreshInterval");
-      //   }
-      // }
     };
 
     return {

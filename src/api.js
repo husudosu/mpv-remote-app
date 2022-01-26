@@ -1,5 +1,5 @@
 import axios from "axios";
-import { toastController } from "@ionic/core";
+// import { toastController } from "@ionic/core";
 
 import { store } from "./store";
 
@@ -20,7 +20,7 @@ function requestOnRejected(error) {
   Promise.reject(error);
 }
 
-export async function configureInstance(host, port) {
+export function configureInstance(host, port) {
   if (callsPending > 0) {
     callsPending = 0;
     cancelSource.cancel("API reconfigure");
@@ -29,26 +29,6 @@ export async function configureInstance(host, port) {
   apiInstance.defaults.baseURL = `http://${host}:${port}/api/v1/`;
   apiInstance.interceptors.request.use(requestOnFulfilled, requestOnRejected);
   // Set active server
-}
-
-export async function connect(serverId) {
-  // Check if server exists
-  const server = store.state.settings.settings.servers.find(
-    (el) => el.id === serverId
-  );
-  //
-  if (server) {
-    console.log(`Connecting to: ${JSON.stringify(server)}`);
-    await configureInstance(server.host, server.port);
-    // Update current server if required
-    if (store.state.settings.settings.currentServerId !== serverId)
-      await store.dispatch("settings/setSetting", {
-        key: "currentServerId",
-        value: serverId,
-      });
-  } else {
-    console.log("No server exists! ");
-  }
 }
 
 apiInstance.interceptors.response.use(
@@ -100,9 +80,11 @@ apiInstance.interceptors.response.use(
 );
 
 export async function openToast(text, duration = 2000) {
-  const toast = await toastController.create({
-    message: text,
-    duration: duration,
-  });
-  return toast.present();
+  console.log(text);
+  console.log(duration);
+  // const toast = await toastController.create({
+  //   message: text,
+  //   duration: duration,
+  // });
+  // return toast.present();
 }

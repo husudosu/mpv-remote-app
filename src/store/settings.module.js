@@ -1,20 +1,30 @@
 import { Storage } from "@capacitor/storage";
 
-import { getServer, initDBTables } from "../dbcrud";
-// import { useState } from "@/composables/state";
+import { createServer, getServer, initDBTables } from "../dbcrud";
 import { Capacitor } from "@capacitor/core";
 import { CapacitorSQLite, SQLiteConnection } from "@capacitor-community/sqlite";
 import { useSQLite } from "vue-sqlite-hook";
+import { apiInstance, configureInstance } from "../api";
 
 const initialState = {
   settings: {
-    configured: false,
     filemanLastPath: null,
     servers: [],
     history: [], // TODO: Should be deprecated
     currentServerId: null,
   },
+  configured: false,
   sqlite: null,
+  dbSession: null,
+  /*
+  New history model should be: 
+  [
+    {
+      server_id: 1,
+      paths: "paths"
+    }
+  ]
+  */
   history: [],
 };
 
@@ -26,7 +36,13 @@ export const settings = {
       return state.settings.servers;
     },
     currentServerId: (state) => {
-      return state.settings.servers.currentServerId;
+      return state.settings.currentServerId;
+    },
+    configured: (state) => {
+      return state.configured;
+    },
+    dbSession: (state) => {
+      return state.dbSession;
     },
   },
   mutations: {
@@ -36,17 +52,30 @@ export const settings = {
     setSqlite(state, value) {
       state.sqlite = value;
     },
+    setDbSession(state, value) {
+      state.dbSession = value;
+    },
     setSetting(state, value) {
       state.settings[value.key] = value.value;
     },
+    setConfigured(state, value) {
+      state.configured = value;
+    },
+    setHistory(state, value) {
+      // find server
+      // SQL Should be used TOOD
+      state.history = value;
+    },
+    appendToHistory(state, value) {
+      state.history.push(value);
+    },
+    appendToServers(state, value) {
+      state.settings.servers.push(value);
+    },
   },
   actions: {
-    loadSettings: async function ({ commit, state, dispatch }) {
+    loadSettings: async function ({ commit, state }) {
       console.log("Load settings");
-      if (!state.sqlite) {
-        console.log("Have to initalize SQLITE into Vuex");
-        await await dispatch("initDatabaseConn");
-      }
       const sqlite = state.sqlite;
       const db = await sqlite.createConnection("remote_db");
       await db.open();
@@ -55,18 +84,20 @@ export const settings = {
       const filemanLastPath = await Storage.get({ key: "filemanLastPath" });
       const history = await Storage.get({ key: "history" });
       const currentServerId = await Storage.get({ key: "currentServerId" });
-
-      let configured = false;
+      console.log("Current server ID:");
+      console.log(currentServerId.value);
       if (servers.length > 0) {
-        await Storage.set({
-          key: "currentServerId",
-          value: servers[0].id,
-        });
-        configured = true;
-      }
+        if (!currentServerId.value) {
+          await Storage.set({
+            key: "currentServerId",
+            value: servers[0].id,
+          });
+          currentServerId.value = servers[0].id.toString();
+        }
+        commit("setConfigured", true);
+      } else commit("setConfigured", false);
 
       commit("setAppSettings", {
-        configured,
         filemanLastPath: JSON.parse(filemanLastPath.value),
         history: JSON.parse(history.value),
         servers,
@@ -77,16 +108,47 @@ export const settings = {
     setSetting: async function ({ commit }, payload) {
       await Storage.set({
         key: payload.key,
-        value: payload.value,
+        value: JSON.stringify(payload.value),
       });
       commit("setSetting", payload);
+    },
+    setCurrentServer: async function ({ dispatch, state, commit }, serverId) {
+      if (state.settings.currentServerId != serverId) {
+        await dispatch("setSetting", {
+          key: "currentServerId",
+          value: serverId,
+        });
+        console.log(`Change current server to: ${serverId}`);
+      }
+      // Find server data
+      const server = state.settings.servers.find((el) => el.id === serverId);
+      if (server) {
+        console.log(`Connecting to server: ${server.host}:${server.port}`);
+        // Clear stuff if there is an existing connection.
+        await commit(
+          "simpleapi/clearPlaybackRefreshInterval",
+          {},
+          { root: true }
+        );
+        configureInstance(server.host, server.port);
+
+        // Get status after connecting immediately.
+        apiInstance.get("/status").then((response) => {
+          commit("simpleapi/setPlayerData", response.data, { root: true });
+        });
+        await dispatch(
+          "simpleapi/setPlaybackRefreshInterval",
+          {},
+          { root: true }
+        );
+      } else console.log("Server not found");
     },
     cleanFilemanHistory: async function ({ dispatch }) {
       await Storage.remove({ key: "history" });
       await Storage.remove({ key: "filemanLastPath" });
       await dispatch("loadSettings");
     },
-    initDatabaseConn: async function ({ commit }) {
+    initSQLITE: async function ({ commit }) {
       const platform = Capacitor.getPlatform();
       const sqlite = new SQLiteConnection(CapacitorSQLite);
       console.log("initalize sqlite");
@@ -128,6 +190,21 @@ export const settings = {
         console.log(`Error: ${err}`);
         throw new Error(`Error: ${err}`);
       }
+    },
+    initDbSession: async function ({ state, commit }) {
+      // Session not exists or session closed
+      console.log("Create db session");
+      const db = await state.sqlite.createConnection("remote_db");
+      await db.open();
+      commit("setDbSession", db);
+    },
+    addServer: async function ({ state, commit, dispatch }, payload) {
+      if (!state.dbSession || !state.dbSession.isDBOpen("remote_db"))
+        await dispatch("initDbSession");
+
+      createServer(state.dbSession, payload);
+      // TODO: Use server ID here!
+      commit("appendToServers", payload);
     },
   },
 };

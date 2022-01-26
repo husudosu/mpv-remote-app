@@ -1,4 +1,4 @@
-import { apiInstance, configureInstance } from "../api";
+import { apiInstance } from "../api";
 // import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 const initialState = {
   playerData: {
@@ -97,6 +97,34 @@ export const simpleapi = {
   state: { ...initialState },
   getters: {
     connectionState: (state) => state.connected,
+    playerData: (state) => state.playerData,
+    playerTitle: (state) => {
+      if (state.connected) {
+        return (
+          state.playerData["media-title"] ||
+          state.playerData.filename ||
+          "Connected (No playback)"
+        );
+      } else {
+        return "Disconnected";
+      }
+    },
+    fileBrowserEnabled: (state) => {
+      return (
+        state.MPVInfo.mpvremoteConfig.unsafefilebrowsing ||
+        state.MPVInfo.mpvremoteConfig.uselocaldb
+      );
+    },
+    audioTracks: (state) => {
+      return state.playerData["track-list"].filter(
+        (track) => track.type === "audio"
+      );
+    },
+    selectedAudioTrackId: (state) => {
+      return state.playerData["track-list"].find(
+        (track) => track.type === "audio" && track.selected
+      ).id;
+    },
   },
   mutations: {
     setPlayerData(state, value) {
@@ -169,25 +197,6 @@ export const simpleapi = {
         }, 1500);
       }
       // Also setup local notifcations
-    },
-    connectToServer: async ({ dispatch, rootState }, id) => {
-      // Find server
-      const server = rootState.settings.settings.servers.find(
-        (el) => el.id === id
-      );
-      if (server) {
-        console.log(`Connecting to server: ${server.host}:${server.port}`);
-        await configureInstance(server.host, server.port);
-
-        if (rootState.settings.currentServerId != server.id)
-          await dispatch(
-            "settings/setSetting",
-            { key: "currentServerId", value: server.id },
-            { root: true }
-          );
-      } else {
-        console.log("Server not found!");
-      }
     },
   },
 };

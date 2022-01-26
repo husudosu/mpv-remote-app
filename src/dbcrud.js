@@ -25,17 +25,26 @@ export const initDBTables = async (db) => {
 };
 
 export const createServer = async (db, data) => {
-  const res = await db.run(
-    `INSERT INTO server (name, host, port) VALUES ("${data.name}", "${data.host}", ${data.port} );`
-  );
+  try {
+    console.log(`Creating server: ${JSON.stringify(data)}`);
+    const res = await db.run(
+      `INSERT INTO server (name, host, port) VALUES ("${data.name}", "${data.host}", ${data.port} );`
+    );
 
-  if (res.changes && res.changes.changes && res.changes.changes < 0) {
-    throw new Error(`Error: execute failed`);
+    if (res.changes && res.changes.changes && res.changes.changes < 0) {
+      console.log("Failed");
+      throw new Error(`Error: execute failed`);
+    }
+    console.log(res.changes);
+  } catch (e) {
+    console.log("Failed creating server:");
+    console.log(e);
   }
 };
 
 export const getServer = async (db, id = null) => {
   if (id) {
+    console.log("Get single one");
     const res = await db.query(`SELECT * FROM server WHERE id=${id}`);
     return res;
   } else {
