@@ -1,6 +1,12 @@
 import { Storage } from "@capacitor/storage";
 
-import { createServer, deleteServer, getServer, initDBTables } from "../dbcrud";
+import {
+  createServer,
+  deleteServer,
+  getServer,
+  initDBTables,
+  updateServerSQL,
+} from "../dbcrud";
 import { Capacitor } from "@capacitor/core";
 import { CapacitorSQLite, SQLiteConnection } from "@capacitor-community/sqlite";
 import { useSQLite } from "vue-sqlite-hook";
@@ -76,6 +82,12 @@ export const settings = {
       // Find server
       const index = state.settings.servers.findIndex((el) => el.id === value);
       if (index > -1) state.settings.servers.splice(index, 1);
+    },
+    updateServerEntry(state, value) {
+      const index = state.settings.servers.findIndex(
+        (el) => el.id === value.id
+      );
+      if (index > -1) state.settings.servers[index] = value;
     },
   },
   actions: {
@@ -220,6 +232,12 @@ export const settings = {
         await dispatch("initDbSession");
       await deleteServer(state.dbSession, serverId);
       commit("removeFromServers", serverId);
+    },
+    updateServer: async function ({ state, commit, dispatch }, payload) {
+      if (!state.dbSession || !state.dbSession.isDBOpen("remote_db"))
+        await dispatch("initDbSession");
+      await updateServerSQL(state.dbSession, payload.id, payload);
+      commit("updateServerEntry", payload);
     },
   },
 };

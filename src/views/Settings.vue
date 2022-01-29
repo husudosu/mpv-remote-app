@@ -17,9 +17,9 @@
       </ion-header>
 
       <ion-list>
-        <ion-item :router-link="{ name: 'folder.servers' }"> Servers </ion-item>
+        <ion-item @click="onServersClicked"> Servers </ion-item>
         <ion-item
-          :router-link="{ name: 'folder.collections' }"
+          @click="onCollectionsClicked"
           :disabled="!connectedState || !uselocaldb"
         >
           <ion-label>Media collections</ion-label>
@@ -43,32 +43,42 @@ import {
   IonList,
   IonItem,
   IonLabel,
-  useIonRouter,
+  // useIonRouter,
+  modalController,
 } from "@ionic/vue";
+import Servers from "./Servers.vue";
+import Collections from "./Collections.vue";
+
 export default {
   setup() {
     const store = useStore();
-    const router = useIonRouter();
+    // const router = useIonRouter();
 
     const connectedState = computed(() => store.state.simpleapi.connected);
-    const currentSettings = computed(() => store.state.settings.server);
     const uselocaldb = computed(
       () => store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb
     );
 
-    const onServersClicked = () => {
-      router.push({ name: "folder.servers" });
+    /* FIXME: Need to use modals here because router messing up when changing between Servers and Media collections
+    Please help me with this problem!
+    Routes also disabled on router/index.js if you want to experiment with this uncomment routes.
+    */
+    const onServersClicked = async () => {
+      // router.push({ name: "folder.servers" });
+      console.log("Servers clicked");
+      const modal = await modalController.create({
+        component: Servers,
+      });
+      await modal.present();
     };
-    const onCollectionsClicked = () => {
-      router.push({ name: "folder.collections" });
+    const onCollectionsClicked = async () => {
+      // router.push({ name: "folder.collections" });
+      const modal = await modalController.create({
+        component: Collections,
+      });
+      await modal.present();
     };
-    const setSetting = async (key) => {
-      console.log(key);
-    };
-
     return {
-      currentSettings,
-      setSetting,
       connectedState,
       uselocaldb,
       onServersClicked,

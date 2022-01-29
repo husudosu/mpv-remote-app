@@ -3,7 +3,9 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button></ion-back-button>
+          <ion-button @click="onBackClicked">
+            <ion-icon :icon="arrowBack"></ion-icon>
+          </ion-button>
         </ion-buttons>
         <ion-title>Servers</ion-title>
       </ion-toolbar>
@@ -35,6 +37,7 @@
             <p>{{ item.host }}:{{ item.port }}</p>
           </ion-label>
         </ion-item>
+        <ion-item v-if="servers.length == 0"> I'm empty </ion-item>
       </ion-list>
     </ion-content>
   </ion-page>
@@ -44,7 +47,7 @@
 import { computed } from "vue";
 
 import { useStore } from "vuex";
-import { add } from "ionicons/icons";
+import { add, arrowBack } from "ionicons/icons";
 import {
   IonPage,
   IonToolbar,
@@ -55,12 +58,12 @@ import {
   IonList,
   IonItem,
   IonIcon,
-  IonBackButton,
   IonLabel,
   IonFab,
   IonFabButton,
   modalController,
 } from "@ionic/vue";
+
 import addServerModal from "../components/addServerModal.vue";
 
 export default {
@@ -74,15 +77,12 @@ export default {
     IonList,
     IonItem,
     IonIcon,
-    IonBackButton,
     IonLabel,
     IonFab,
     IonFabButton,
   },
 
   setup() {
-    // Capacitor SQLite and Jeep init
-    // const app = getCurrentInstance();
     const store = useStore();
     const servers = computed(() => store.getters["settings/servers"]);
 
@@ -95,12 +95,9 @@ export default {
         },
       });
       modal.onDidDismiss().then(async (response) => {
-        if (response.data) {
-          // servers.value.push(response.data);
+        if (response.data)
           await store.dispatch("settings/addServer", response.data);
-        }
       });
-
       await modal.present();
     };
 
@@ -114,66 +111,25 @@ export default {
       });
       modal.onDidDismiss().then(async (response) => {
         if (response.data) {
-          // Deletes server
-          if (response.data.delete) {
-            console.log("Delete server");
+          if (response.data.delete)
             await store.dispatch("settings/removeServer", server.id);
-          } else {
-            console.log("Update server");
-          }
+          else await store.dispatch("settings/updateServer", response.data);
         }
       });
       await modal.present();
     };
-    // const onUpdateServerClicked = async (server) => {
-    //   const modal = await modalController.create({
-    //     component: addServerModal,
-    //     componentProps: {
-    //       modalController,
-    //       server,
-    //     },
-    //   });
-    //   modal.onDidDismiss().then(async (response) => {
-    //     if (response.data) {
-    //       const index = servers.value.findIndex((el) => el.id === server.id);
 
-    //       if (!response.data.delete) {
-    //         await updateServer(db.value, server.id, response.data);
-    //         servers.value[index] = Object.assign(
-    //           servers.value[index],
-    //           response.data
-    //         );
-    //       }
-    //     }
-    //   }
-    // }
-    //       // Update server
-    //       // if (!response.data.delete) {
-    //       //   servers.value[index] = Object.assign(
-    //       //     servers.value[index],
-    //       //     response.data
-    //       //   );
-    //       // } else {
-    //       //   // Delete server
-    //       //   servers.value.splice(index, 1);
-    //       // }
-    //       // await store.dispatch("settings/setSetting", {
-    //       //   key: "servers",
-    //       //   value: JSON.stringify(servers.value),
-    //       // });
-    //       // Reload settings
-    //       // store.dispatch("settings/loadSettings");
-    //     }
-    //   });
-
-    //   await modal.present();
-    // };
+    const onBackClicked = () => {
+      modalController.dismiss();
+    };
 
     return {
       servers,
       addNewserver,
       onUpdateServerClicked,
+      onBackClicked,
       add,
+      arrowBack,
     };
   },
 };

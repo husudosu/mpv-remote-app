@@ -52,7 +52,7 @@ export const getServer = async (db, id = null) => {
   }
 };
 
-export const updateServer = async (db, id, data) => {
+export const updateServerSQL = async (db, id, data) => {
   const res = await db.run(
     "UPDATE server SET name=COALESCE(?, name), host=COALESCE(?, host), port=COALESCE(?, port) WHERE id=?",
     [data.name, data.host, data.port, id]
@@ -60,6 +60,7 @@ export const updateServer = async (db, id, data) => {
   if (res.changes && res.changes.changes && res.changes.changes < 0) {
     throw new Error(`Error: execute failed`);
   }
+  return res;
 };
 
 export const deleteServer = async (db, id) => {

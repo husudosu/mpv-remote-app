@@ -100,12 +100,22 @@ export default {
     };
 
     const onSubmitClicked = () => {
-      console.log("Submit clicked");
-      props.modalController.dismiss(dialog.value);
+      // Validate server data
+      let errors = [];
+      if (dialog.value.name.length === 0) errors.push("Name required");
+      if (dialog.value.host.length === 0) errors.push("Host required");
+
+      if (isNaN(dialog.value.port)) errors.push("Port should be number");
+      else if (dialog.value.port <= 0)
+        errors.push("Port should be greater than 0");
+      else if (dialog.value.port > 65535)
+        errors.push("Port should be smaller than 65535");
+
+      if (errors.length > 0) alert(errors.join("\n"));
+      else props.modalController.dismiss(dialog.value);
     };
 
     const onDeleteClicked = () => {
-      console.log("Delete clicked");
       props.modalController.dismiss({ delete: true });
     };
 
