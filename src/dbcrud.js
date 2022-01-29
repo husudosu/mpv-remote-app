@@ -26,16 +26,14 @@ export const initDBTables = async (db) => {
 
 export const createServer = async (db, data) => {
   try {
-    console.log(`Creating server: ${JSON.stringify(data)}`);
     const res = await db.run(
       `INSERT INTO server (name, host, port) VALUES ("${data.name}", "${data.host}", ${data.port} );`
     );
 
     if (res.changes && res.changes.changes && res.changes.changes < 0) {
-      console.log("Failed");
       throw new Error(`Error: execute failed`);
     }
-    console.log(res.changes);
+    return res;
   } catch (e) {
     console.log("Failed creating server:");
     console.log(e);
@@ -62,4 +60,10 @@ export const updateServer = async (db, id, data) => {
   if (res.changes && res.changes.changes && res.changes.changes < 0) {
     throw new Error(`Error: execute failed`);
   }
+};
+
+export const deleteServer = async (db, id) => {
+  const res = await db.run("DELETE FROM server WHERE id=?", [id]);
+  console.log(res);
+  return res;
 };

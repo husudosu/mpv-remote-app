@@ -4,11 +4,6 @@
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-back-button></ion-back-button>
-          <ion-button
-            router-direction="back"
-            :router-link="{ name: 'folder.settings' }"
-            >Back</ion-button
-          >
         </ion-buttons>
         <ion-title>Servers</ion-title>
       </ion-toolbar>
@@ -63,7 +58,6 @@ import {
   IonBackButton,
   IonLabel,
   IonFab,
-  IonButton,
   IonFabButton,
   modalController,
 } from "@ionic/vue";
@@ -84,7 +78,6 @@ export default {
     IonLabel,
     IonFab,
     IonFabButton,
-    IonButton,
   },
 
   setup() {
@@ -111,6 +104,27 @@ export default {
       await modal.present();
     };
 
+    const onUpdateServerClicked = async (server) => {
+      const modal = await modalController.create({
+        component: addServerModal,
+        componentProps: {
+          modalController,
+          server,
+        },
+      });
+      modal.onDidDismiss().then(async (response) => {
+        if (response.data) {
+          // Deletes server
+          if (response.data.delete) {
+            console.log("Delete server");
+            await store.dispatch("settings/removeServer", server.id);
+          } else {
+            console.log("Update server");
+          }
+        }
+      });
+      await modal.present();
+    };
     // const onUpdateServerClicked = async (server) => {
     //   const modal = await modalController.create({
     //     component: addServerModal,
@@ -130,6 +144,9 @@ export default {
     //           response.data
     //         );
     //       }
+    //     }
+    //   }
+    // }
     //       // Update server
     //       // if (!response.data.delete) {
     //       //   servers.value[index] = Object.assign(
@@ -155,7 +172,7 @@ export default {
     return {
       servers,
       addNewserver,
-      // onUpdateServerClicked,
+      onUpdateServerClicked,
       add,
     };
   },

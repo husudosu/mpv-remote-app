@@ -1,6 +1,6 @@
 import { Storage } from "@capacitor/storage";
 
-import { createServer, getServer, initDBTables } from "../dbcrud";
+import { createServer, deleteServer, getServer, initDBTables } from "../dbcrud";
 import { Capacitor } from "@capacitor/core";
 import { CapacitorSQLite, SQLiteConnection } from "@capacitor-community/sqlite";
 import { useSQLite } from "vue-sqlite-hook";
@@ -72,20 +72,20 @@ export const settings = {
     appendToServers(state, value) {
       state.settings.servers.push(value);
     },
+    removeFromServers(state, value) {
+      // Find server
+      const index = state.settings.servers.findIndex((el) => el.id === value);
+      if (index > -1) state.settings.servers.splice(index, 1);
+    },
   },
   actions: {
     loadSettings: async function ({ commit, state }) {
       console.log("Load settings");
-      const sqlite = state.sqlite;
-      const db = await sqlite.createConnection("remote_db");
-      await db.open();
-      const servers = await getServer(db);
+      const servers = await getServer(state.dbSession);
 
       const filemanLastPath = await Storage.get({ key: "filemanLastPath" });
       const history = await Storage.get({ key: "history" });
       const currentServerId = await Storage.get({ key: "currentServerId" });
-      console.log("Current server ID:");
-      console.log(currentServerId.value);
       if (servers.length > 0) {
         if (!currentServerId.value) {
           await Storage.set({
@@ -103,7 +103,6 @@ export const settings = {
         servers,
         currentServerId: parseInt(currentServerId.value),
       });
-      await sqlite.closeConnection("remote_db");
     },
     setSetting: async function ({ commit }, payload) {
       await Storage.set({
@@ -118,7 +117,6 @@ export const settings = {
           key: "currentServerId",
           value: serverId,
         });
-        console.log(`Change current server to: ${serverId}`);
       }
       // Find server data
       const server = state.settings.servers.find((el) => el.id === serverId);
@@ -184,8 +182,8 @@ export const settings = {
         }
         await db.open();
         await initDBTables(db);
-        await sqlite.closeConnection("remote_db");
         commit("setSqlite", useSQLite());
+        commit("setDbSession", db);
       } catch (err) {
         console.log(`Error: ${err}`);
         throw new Error(`Error: ${err}`);
@@ -198,13 +196,30 @@ export const settings = {
       await db.open();
       commit("setDbSession", db);
     },
+    closeDbConnection: async function ({ state, commit }) {
+      console.log("Closing DB connection");
+      await state.sqlite.closeConnection("remote_db");
+      commit("setDbSession", null);
+    },
     addServer: async function ({ state, commit, dispatch }, payload) {
       if (!state.dbSession || !state.dbSession.isDBOpen("remote_db"))
         await dispatch("initDbSession");
 
-      createServer(state.dbSession, payload);
-      // TODO: Use server ID here!
+      const res = await createServer(state.dbSession, payload);
+      payload.id = res.changes.lastId;
       commit("appendToServers", payload);
+
+      // Set app configured state if needed and connect to server.
+      if (!state.configured) {
+        commit("setConfigured", true);
+        await dispatch("setCurrentServer", payload.id);
+      }
+    },
+    removeServer: async function ({ state, commit, dispatch }, serverId) {
+      if (!state.dbSession || !state.dbSession.isDBOpen("remote_db"))
+        await dispatch("initDbSession");
+      await deleteServer(state.dbSession, serverId);
+      commit("removeFromServers", serverId);
     },
   },
 };

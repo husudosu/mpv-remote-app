@@ -4,11 +4,6 @@
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-back-button></ion-back-button>
-          <ion-button
-            router-direction="back"
-            :router-link="{ name: 'folder.settings' }"
-            >Back</ion-button
-          >
         </ion-buttons>
         <ion-title>Media collections</ion-title>
       </ion-toolbar>

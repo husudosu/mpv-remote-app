@@ -12,7 +12,6 @@
     </ion-header>
     <ion-content :fullscreen="true" v-if="configured">
       <ion-grid style="height: 100%">
-        {{ filebrowserEnabled }}
         <ion-row class="remoteButtons">
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
