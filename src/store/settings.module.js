@@ -1,10 +1,13 @@
 import { Storage } from "@capacitor/storage";
 
 import {
+  createFilemanHistorySQL,
   createServer,
   deleteServer,
+  getFilemanHistorySQL,
   getServer,
   initDBTables,
+  UpdateFilemanHistorySQL,
   updateServerSQL,
 } from "../dbcrud";
 import { Capacitor } from "@capacitor/core";
@@ -14,24 +17,14 @@ import { apiInstance, configureInstance } from "../api";
 
 const initialState = {
   settings: {
-    filemanLastPath: null,
     servers: [],
-    history: [], // TODO: Should be deprecated
     currentServerId: null,
   },
   configured: false,
   sqlite: null,
   dbSession: null,
-  /*
-  New history model should be: 
-  [
-    {
-      server_id: 1,
-      paths: "paths"
-    }
-  ]
-  */
   history: [],
+  filemanLastPath: null,
 };
 
 export const settings = {
@@ -50,6 +43,9 @@ export const settings = {
     dbSession: (state) => {
       return state.dbSession;
     },
+    getServerHistory: (state) => {
+      return state.history;
+    },
   },
   mutations: {
     setAppSettings(state, value) {
@@ -67,14 +63,6 @@ export const settings = {
     setConfigured(state, value) {
       state.configured = value;
     },
-    setHistory(state, value) {
-      // find server
-      // SQL Should be used TOOD
-      state.history = value;
-    },
-    appendToHistory(state, value) {
-      state.history.push(value);
-    },
     appendToServers(state, value) {
       state.settings.servers.push(value);
     },
@@ -89,14 +77,17 @@ export const settings = {
       );
       if (index > -1) state.settings.servers[index] = value;
     },
+    setHistory(state, value) {
+      state.history = value;
+    },
+    setFilemanLastPath(state, value) {
+      state.filemanLastPath = value;
+    },
   },
   actions: {
     loadSettings: async function ({ commit, state }) {
       console.log("Load settings");
       const servers = await getServer(state.dbSession);
-
-      const filemanLastPath = await Storage.get({ key: "filemanLastPath" });
-      const history = await Storage.get({ key: "history" });
       const currentServerId = await Storage.get({ key: "currentServerId" });
       if (servers.length > 0) {
         if (!currentServerId.value) {
@@ -110,8 +101,6 @@ export const settings = {
       } else commit("setConfigured", false);
 
       commit("setAppSettings", {
-        filemanLastPath: JSON.parse(filemanLastPath.value),
-        history: JSON.parse(history.value),
         servers,
         currentServerId: parseInt(currentServerId.value),
       });
@@ -141,11 +130,12 @@ export const settings = {
           { root: true }
         );
         configureInstance(server.host, server.port);
-
         // Get status after connecting immediately.
         apiInstance.get("/status").then((response) => {
           commit("simpleapi/setPlayerData", response.data, { root: true });
         });
+        // Load fileman history
+        await dispatch("loadFilemanHistory");
         await dispatch(
           "simpleapi/setPlaybackRefreshInterval",
           {},
@@ -153,21 +143,10 @@ export const settings = {
         );
       } else console.log("Server not found");
     },
-    cleanFilemanHistory: async function ({ dispatch }) {
-      await Storage.remove({ key: "history" });
-      await Storage.remove({ key: "filemanLastPath" });
-      await dispatch("loadSettings");
-    },
     initSQLITE: async function ({ commit }) {
       const platform = Capacitor.getPlatform();
       const sqlite = new SQLiteConnection(CapacitorSQLite);
       console.log("initalize sqlite");
-      // const [existConn, setExistConn] = useState(false);
-      // app.config.globalProperties.$existingConn = {
-      //   existConn: existConn,
-      //   setExistConn: setExistConn,
-      // };
-
       try {
         if (platform === "web") {
           // Create the 'jeep-sqlite' Stencil component
@@ -197,7 +176,6 @@ export const settings = {
         commit("setSqlite", useSQLite());
         commit("setDbSession", db);
       } catch (err) {
-        console.log(`Error: ${err}`);
         throw new Error(`Error: ${err}`);
       }
     },
@@ -227,17 +205,44 @@ export const settings = {
         await dispatch("setCurrentServer", payload.id);
       }
     },
-    removeServer: async function ({ state, commit, dispatch }, serverId) {
-      if (!state.dbSession || !state.dbSession.isDBOpen("remote_db"))
-        await dispatch("initDbSession");
+    removeServer: async function ({ state, commit }, serverId) {
       await deleteServer(state.dbSession, serverId);
       commit("removeFromServers", serverId);
     },
-    updateServer: async function ({ state, commit, dispatch }, payload) {
-      if (!state.dbSession || !state.dbSession.isDBOpen("remote_db"))
-        await dispatch("initDbSession");
+    updateServer: async function ({ state, commit }, payload) {
       await updateServerSQL(state.dbSession, payload.id, payload);
       commit("updateServerEntry", payload);
+    },
+    loadFilemanHistory: async function ({ state, commit }) {
+      const history = await getFilemanHistorySQL(
+        state.dbSession,
+        state.settings.currentServerId
+      );
+      if (history.length > 0) {
+        console.log(
+          `History found for server: paths: ${
+            history[0].paths
+          } ${JSON.stringify(history[0].last_path)}`
+        );
+        commit("setHistory", JSON.parse(history[0].paths));
+        commit("setFilemanLastPath", JSON.parse(history[0].last_path));
+      } else {
+        await createFilemanHistorySQL(
+          state.dbSession,
+          state.settings.currentServerId,
+          []
+        );
+      }
+    },
+    updateFilemanHistory: async function ({ state, commit }, payload) {
+      await UpdateFilemanHistorySQL(
+        state.dbSession,
+        state.settings.currentServerId,
+        payload.paths,
+        payload.last_path
+      );
+      commit("setHistory", payload.paths);
+      commit("setFilemanLastPath", payload.last_path);
     },
   },
 };

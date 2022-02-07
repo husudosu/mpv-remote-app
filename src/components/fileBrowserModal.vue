@@ -32,41 +32,57 @@
       </ion-toolbar>
     </ion-header>
     <ion-content
+      ref="browserContent"
       class="ion-padding"
-      v-if="(files.cwd || files.collection_id) && connectedState"
+      v-if="(files.cwd || files.collection_id) && connectionState"
     >
-      <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
-        <ion-icon :icon="folder" slot="start"></ion-icon>
-        ...
-      </ion-item>
-      <ion-item
-        v-for="(entry, index) in files.content"
-        :key="index"
-        @click="onEntryClicked(entry)"
+      <ion-list>
+        <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
+          <ion-icon :icon="folder" slot="start"></ion-icon>
+          ...
+        </ion-item>
+        <ion-item
+          v-for="(entry, index) in browsableFiles"
+          :key="index"
+          @click="onEntryClicked(entry)"
+        >
+          <ion-icon
+            slot="start"
+            v-if="entry.mediaStatus && entry.mediaStatus.finished === 0"
+            class="mediaStatusProgress"
+            :icon="decideIcon(entry)"
+          ></ion-icon>
+          <ion-icon
+            slot="start"
+            v-else-if="entry.mediaStatus && entry.mediaStatus.finished === 1"
+            class="mediaStatusFinished"
+            :icon="decideIcon(entry)"
+          ></ion-icon>
+          <ion-icon
+            v-else-if="entry.type === 'subtitle'"
+            class="fileformatSubtitle"
+            :icon="journalOutline"
+            slot="start"
+          ></ion-icon>
+          <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
+          {{ entry.name }}
+        </ion-item>
+      </ion-list>
+
+      <ion-infinite-scroll
+        @ionInfinite="onInfiniteScroll($event)"
+        threshold="1000px"
+        id="infinite-scroll"
+        :disabled="!infiniteScrollEnabled"
       >
-        <ion-icon
-          slot="start"
-          v-if="entry.mediaStatus && entry.mediaStatus.finished === 0"
-          class="mediaStatusProgress"
-          :icon="decideIcon(entry)"
-        ></ion-icon>
-        <ion-icon
-          slot="start"
-          v-else-if="entry.mediaStatus && entry.mediaStatus.finished === 1"
-          class="mediaStatusFinished"
-          :icon="decideIcon(entry)"
-        ></ion-icon>
-        <ion-icon
-          v-else-if="entry.type === 'subtitle'"
-          class="fileformatSubtitle"
-          :icon="journalOutline"
-          slot="start"
-        ></ion-icon>
-        <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
-        {{ entry.name }}
-      </ion-item>
+        <ion-infinite-scroll-content
+          loading-spinner="bubbles"
+          loading-text="Loading more data..."
+        >
+        </ion-infinite-scroll-content>
+      </ion-infinite-scroll>
     </ion-content>
-    <ion-content v-else-if="!connectedState">
+    <ion-content v-else-if="!connectionState">
       Lost connection to server.
     </ion-content>
     <ion-content v-else-if="!loading">
@@ -134,6 +150,8 @@ import {
   IonListHeader,
   actionSheetController,
   alertController,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
 } from "@ionic/vue";
 import {
   folder,
@@ -157,21 +175,31 @@ export default {
   props: ["modalController", "action"],
   setup(props) {
     const store = useStore();
-    const connectedState = computed(() => store.state.simpleapi.connected);
     const serverConfig = computed(
       () => store.state.simpleapi.MPVInfo.mpvremoteConfig
     );
     const files = ref({});
-    const collections = ref([]);
+
+    // Browasble files by ion-infinite scroll
+    const browsableFiles = ref([]);
+    const INFINITE_SCROLL_STEP = 100;
+    const infiniteScrollEnabled = ref(false);
+
     const filesBak = ref([]);
+    const collections = ref([]);
     const search = ref("");
     const loading = ref(true);
+    const browserContent = ref();
+
     const showOpenFolder = ref(props.action === FileBrowserActions.OPENFOLDER);
     const drives = ref([]);
-    const filemanLastPath = store.state.settings.settings.filemanLastPath;
+
+    const filemanLastPath = store.state.settings.filemanLastPath;
     const sortBy = ref(FileBrowserSortBy.NAME);
 
-    let history = store.state.settings.settings.history || [];
+    // let history = store.state.settings.settings.history || [];
+    let history = store.getters["settings/getServerHistory"];
+
     const titleText = computed(() => {
       if (files.value.dirname) return files.value.dirname;
       else if (files.value.collection_id) {
@@ -212,30 +240,21 @@ export default {
         filemanLastPath.collection_id = files.value.collection_id;
       }
       // Also save history
-      await store.dispatch("settings/setSetting", {
-        key: "history",
-        value: JSON.stringify(history),
+      await store.dispatch("settings/updateFilemanHistory", {
+        paths: history,
+        last_path: filemanLastPath,
       });
-
-      if (
-        filemanLastPath.cwd != null ||
-        filemanLastPath.collection_id != null
-      ) {
-        return store.dispatch("settings/setSetting", {
-          key: "filemanLastPath",
-          value: JSON.stringify(filemanLastPath),
-        });
-      }
     };
 
     const getDirectoryContents = async (path = null, collectionId = null) => {
-      console.log("Get directory contents");
+      console.log(
+        `Get directory contents: path: ${path} collection:${collectionId}`
+      );
       let data = {};
       if (path) data.path = path;
       if (collectionId) data.collection_id = collectionId;
       // Save to history
       // Render spinner if loading takes more than 150 msec
-
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
       }, 150);
@@ -245,7 +264,13 @@ export default {
           files.value = response.data;
           filesBak.value = response.data;
           search.value = "";
-
+          browsableFiles.value = files.value.content.slice(
+            0,
+            INFINITE_SCROLL_STEP
+          );
+          // Enable infinite scroll if needed.
+          if (files.value.content.length > INFINITE_SCROLL_STEP)
+            infiniteScrollEnabled.value = true;
           // Render IO related errors
           if (response.data.errors && response.data.errors.length > 0) {
             openToast(response.data.errors, 3000);
@@ -254,12 +279,32 @@ export default {
         .finally(() => {
           clearTimeout(loadingTimeout);
           loading.value = false;
+          browserContent.value.$el.scrollToTop();
         });
+    };
+
+    const onInfiniteScroll = (ev) => {
+      // Load more items
+      if (browsableFiles.value.length !== files.value.content.length) {
+        console.log("Load more items");
+        browsableFiles.value.push(
+          ...files.value.content.slice(
+            browsableFiles.value.length,
+            browsableFiles.value.length + INFINITE_SCROLL_STEP
+          )
+        );
+      } else {
+        infiniteScrollEnabled.value = false;
+        console.log("Reached end");
+      }
+      ev.target.complete();
     };
 
     if (filemanLastPath) {
       if (filemanLastPath.type == "collection") {
+        console.log("Collection should be loaded");
         getDirectoryContents(null, filemanLastPath.collection_id).catch(() => {
+          console.log("Got error, loading basic");
           getDirectoryContents();
         });
       } else if (filemanLastPath.type == "directory") {
@@ -300,7 +345,6 @@ export default {
         const { role } = await actionSheet.onDidDismiss();
 
         if (role === "continue") {
-          console.log("Continue");
           saveLastPath().then(() => {
             props.modalController.dismiss({
               filename: entry.fullPath,
@@ -374,7 +418,6 @@ export default {
       await actionSheet.present();
 
       const { role } = await actionSheet.onDidDismiss();
-      console.log(`Value:${role}`);
 
       if (role !== "backdrop") {
         getDirectoryContents(role);
@@ -411,6 +454,11 @@ export default {
       files.value.content = files.value.content.filter(
         (el) => el.name.toLowerCase().indexOf(search.value.toLowerCase()) > -1
       );
+      // Enable infinite scroll if needed.
+      if (files.value.content.length > INFINITE_SCROLL_STEP)
+        infiniteScrollEnabled.value = true;
+
+      browsableFiles.value = files.value.content.slice(0, INFINITE_SCROLL_STEP);
     };
     const onOpenDirectoryClicked = () => {
       saveLastPath().then(() => props.modalController.dismiss(files.value.cwd));
@@ -501,6 +549,10 @@ export default {
       decideIcon,
       onCollectionsClicked,
       getDirectoryContents,
+      browsableFiles,
+      connectionState: computed(
+        () => store.getters["simpleapi/connectionState"]
+      ),
       showOpenFolder,
       titleText,
       loading,
@@ -516,10 +568,12 @@ export default {
       film,
       collections,
       drives,
-      connectedState,
       serverConfig,
       funnelOutline,
       onSortByClicked,
+      onInfiniteScroll,
+      infiniteScrollEnabled,
+      browserContent,
     };
   },
   components: {
@@ -537,6 +591,8 @@ export default {
     IonLoading,
     IonList,
     IonListHeader,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent,
   },
 };
 </script>

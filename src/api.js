@@ -1,5 +1,5 @@
 import axios from "axios";
-// import { toastController } from "@ionic/core";
+import { toastController } from "@ionic/core";
 
 import { store } from "./store";
 
@@ -80,11 +80,9 @@ apiInstance.interceptors.response.use(
 );
 
 export async function openToast(text, duration = 2000) {
-  console.log(text);
-  console.log(duration);
-  // const toast = await toastController.create({
-  //   message: text,
-  //   duration: duration,
-  // });
-  // return toast.present();
+  const toast = await toastController.create({
+    message: text,
+    duration: duration,
+  });
+  return toast.present();
 }
