@@ -1,7 +1,6 @@
 <template>
   <ion-page>
-    <ion-loading :is-open="loading" message="Loading contents...">
-    </ion-loading>
+    <ion-loading :is-open="loading" message="Loading..."> </ion-loading>
     <ion-header>
       <ion-toolbar>
         <ion-title>{{ titleText }}</ion-title>
@@ -65,7 +64,7 @@
             slot="start"
           ></ion-icon>
           <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
-          {{ entry.name }}
+          <ion-label class="ion-text-wrap">{{ entry.name }}</ion-label>
         </ion-item>
       </ion-list>
 
@@ -76,7 +75,7 @@
         :disabled="!infiniteScrollEnabled"
       >
         <ion-infinite-scroll-content
-          loading-spinner="bubbles"
+          loading-spinner="circles"
           loading-text="Loading more data..."
         >
         </ion-infinite-scroll-content>
@@ -152,6 +151,7 @@ import {
   alertController,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonLabel,
 } from "@ionic/vue";
 import {
   folder,
@@ -487,6 +487,11 @@ export default {
           });
           break;
       }
+      // Enable infinite scroll if needed.
+      if (files.value.content.length > INFINITE_SCROLL_STEP)
+        infiniteScrollEnabled.value = true;
+
+      browsableFiles.value = files.value.content.slice(0, INFINITE_SCROLL_STEP);
 
       clearInterval(loadingTimeout);
     };
@@ -593,6 +598,7 @@ export default {
     IonListHeader,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
+    IonLabel,
   },
 };
 </script>

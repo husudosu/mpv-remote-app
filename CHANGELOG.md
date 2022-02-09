@@ -12,6 +12,6 @@ Update [mpv-remote-node](https://github.com/husudosu/mpv-remote-node) to 1.0.3!
 Very important to update mpv-remote-node to 1.0.5!
 
 - Upgraded to Ionic v6,
-- APP working properly from web browser, useful for web browser debugging,
 - Support for multiple servers,
-- Launching configuration "wizzard" until the app not configured,
+- Multiple server handling
+- Filebrowser speed improvements with larger directories/collections

@@ -6,6 +6,12 @@ Build production:
 ionic capacitor build android --prod --release --verbose
 ```
 
+Optimized build:
+
+```bash
+ionic capacitor build android --prod --aot --minifyjs --minifycss --optimizejs
+```
+
 Run debugging on android:
 
 ```bash
