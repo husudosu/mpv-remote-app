@@ -21,6 +21,11 @@ import "@ionic/vue/css/text-transformation.css";
 import "@ionic/vue/css/flex-utils.css";
 import "@ionic/vue/css/display.css";
 
+// vue-virtual-scroller@next
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
+import VueVirtualScroller from "vue-virtual-scroller";
+import { RecycleScroller, DynamicScroller } from "vue-virtual-scroller";
+
 /* Theme variables */
 import "./theme/variables.css";
 import "./theme/darkmode.css";
@@ -36,7 +41,13 @@ applyPolyfills().then(() => {
   jeepSqlite(window);
 });
 window.addEventListener("DOMContentLoaded", async () => {
-  const app = createApp(Container).use(IonicVue).use(router).use(store);
+  const app = createApp(Container)
+    .use(IonicVue)
+    .use(router)
+    .use(store)
+    .use(VueVirtualScroller);
+  app.component("RecycleScroller", RecycleScroller);
+  app.component("DynamicScroller", DynamicScroller);
   await store.dispatch("settings/initSQLITE");
   await store.dispatch("settings/loadSettings");
   router.isReady().then(() => {
