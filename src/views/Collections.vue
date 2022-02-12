@@ -3,7 +3,9 @@
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button></ion-back-button>
+          <ion-button @click="onBackClicked">
+            <ion-icon :icon="arrowBack"></ion-icon>
+          </ion-button>
         </ion-buttons>
         <ion-title>Media collections</ion-title>
       </ion-toolbar>
@@ -15,15 +17,16 @@
           <ion-title size="large">Media collections</ion-title>
         </ion-toolbar>
       </ion-header>
-      <ion-button
-        :disabled="!connectedState"
+      <ion-fab
+        vertical="bottom"
+        horizontal="end"
+        slot="fixed"
         @click="onAddNewCollectionClicked"
-        fill="clear"
-        color="success"
       >
-        <ion-icon slot="start" :icon="addOutline"></ion-icon>
-        Add collection
-      </ion-button>
+        <ion-fab-button color="success">
+          <ion-icon :icon="add"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
       <ion-list>
         <ion-item v-for="collection in collections" :key="collection.id">
           <ion-label class="ion-text-wrap">
@@ -43,6 +46,8 @@
             <ion-icon slot="icon-only" :icon="trashBin"></ion-icon>
           </ion-button>
         </ion-item>
+
+        <ion-item v-if="collections.length == 0"> I'm empty </ion-item>
       </ion-list>
     </ion-content>
   </ion-page>
@@ -59,13 +64,14 @@ import {
   IonToolbar,
   IonList,
   IonItem,
-  IonBackButton,
-  IonButton,
   IonIcon,
   IonLabel,
+  IonFab,
+  IonFabButton,
+  IonButton,
   modalController,
 } from "@ionic/vue";
-import { addOutline, trashBin, options } from "ionicons/icons";
+import { add, trashBin, options, arrowBack } from "ionicons/icons";
 import { apiInstance } from "../api";
 import { useStore } from "vuex";
 import addCollectionModal from "../components/addCollectionModal.vue";
@@ -129,6 +135,9 @@ export default {
       await modal.present();
     };
 
+    const onBackClicked = () => {
+      modalController.dismiss();
+    };
     const getCollectionType = (value) => {
       switch (value) {
         case 1:
@@ -146,11 +155,13 @@ export default {
       onDeleteCollectionClicked,
       getCollectionType,
       onEditCollectionClicked,
+      onBackClicked,
       connectedState,
       collections,
-      addOutline,
+      add,
       trashBin,
       options,
+      arrowBack,
     };
   },
   components: {
@@ -162,10 +173,11 @@ export default {
     IonContent,
     IonList,
     IonItem,
-    IonBackButton,
-    IonButton,
     IonIcon,
     IonLabel,
+    IonFab,
+    IonFabButton,
+    IonButton,
   },
 };
 </script>

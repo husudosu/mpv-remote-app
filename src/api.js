@@ -20,7 +20,7 @@ function requestOnRejected(error) {
   Promise.reject(error);
 }
 
-export async function configureInstance(host, port) {
+export function configureInstance(host, port) {
   if (callsPending > 0) {
     callsPending = 0;
     cancelSource.cancel("API reconfigure");
@@ -28,6 +28,7 @@ export async function configureInstance(host, port) {
   }
   apiInstance.defaults.baseURL = `http://${host}:${port}/api/v1/`;
   apiInstance.interceptors.request.use(requestOnFulfilled, requestOnRejected);
+  // Set active server
 }
 
 apiInstance.interceptors.response.use(

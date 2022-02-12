@@ -95,6 +95,37 @@ const initialState = {
 export const simpleapi = {
   namespaced: true,
   state: { ...initialState },
+  getters: {
+    connectionState: (state) => state.connected,
+    playerData: (state) => state.playerData,
+    playerTitle: (state) => {
+      if (state.connected) {
+        return (
+          state.playerData["media-title"] ||
+          state.playerData.filename ||
+          "Connected (No playback)"
+        );
+      } else {
+        return "Disconnected";
+      }
+    },
+    fileBrowserEnabled: (state) => {
+      return (
+        state.MPVInfo.mpvremoteConfig.unsafefilebrowsing ||
+        state.MPVInfo.mpvremoteConfig.uselocaldb
+      );
+    },
+    audioTracks: (state) => {
+      return state.playerData["track-list"].filter(
+        (track) => track.type === "audio"
+      );
+    },
+    selectedAudioTrackId: (state) => {
+      return state.playerData["track-list"].find(
+        (track) => track.type === "audio" && track.selected
+      ).id;
+    },
+  },
   mutations: {
     setPlayerData(state, value) {
       state.playerData = value;

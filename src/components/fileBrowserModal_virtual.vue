@@ -3,7 +3,7 @@
     <ion-loading :is-open="loading" message="Loading..."> </ion-loading>
     <ion-header>
       <ion-toolbar>
-        <ion-title>{{ titleText }}</ion-title>
+        <ion-title>filebrowser virtual scroll</ion-title>
         <ion-buttons slot="end">
           <ion-button
             :disabled="Object.keys(files).length === 0"
@@ -36,12 +36,43 @@
       v-if="(files.cwd || files.collection_id) && connectionState"
     >
       <ion-list>
-        <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
+        <DynamicScroller
+          class="scroller"
+          :items="files.content"
+          :minItemSize="60"
+          keyField="fullPath"
+        >
+          <template #default="{ item }">
+            <ion-item @click="onEntryClicked(item)">
+              <ion-icon
+                slot="start"
+                v-if="item.mediaStatus && item.mediaStatus.finished === 0"
+                class="mediaStatusProgress"
+                :icon="decideIcon(item)"
+              ></ion-icon>
+              <ion-icon
+                slot="start"
+                v-else-if="item.mediaStatus && item.mediaStatus.finished === 1"
+                class="mediaStatusFinished"
+                :icon="decideIcon(item)"
+              ></ion-icon>
+              <ion-icon
+                v-else-if="item.type === 'subtitle'"
+                class="fileformatSubtitle"
+                :icon="journalOutline"
+                slot="start"
+              ></ion-icon>
+              <ion-icon v-else :icon="decideIcon(item)" slot="start"></ion-icon>
+              <ion-label class="ion-text-wrap">{{ item.name }}</ion-label>
+            </ion-item>
+          </template>
+        </DynamicScroller>
+        <!-- <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
           <ion-icon :icon="folder" slot="start"></ion-icon>
           ...
         </ion-item>
         <ion-item
-          v-for="(entry, index) in browsableFiles"
+          v-for="(entry, index) in files.content"
           :key="index"
           @click="onEntryClicked(entry)"
         >
@@ -65,20 +96,8 @@
           ></ion-icon>
           <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
           <ion-label class="ion-text-wrap">{{ entry.name }}</ion-label>
-        </ion-item>
+        </ion-item> -->
       </ion-list>
-      <ion-infinite-scroll
-        @ionInfinite="onInfiniteScroll($event)"
-        threshold="1000px"
-        id="infinite-scroll"
-        :disabled="!infiniteScrollEnabled"
-      >
-        <ion-infinite-scroll-content
-          loading-spinner="circles"
-          loading-text="Loading more data..."
-        >
-        </ion-infinite-scroll-content>
-      </ion-infinite-scroll>
     </ion-content>
     <ion-content v-else-if="!connectionState">
       Lost connection to server.
@@ -148,8 +167,6 @@ import {
   IonListHeader,
   actionSheetController,
   alertController,
-  IonInfiniteScroll,
-  IonInfiniteScrollContent,
   // IonLabel,
 } from "@ionic/vue";
 import {
@@ -180,8 +197,7 @@ export default {
     const files = ref({});
 
     // Browasble files by ion-infinite scroll
-    const browsableFiles = ref([]);
-    const INFINITE_SCROLL_STEP = 500;
+    const INFINITE_SCROLL_STEP = 100;
     const infiniteScrollEnabled = ref(false);
 
     const filesBak = ref([]);
@@ -261,12 +277,9 @@ export default {
         .post("filebrowser/browse", data)
         .then((response) => {
           files.value = response.data;
+          console.log(files.value);
           filesBak.value = response.data;
           search.value = "";
-          browsableFiles.value = files.value.content.slice(
-            0,
-            INFINITE_SCROLL_STEP
-          );
           // Enable infinite scroll if needed.
           if (files.value.content.length > INFINITE_SCROLL_STEP)
             infiniteScrollEnabled.value = true;
@@ -280,23 +293,6 @@ export default {
           loading.value = false;
           browserContent.value.$el.scrollToTop();
         });
-    };
-
-    const onInfiniteScroll = (ev) => {
-      // Load more items
-      if (browsableFiles.value.length !== files.value.content.length) {
-        console.log("Load more items");
-        browsableFiles.value.push(
-          ...files.value.content.slice(
-            browsableFiles.value.length,
-            browsableFiles.value.length + INFINITE_SCROLL_STEP
-          )
-        );
-      } else {
-        infiniteScrollEnabled.value = false;
-        console.log("Reached end");
-      }
-      ev.target.complete();
     };
 
     if (filemanLastPath) {
@@ -456,8 +452,6 @@ export default {
       // Enable infinite scroll if needed.
       if (files.value.content.length > INFINITE_SCROLL_STEP)
         infiniteScrollEnabled.value = true;
-
-      browsableFiles.value = files.value.content.slice(0, INFINITE_SCROLL_STEP);
     };
     const onOpenDirectoryClicked = () => {
       saveLastPath().then(() => props.modalController.dismiss(files.value.cwd));
@@ -489,8 +483,6 @@ export default {
       // Enable infinite scroll if needed.
       if (files.value.content.length > INFINITE_SCROLL_STEP)
         infiniteScrollEnabled.value = true;
-
-      browsableFiles.value = files.value.content.slice(0, INFINITE_SCROLL_STEP);
 
       clearInterval(loadingTimeout);
     };
@@ -553,7 +545,6 @@ export default {
       decideIcon,
       onCollectionsClicked,
       getDirectoryContents,
-      browsableFiles,
       connectionState: computed(
         () => store.getters["simpleapi/connectionState"]
       ),
@@ -575,7 +566,6 @@ export default {
       serverConfig,
       funnelOutline,
       onSortByClicked,
-      onInfiniteScroll,
       infiniteScrollEnabled,
       browserContent,
     };
@@ -595,8 +585,6 @@ export default {
     IonLoading,
     IonList,
     IonListHeader,
-    IonInfiniteScroll,
-    IonInfiniteScrollContent,
     // IonLabel,
   },
 };

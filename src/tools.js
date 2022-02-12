@@ -42,3 +42,8 @@ export const assOverride = {
   FORCE: "force",
   SCALE: "scale",
 };
+
+export const loadFileFlags = {
+  APPEND_PLAY: "append-play",
+  REPLACE: "replace",
+};

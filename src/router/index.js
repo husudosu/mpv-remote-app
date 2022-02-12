@@ -10,20 +10,25 @@ const routes = [
     component: () => import("../views/Player.vue"),
   },
   {
-    name: "folder.settings",
-    path: "/folder/settings",
-    component: () => import("../views/Settings.vue"),
-  },
-  {
     name: "folder.playlist",
     path: "/folder/playlist",
     component: () => import("../views/Playlist.vue"),
   },
   {
-    name: "folder.settings.collections",
-    path: "/folder/settings/collections",
-    component: () => import("../views/Collections.vue"),
+    name: "folder.settings",
+    path: "/folder/settings",
+    component: () => import("../views/Settings.vue"),
   },
+  // {
+  //   name: "folder.collections",
+  //   path: "/folder/collections",
+  //   component: () => import("../views/Collections.vue"),
+  // },
+  // {
+  //   name: "folder.servers",
+  //   path: "/folder/servers",
+  //   component: () => import("../views/Servers.vue"),
+  // },
   {
     name: "folder.about",
     path: "/folder/about",

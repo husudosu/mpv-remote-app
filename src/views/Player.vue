@@ -10,24 +10,24 @@
         </ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" v-if="serverConfigured">
+    <ion-content :fullscreen="true" v-if="configured">
       <ion-grid style="height: 100%">
         <ion-row class="remoteButtons">
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
-              :disabled="!connectedState || !playerData.filename"
+              :disabled="!connectionState || !playerData.filename"
               @click="changeVolume('decrease')"
             >
               <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState || !playerData.filename"
+              :disabled="!connectionState || !playerData.filename"
               @click="changeVolume('mute')"
             >
               <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState || !playerData.filename"
+              :disabled="!connectionState || !playerData.filename"
               @click="changeVolume('increase')"
             >
               <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
@@ -35,25 +35,25 @@
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
-              :disabled="!connectedState || !playerData.filename"
+              :disabled="!connectionState || !playerData.filename"
               @click="onInfoClicked"
             >
               <ion-icon slot="icon-only" :icon="informationCircle"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState || !playerData.filename"
+              :disabled="!connectionState || !playerData.filename"
               @click="onFullscreenClicked"
             >
               <ion-icon slot="icon-only" :icon="scanOutline"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState || !playerData.filename"
+              :disabled="!connectionState || !playerData.filename"
               @click="onAudioSettingsClicked"
             >
               <ion-icon slot="icon-only" :icon="earOutline"></ion-icon>
             </ion-button>
             <ion-button
-              :disabled="!connectedState || !playerData.filename"
+              :disabled="!connectionState || !playerData.filename"
               @click="onSubtitleSettingsClicked"
             >
               <ion-icon
@@ -65,12 +65,12 @@
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
             <ion-button
-              :disabled="!connectedState || !filebrowserEnabled"
+              :disabled="!connectionState || !filebrowserEnabled"
               @click="onFileBrowserClicked"
             >
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectedState" @click="onOpenURLClicked">
+            <ion-button :disabled="!connectionState" @click="onOpenURLClicked">
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
             <ion-button
@@ -79,7 +79,7 @@
             >
               <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectedState" @click="onShutdownClicked">
+            <ion-button :disabled="!connectionState" @click="onShutdownClicked">
               <ion-icon slot="icon-only" :icon="power"></ion-icon>
             </ion-button>
           </ion-col>
@@ -102,7 +102,7 @@
       </ion-grid>
     </ion-content>
     <playerController
-      v-if="serverConfigured && playerData.filename"
+      v-if="configured && playerData.filename"
     ></playerController>
   </ion-page>
 </template>
@@ -127,7 +127,6 @@ import {
 
 import { computed } from "vue";
 import { useStore } from "vuex";
-import { useRoute } from "vue-router";
 import {
   volumeHighOutline,
   volumeLowOutline,
@@ -149,37 +148,14 @@ import fileBrowserModal from "../components/fileBrowserModal.vue";
 import infoModal from "../components/infoModal.vue";
 import playerController from "../components/playerController.vue";
 
-import { formatTime, seekFlags, openURL } from "../tools";
+import { formatTime, seekFlags, openURL, loadFileFlags } from "../tools";
 import { apiInstance } from "../api";
 import { FileBrowserActions } from "../enums";
 export default {
   setup() {
     const store = useStore();
-    const route = useRoute();
-    const playerData = computed(() => store.state.simpleapi.playerData);
-    const connectedState = computed(() => store.state.simpleapi.connected);
     const screenOrientation = computed(() => store.state.app.screenOrientation);
-    const filebrowserEnabled = computed(() => {
-      return (
-        store.state.simpleapi.MPVInfo.mpvremoteConfig.unsafefilebrowsing ||
-        store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb
-      );
-    });
-    const serverConfigured = computed(
-      () => store.state.settings.settings.configured
-    );
-    const playerTitle = computed(() => {
-      if (connectedState.value) {
-        return (
-          playerData.value["media-title"] ||
-          playerData.value.filename ||
-          "Connected (No playback)"
-        );
-      } else {
-        return "Disconnected";
-      }
-    });
-
+    const playerData = computed(() => store.getters["simpleapi/playerData"]);
     const onFileBrowserClicked = async () => {
       const modal = await modalController.create({
         component: fileBrowserModal,
@@ -192,8 +168,8 @@ export default {
         if (response.data) {
           console.log(`Data from modal: ${JSON.stringify(response.data)}`);
           const mode = response.data.appendToPlaylist
-            ? "append-play"
-            : "replace";
+            ? loadFileFlags.APPEND_PLAY
+            : loadFileFlags.REPLACE;
           apiInstance.post("playlist", {
             filename: response.data.filename,
             flag: mode,
@@ -217,29 +193,28 @@ export default {
           break;
         case "increase":
           if (playerData.value.volume < playerData.value["volume-max"]) {
-            const newVolume = Math.min(playerData.value["volume-max"], playerData.value.volume + 5);
-            apiInstance
-              .post(`controls/volume/${newVolume}`)
-              .then(() =>
-                store.commit("simpleapi/setPlayerDataProperty", {
-                  key: "volume",
-                  value: playerData.value.volume + 5,
-                })
-              );
+            const newVolume = Math.min(
+              playerData.value["volume-max"],
+              playerData.value.volume + 5
+            );
+            apiInstance.post(`controls/volume/${newVolume}`).then(() =>
+              store.commit("simpleapi/setPlayerDataProperty", {
+                key: "volume",
+                value: playerData.value.volume + 5,
+              })
+            );
           }
           break;
         case "decrease":
-          console.log(playerData.value.volume)
+          console.log(playerData.value.volume);
           if (playerData.value.volume > 0) {
-            const newVolume = Math.max(0, playerData.value.volume - 5)
-            apiInstance
-              .post(`controls/volume/${newVolume}`)
-              .then(() =>
-                store.commit("simpleapi/setPlayerDataProperty", {
-                  key: "volume",
-                  value: playerData.value.volume - 5,
-                })
-              );
+            const newVolume = Math.max(0, playerData.value.volume - 5);
+            apiInstance.post(`controls/volume/${newVolume}`).then(() =>
+              store.commit("simpleapi/setPlayerDataProperty", {
+                key: "volume",
+                value: playerData.value.volume - 5,
+              })
+            );
           }
           break;
       }
@@ -360,11 +335,15 @@ export default {
 
     return {
       playerData,
-      playerTitle,
-      connectedState,
-      route,
+      playerTitle: computed(() => store.getters["simpleapi/playerTitle"]),
+      connectionState: computed(
+        () => store.getters["simpleapi/connectionState"]
+      ),
+      filebrowserEnabled: computed(
+        () => store.getters["simpleapi/fileBrowserEnabled"]
+      ),
+      configured: computed(() => store.getters["settings/configured"]),
       changeVolume,
-      serverConfigured,
       volumeHighOutline,
       volumeLowOutline,
       volumeMuteOutline,
@@ -387,7 +366,6 @@ export default {
       openURL,
       onChaptersClicked,
       onShutdownClicked,
-      filebrowserEnabled,
     };
   },
 
