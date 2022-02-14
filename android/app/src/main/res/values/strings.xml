@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">MPV Remote</string>
     <string name="title_activity_main">MPV Remote</string>
-    <string name="package_name">io.ionic.starter</string>
-    <string name="custom_url_scheme">io.ionic.starter</string>
+    <string name="package_name">com.husudosu.mpvremote</string>
+    <string name="custom_url_scheme">com.husudosu.mpvremote</string>
 </resources>

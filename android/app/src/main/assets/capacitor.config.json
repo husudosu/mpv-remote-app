@@ -1,6 +1,9 @@
 {
-	"appId": "io.ionic.starter",
+	"appId": "com.husudosu.mpvremote",
 	"appName": "MPV Remote",
 	"webDir": "dist",
-	"bundledWebRuntime": false
+	"bundledWebRuntime": false,
+	"server": {
+		"url": "http://192.168.88.150:8100"
+	}
 }

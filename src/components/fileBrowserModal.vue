@@ -150,7 +150,7 @@ import {
   alertController,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  // IonLabel,
+  IonLabel,
 } from "@ionic/vue";
 import {
   folder,
@@ -300,6 +300,7 @@ export default {
     };
 
     if (filemanLastPath) {
+      console.log("Fileman last path exists ");
       if (filemanLastPath.type == "collection") {
         console.log("Collection should be loaded");
         getDirectoryContents(null, filemanLastPath.collection_id).catch(() => {
@@ -310,6 +311,8 @@ export default {
         getDirectoryContents(filemanLastPath.cwd).catch(() => {
           getDirectoryContents();
         });
+      } else {
+        getDirectoryContents();
       }
     } else {
       loading.value = false;
@@ -597,7 +600,7 @@ export default {
     IonListHeader,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
-    // IonLabel,
+    IonLabel,
   },
 };
 </script>

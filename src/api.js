@@ -21,6 +21,9 @@ function requestOnRejected(error) {
 }
 
 export function configureInstance(host, port) {
+  // Before reconfiguration set store states.
+  store.commit("simpleapi/setConnectedState", false);
+  store.commit("simpleapi/clearPlayerData");
   if (callsPending > 0) {
     callsPending = 0;
     cancelSource.cancel("API reconfigure");
@@ -28,7 +31,6 @@ export function configureInstance(host, port) {
   }
   apiInstance.defaults.baseURL = `http://${host}:${port}/api/v1/`;
   apiInstance.interceptors.request.use(requestOnFulfilled, requestOnRejected);
-  // Set active server
 }
 
 apiInstance.interceptors.response.use(

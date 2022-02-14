@@ -61,6 +61,7 @@ import {
   IonLabel,
   IonFab,
   IonFabButton,
+  IonButton,
   modalController,
 } from "@ionic/vue";
 
@@ -80,6 +81,7 @@ export default {
     IonLabel,
     IonFab,
     IonFabButton,
+    IonButton,
   },
 
   setup() {

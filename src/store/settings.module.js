@@ -85,8 +85,26 @@ export const settings = {
     },
   },
   actions: {
-    loadSettings: async function ({ commit, state }) {
+    loadSettings: async function ({ commit, state, dispatch }) {
       console.log("Load settings");
+
+      // Migrate old local storage server handling into SQLITE based
+      const oldServerIP = await Storage.get({ key: "server_ip" });
+      const oldServerPort = await Storage.get({ key: "server_port" });
+
+      if (oldServerIP.value && oldServerPort.value) {
+        console.log(
+          `Migrating server from older release ${oldServerIP.value} ${oldServerPort.value}`
+        );
+        await dispatch("addServer", {
+          host: oldServerIP.value,
+          port: parseInt(oldServerPort.value),
+          name: "Player",
+        });
+        await Storage.remove({ key: "server_ip" });
+        await Storage.remove({ key: "server_port" });
+      }
+
       const servers = await getServer(state.dbSession);
       const currentServerId = await Storage.get({ key: "currentServerId" });
       if (servers.length > 0) {
@@ -113,6 +131,7 @@ export const settings = {
       commit("setSetting", payload);
     },
     setCurrentServer: async function ({ dispatch, state, commit }, serverId) {
+      console.log(`Current server id ${state.settings.currentServerId}`);
       if (state.settings.currentServerId != serverId) {
         await dispatch("setSetting", {
           key: "currentServerId",
@@ -227,6 +246,7 @@ export const settings = {
         commit("setHistory", JSON.parse(history[0].paths));
         commit("setFilemanLastPath", JSON.parse(history[0].last_path));
       } else {
+        console.log("Creating fileman hitory");
         await createFilemanHistorySQL(
           state.dbSession,
           state.settings.currentServerId,

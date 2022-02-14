@@ -102,6 +102,9 @@ export default {
     const onSubmitClicked = () => {
       // Validate server data
       let errors = [];
+      dialog.value.name = dialog.value.name.trim();
+      dialog.value.host = dialog.value.host.trim();
+
       if (dialog.value.name.length === 0) errors.push("Name required");
       if (dialog.value.host.length === 0) errors.push("Host required");
 

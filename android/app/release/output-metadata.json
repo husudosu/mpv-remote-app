@@ -4,13 +4,13 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "io.ionic.starter",
+  "applicationId": "com.husudosu.mpvremote",
   "variantName": "release",
   "elements": [
     {
       "type": "SINGLE",
       "filters": [],
-      "versionCode": 1,
+      "versionCode": 5,
       "versionName": "1.0.5",
       "outputFile": "app-release.apk"
     }

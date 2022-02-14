@@ -81,11 +81,6 @@ export const createFilemanHistorySQL = async (
     "INSERT INTO fileman_history (server_id, paths, last_path) VALUES(?, ?, ?)",
     [serverId, JSON.stringify(paths), JSON.stringify(last_path)]
   );
-  // const res = await db.run(
-  //   `INSERT INTO fileman_history (server_id, paths, last_path) VALUES (${serverId}, "${JSON.stringify(
-  //     paths
-  //   )}", "${JSON.stringify(last_path)}")`
-  // );
   if (res.changes && res.changes.changes && res.changes.changes < 0) {
     throw new Error("Error: execute failed");
   }
@@ -98,9 +93,6 @@ export const getFilemanHistorySQL = async (db, serverId = null) => {
       "SELECT * FROM fileman_history WHERE server_id=?",
       [serverId]
     );
-    // const res = await db.query(
-    //   `SELECT * FROM fileman_history where server_id=${serverId}`
-    // );
     return res.values;
   } else {
     const res = await db.query("SELECT * FROM fileman_history");
@@ -122,13 +114,6 @@ export const UpdateFilemanHistorySQL = async (
       "UPDATE fileman_history SET paths=?, last_path=? WHERE id=?",
       [JSON.stringify(paths), JSON.stringify(last_path), historyEntry[0].id]
     );
-    // const res = await db.run(
-    //   `UPDATE fileman_history SET paths='${JSON.stringify(
-    //     paths
-    //   )}', last_path='${JSON.stringify(last_path)}' WHERE id=${
-    //     historyEntry[0].id
-    //   }`
-    // );
     if (res.changes && res.changes.changes && res.changes.changes < 0) {
       throw new Error("Error: execute failed");
     }
