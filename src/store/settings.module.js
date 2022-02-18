@@ -13,7 +13,7 @@ import {
 import { Capacitor } from "@capacitor/core";
 import { CapacitorSQLite, SQLiteConnection } from "@capacitor-community/sqlite";
 import { useSQLite } from "vue-sqlite-hook";
-import { apiInstance, configureInstance } from "../api";
+import { apiInstance, configureInstance, disconnect } from "../api";
 
 const initialState = {
   settings: {
@@ -224,9 +224,21 @@ export const settings = {
         await dispatch("setCurrentServer", payload.id);
       }
     },
-    removeServer: async function ({ state, commit }, serverId) {
+    removeServer: async function ({ state, commit, dispatch }, serverId) {
       await deleteServer(state.dbSession, serverId);
+
       commit("removeFromServers", serverId);
+      // If the active server removed disconnect
+      if (state.settings.currentServerId === serverId) {
+        console.log("Disconnect from server");
+        if (state.settings.servers.length === 0) {
+          disconnect();
+          commit("setConfigured", false);
+        } else {
+          console.log("Connect to next server");
+          dispatch("setCurrentServer", state.settings.servers[0].id);
+        }
+      }
     },
     updateServer: async function ({ state, commit }, payload) {
       await updateServerSQL(state.dbSession, payload.id, payload);

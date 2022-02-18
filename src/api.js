@@ -20,15 +20,20 @@ function requestOnRejected(error) {
   Promise.reject(error);
 }
 
-export function configureInstance(host, port) {
-  // Before reconfiguration set store states.
+export function disconnect() {
+  store.commit("simpleapi/clearPlaybackRefreshInterval");
   store.commit("simpleapi/setConnectedState", false);
   store.commit("simpleapi/clearPlayerData");
   if (callsPending > 0) {
     callsPending = 0;
-    cancelSource.cancel("API reconfigure");
+    cancelSource.cancel("Cancel pending requests");
     cancelSource = axios.CancelToken.source();
   }
+}
+
+export function configureInstance(host, port) {
+  // Before reconfiguration set store states.
+  disconnect();
   apiInstance.defaults.baseURL = `http://${host}:${port}/api/v1/`;
   apiInstance.interceptors.request.use(requestOnFulfilled, requestOnRejected);
 }
