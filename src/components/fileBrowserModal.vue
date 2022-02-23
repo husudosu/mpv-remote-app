@@ -35,12 +35,7 @@
       class="ion-padding"
       v-if="(files.cwd || files.collection_id) && connectionState"
     >
-      <ion-list>
-        <ion-item @click="onPrevDirectoryClicked" v-if="files.prevDir">
-          <ion-icon :icon="folder" slot="start"></ion-icon>
-          ...
-        </ion-item>
-        <ion-item
+      <!-- <ion-item
           v-for="(entry, index) in browsableFiles"
           :key="index"
           @click="onEntryClicked(entry)"
@@ -66,6 +61,46 @@
           <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
           <ion-label class="ion-text-wrap">{{ entry.name }}</ion-label>
         </ion-item>
+      </ion-list> -->
+      <ion-list>
+        <div class="row" @click="onPrevDirectoryClicked" v-if="files.prevDir">
+          <div class="columnIcon">
+            <ion-icon :icon="folder"> </ion-icon>
+          </div>
+          <div class="column">...</div>
+        </div>
+
+        <div
+          class="row"
+          v-for="(entry, index) in browsableFiles"
+          :key="index"
+          @click="onEntryClicked(entry)"
+        >
+          <div class="columnIcon">
+            <ion-icon
+              slot="start"
+              v-if="entry.mediaStatus && entry.mediaStatus.finished === 0"
+              class="mediaStatusProgress"
+              :icon="decideIcon(entry)"
+            ></ion-icon>
+            <ion-icon
+              slot="start"
+              v-else-if="entry.mediaStatus && entry.mediaStatus.finished === 1"
+              class="mediaStatusFinished"
+              :icon="decideIcon(entry)"
+            ></ion-icon>
+            <ion-icon
+              v-else-if="entry.type === 'subtitle'"
+              class="fileformatSubtitle"
+              :icon="journalOutline"
+              slot="start"
+            ></ion-icon>
+            <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
+          </div>
+          <div class="column">
+            {{ entry.name }}
+          </div>
+        </div>
       </ion-list>
       <ion-infinite-scroll
         @ionInfinite="onInfiniteScroll($event)"
@@ -127,6 +162,7 @@
 </template>
 
 <script>
+/*eslint no-unused-vars: "error"*/
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
 import { apiInstance, openToast } from "../api";
@@ -150,7 +186,6 @@ import {
   alertController,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  // IonLabel,
 } from "@ionic/vue";
 import {
   folder,
@@ -181,7 +216,7 @@ export default {
 
     // Browasble files by ion-infinite scroll
     const browsableFiles = ref([]);
-    const INFINITE_SCROLL_STEP = 500;
+    const INFINITE_SCROLL_STEP = 100;
     const infiniteScrollEnabled = ref(false);
 
     const filesBak = ref([]);
@@ -211,23 +246,50 @@ export default {
       return "Filebrowser";
     });
 
-    // Get paths or drives
-    if (store.state.simpleapi.MPVInfo.mpvremoteConfig.unsafefilebrowsing) {
-      apiInstance.get("/drives").then((response) => {
-        drives.value = response.data;
-      });
-    } else {
-      apiInstance
-        .get("filebrowser/paths")
-        .then((response) => (drives.value = response.data));
-    }
+    const loadFilebrowserSettings = async () => {
+      // Get paths or drives
+      if (store.state.simpleapi.MPVInfo.mpvremoteConfig.unsafefilebrowsing) {
+        await apiInstance.get("/drives").then((response) => {
+          drives.value = response.data;
+        });
+      } else {
+        await apiInstance
+          .get("filebrowser/paths")
+          .then((response) => (drives.value = response.data));
+      }
 
-    // Get collections.
-    if (store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb) {
-      apiInstance
-        .get("/collections")
-        .then((response) => (collections.value = response.data));
-    }
+      // Get collections.
+      if (store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb) {
+        await apiInstance
+          .get("/collections")
+          .then((response) => (collections.value = response.data));
+      }
+    };
+
+    const loadFileBrowser = async () => {
+      await loadFilebrowserSettings();
+      if (filemanLastPath) {
+        console.log("Fileman last path exists ");
+        if (filemanLastPath.type == "collection") {
+          console.log("Collection should be loaded");
+          getDirectoryContents(null, filemanLastPath.collection_id).catch(
+            () => {
+              console.log("Got error, loading basic");
+              getDirectoryContents();
+            }
+          );
+        } else if (filemanLastPath.type == "directory") {
+          getDirectoryContents(filemanLastPath.cwd).catch(() => {
+            getDirectoryContents();
+          });
+        } else {
+          // No valid directory content detected
+          loading.value = false;
+        }
+      } else {
+        loading.value = false;
+      }
+    };
 
     const saveLastPath = async () => {
       let filemanLastPath = {};
@@ -257,7 +319,7 @@ export default {
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
       }, 150);
-      return apiInstance
+      return await apiInstance
         .post("filebrowser/browse", data)
         .then((response) => {
           files.value = response.data;
@@ -298,22 +360,6 @@ export default {
       }
       ev.target.complete();
     };
-
-    if (filemanLastPath) {
-      if (filemanLastPath.type == "collection") {
-        console.log("Collection should be loaded");
-        getDirectoryContents(null, filemanLastPath.collection_id).catch(() => {
-          console.log("Got error, loading basic");
-          getDirectoryContents();
-        });
-      } else if (filemanLastPath.type == "directory") {
-        getDirectoryContents(filemanLastPath.cwd).catch(() => {
-          getDirectoryContents();
-        });
-      }
-    } else {
-      loading.value = false;
-    }
 
     const onCancelClicked = () => {
       saveLastPath().then(() => props.modalController.dismiss());
@@ -543,6 +589,7 @@ export default {
       }
     };
 
+    loadFileBrowser();
     return {
       onCancelClicked,
       onPrevDirectoryClicked,
@@ -597,7 +644,6 @@ export default {
     IonListHeader,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
-    // IonLabel,
   },
 };
 </script>
@@ -622,5 +668,31 @@ ion-footer ion-button {
 
 .mediaStatusProgress {
   color: yellow;
+}
+
+.row {
+  display: flex;
+  background-color: #172246;
+  align-items: center;
+  justify-content: center;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.3);
+}
+
+.columnIcon {
+  padding-left: 17px;
+  padding-right: 30px;
+  flex: 10%;
+  min-width: 72px;
+  font-size: 25px;
+  color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.54);
+}
+
+.column {
+  flex: 90%;
+  min-width: 0px;
+  padding-right: 10px;
 }
 </style>

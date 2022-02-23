@@ -5,21 +5,26 @@
         <ion-content>
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
-            <ion-select
-              class="serverSelect"
-              interface="action-sheet"
-              placeholder="No server selected"
-              :value="currentServerId"
-              @ionChange="setCurrentServer($event.target.value)"
-            >
-              <ion-select-option
-                v-for="server in servers"
-                :key="server.id"
-                :value="server.id"
+            <template v-if="servers.length > 0">
+              <ion-select
+                class="serverSelect"
+                interface="action-sheet"
+                placeholder="No server selected"
+                :value="currentServerId"
+                @ionChange="setCurrentServer($event.target.value)"
               >
-                {{ server.name }} ({{ server.host }}:{{ server.port }})
-              </ion-select-option>
-            </ion-select>
+                <ion-select-option
+                  v-for="server in servers"
+                  :key="server.id"
+                  :value="server.id"
+                >
+                  {{ server.name }} ({{ server.host }}:{{ server.port }})
+                </ion-select-option>
+              </ion-select>
+            </template>
+            <template v-else>
+              <div class="serverSelect">No server configured</div>
+            </template>
             <div class="horizontalLine"></div>
             <ion-menu-toggle
               auto-hide="false"

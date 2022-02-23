@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package com.husudosu.mpvremote;
 
 import com.getcapacitor.BridgeActivity;
 

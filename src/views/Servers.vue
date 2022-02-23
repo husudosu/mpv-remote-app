@@ -61,6 +61,7 @@ import {
   IonLabel,
   IonFab,
   IonFabButton,
+  IonButton,
   modalController,
 } from "@ionic/vue";
 
@@ -80,11 +81,13 @@ export default {
     IonLabel,
     IonFab,
     IonFabButton,
+    IonButton,
   },
 
   setup() {
     const store = useStore();
     const servers = computed(() => store.getters["settings/servers"]);
+    // TODO: If active server edited, deleted reconnect/disconenct from server and connect to the next one.
 
     // Load servers from store
     const addNewserver = async () => {
