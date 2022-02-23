@@ -16,7 +16,7 @@ Very important to update mpv-remote-node to 1.0.5!
 - Multiple server handling
 - Filebrowser speed improvements with larger directories/collections
 
-## 1.0.6 (Pre-release on dev branch)
+## 1.0.6
 
 Minimum [mpv-remote-node](https://github.com/husudosu/mpv-remote-node) version: 1.0.5
 Before installing this version of MPV-remote app, please uninstall the previous one! Some Android related stuff changed!
