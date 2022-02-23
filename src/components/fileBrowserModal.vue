@@ -119,7 +119,6 @@
       Lost connection to server.
     </ion-content>
     <ion-content v-else-if="!loading">
-      <ion-label>Kurva</ion-label>
       <ion-list-header>Collections</ion-list-header>
       <ion-list>
         <ion-item
@@ -187,7 +186,6 @@ import {
   alertController,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  IonLabel,
 } from "@ionic/vue";
 import {
   folder,
@@ -218,7 +216,7 @@ export default {
 
     // Browasble files by ion-infinite scroll
     const browsableFiles = ref([]);
-    const INFINITE_SCROLL_STEP = 500;
+    const INFINITE_SCROLL_STEP = 100;
     const infiniteScrollEnabled = ref(false);
 
     const filesBak = ref([]);
@@ -646,7 +644,6 @@ export default {
     IonListHeader,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
-    IonLabel,
   },
 };
 </script>

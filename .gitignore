@@ -30,3 +30,4 @@ npm-debug.log*
 /plugins
 /www
 resources/android
+package-lock.json
