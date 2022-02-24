@@ -31,6 +31,14 @@ Configure IP & Port in your application and run mpv with --idle flag on your hos
 
 The app not available on Google Play yet. I want improve my application before putting it to wider public.
 
+## App available on IzzyOnDroid
+
+<p align="center">
+    <a href="https://apt.izzysoft.de/fdroid/index/apk/com.husudosu.mpvremote">
+    <img src="images/IzzyOnDroid.png" >
+    </a>
+</p>
+
 ## Screnshoots (2021-08-07) state
 
 |                          Player                          |                           Media info                           |
