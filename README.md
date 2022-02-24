@@ -17,7 +17,9 @@ Kodi not renders properly some ASS/SSA subtitles some anime have overanimated su
 - Playlist handling,
 - Media file info,
 - Media collection handling,
-- Media status time stored on host machine. You can continue playback where you left off
+- Media status time can be stored on host machine. You can continue playback where you left off,
+- Open videos from Youtube app by using share function,
+- Open online streams from other apps for example [Aniyomi anime streamer](https://github.com/jmir1/aniyomi)
 
 ## How to use it
 

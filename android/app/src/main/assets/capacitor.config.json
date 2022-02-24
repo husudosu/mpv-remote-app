@@ -1,5 +1,5 @@
 {
-	"appId": "io.ionic.starter",
+	"appId": "com.husudosu.mpvremote",
 	"appName": "MPV Remote",
 	"webDir": "dist",
 	"bundledWebRuntime": false

@@ -5,21 +5,40 @@
         <ion-content>
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
-            <ion-note>{{ version }}</ion-note>
-
+            <template v-if="servers.length > 0">
+              <ion-select
+                class="serverSelect"
+                interface="action-sheet"
+                placeholder="No server selected"
+                :value="currentServerId"
+                @ionChange="setCurrentServer($event.target.value)"
+              >
+                <ion-select-option
+                  v-for="server in servers"
+                  :key="server.id"
+                  :value="server.id"
+                >
+                  {{ server.name }} ({{ server.host }}:{{ server.port }})
+                </ion-select-option>
+              </ion-select>
+            </template>
+            <template v-else>
+              <div class="serverSelect">No server configured</div>
+            </template>
+            <div class="horizontalLine"></div>
             <ion-menu-toggle
               auto-hide="false"
               v-for="(p, i) in appPages"
               :key="i"
             >
               <ion-item
-                @click="selectedIndex = i"
+                @click="selectedPageIndex = i"
                 router-direction="root"
                 :router-link="p.url"
                 lines="none"
                 detail="false"
                 class="hydrated"
-                :class="{ selected: selectedIndex === i }"
+                :class="{ selected: selectedPageIndex === i }"
               >
                 <ion-icon
                   slot="start"
@@ -38,6 +57,7 @@
 </template>
 
 <script>
+import { computed, defineComponent, ref } from "vue";
 import {
   IonApp,
   IonContent,
@@ -48,24 +68,23 @@ import {
   IonListHeader,
   IonMenu,
   IonMenuToggle,
-  IonNote,
   IonRouterOutlet,
   IonSplitPane,
+  IonSelect,
+  IonSelectOption,
 } from "@ionic/vue";
-import { defineComponent, ref } from "vue";
-import { useRoute } from "vue-router";
 import {
   playCircleOutline,
   cogOutline,
   listOutline,
   informationCircleOutline,
 } from "ionicons/icons";
+import { getPlatforms } from "@ionic/vue";
 import { App } from "@capacitor/app";
-
 import { useStore } from "vuex";
-import { configureInstance, apiInstance } from "./api";
-import appInfo from "./verinfo";
+
 import { AndroindIntentActions } from "./enums";
+import { apiInstance } from "./api";
 
 export default defineComponent({
   name: "App",
@@ -79,14 +98,19 @@ export default defineComponent({
     IonListHeader,
     IonMenu,
     IonMenuToggle,
-    IonNote,
     IonRouterOutlet,
     IonSplitPane,
+    IonSelect,
+    IonSelectOption,
   },
   setup() {
-    const selectedIndex = ref(0);
     const store = useStore();
-    const route = useRoute();
+    const platforms = getPlatforms();
+    const selectedPageIndex = ref(0);
+
+    /*
+    Side menu handler
+    */
     const appPages = [
       {
         title: "Player",
@@ -115,11 +139,32 @@ export default defineComponent({
     ];
     const path = window.location.pathname.split("folder/")[1];
     if (path !== undefined) {
-      selectedIndex.value = appPages.findIndex(
+      selectedPageIndex.value = appPages.findIndex(
         (page) => page.title.toLowerCase() === path.toLowerCase()
       );
     }
 
+    /*
+    Initalize app
+    */
+    const initApp = async () => {
+      await store.dispatch(
+        "settings/setCurrentServer",
+        store.getters["settings/currentServerId"]
+      );
+
+      if (platforms.includes("hybrid")) {
+        console.log("Registering indent");
+        registerBroadcastReceiver();
+        window.plugins.intentShim.onIntent((intent) => {
+          handleIntent(intent);
+        });
+      }
+    };
+
+    /*
+    Handling of Android intents.
+    */
     const handleSendIntent = async (intent) => {
       intent.clipItems.forEach((el) => {
         apiInstance.post("playlist", {
@@ -128,7 +173,6 @@ export default defineComponent({
         });
       });
     };
-
     const handleViewIntent = async (intent) => {
       let headerArray = [];
       if (Object.prototype.hasOwnProperty.call(intent.extras, "headers")) {
@@ -138,7 +182,6 @@ export default defineComponent({
           );
         }
       }
-
       if (Object.prototype.hasOwnProperty.call(intent, "data")) {
         let reqData = {
           filename: intent.data,
@@ -153,7 +196,6 @@ export default defineComponent({
         apiInstance.post("playlist", reqData);
       }
     };
-
     const handleIntent = async (intent) => {
       // console.log("Full intent object" + JSON.stringify(intent));
       if (Object.prototype.hasOwnProperty.call(intent, "action")) {
@@ -169,7 +211,6 @@ export default defineComponent({
         }
       }
     };
-
     const registerBroadcastReceiver = () => {
       window.plugins.intentShim.registerBroadcastReceiver(
         {
@@ -183,61 +224,46 @@ export default defineComponent({
         }
       );
     };
-
     const unregisterBroadcastReceiver = () => {
       window.plugins.intentShim.unregisterBroadcastReceiver();
     };
 
-    document.addEventListener("deviceReady", () => {
-      store.dispatch("settings/loadSettings").then(() => {
-        configureInstance(
-          store.state.settings.settings.server.server_ip,
-          store.state.settings.settings.server.server_port
-        );
-        // Register intent handling
-        registerBroadcastReceiver();
-        window.plugins.intentShim.onIntent((intent) => {
-          handleIntent(intent);
-        });
-        apiInstance.get("/status").then((response) => {
-          store.commit("simpleapi/setPlayerData", response.data);
-        });
-        store.dispatch("simpleapi/setPlaybackRefreshInterval");
-      });
-
-      window.addEventListener("orientationchange", function () {
-        store.commit("app/setScreenOrinetation", screen.orientation.type);
-      });
+    // Listeners
+    if (!platforms.includes("hybrid")) initApp();
+    document.addEventListener("deviceReady", () => initApp());
+    window.addEventListener("orientationchange", function () {
+      store.commit("app/setScreenOrinetation", screen.orientation.type);
     });
-
-    App.addListener("appStateChange", ({ isActive }) => {
+    App.addListener("appStateChange", async ({ isActive }) => {
       if (isActive) {
         // Set screen orientation if active
         store.commit("app/setScreenOrinetation", screen.orientation.type);
         apiInstance.get("/status").then((response) => {
           store.commit("simpleapi/setPlayerData", response.data);
         });
-        if (!store.state.simpleapi.playbackRefreshInterval) {
-          store.dispatch("simpleapi/setPlaybackRefreshInterval");
-        }
 
-        registerBroadcastReceiver();
+        if (!store.state.simpleapi.playbackRefreshInterval)
+          store.dispatch("simpleapi/setPlaybackRefreshInterval");
+        if (!store.state.settings.dbSession)
+          await store.dispatch("settings/initDbSession");
+
+        if (platforms.includes("hybrid")) registerBroadcastReceiver();
       } else {
         // Battery saving stuff
         store.commit("simpleapi/clearPlaybackRefreshInterval");
-        unregisterBroadcastReceiver();
+        await store.dispatch("settings/closeDbConnection");
+        if (platforms.includes("hybrid")) unregisterBroadcastReceiver();
       }
     });
-
     return {
-      selectedIndex,
+      selectedPageIndex,
       appPages,
-      cogOutline,
-      informationCircleOutline,
-      listOutline,
-      playCircleOutline,
-      version: appInfo.version,
-      isSelected: (url) => (url === route.path ? "selected" : ""),
+      servers: computed(() => store.getters["settings/servers"]),
+      currentServerId: computed(
+        () => store.getters["settings/currentServerId"]
+      ),
+      setCurrentServer: (serverId) =>
+        store.dispatch("settings/setCurrentServer", serverId),
     };
   },
 });
@@ -329,8 +355,8 @@ ion-menu.ios ion-note {
 }
 
 ion-menu.ios ion-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
+  --padding-start: 10px;
+  --padding-end: 10px;
   --min-height: 50px;
 }
 
@@ -366,5 +392,23 @@ ion-note {
 
 ion-item.selected {
   --color: var(--ion-color-primary);
+}
+
+.horizontalLine {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  border-bottom: 1px solid var(--ion-color-step-150, #d7d8da);
+}
+.serverSelect {
+  width: 100%;
+  justify-content: left;
+  padding-left: 10px;
+}
+
+.serverSelect::part(text) {
+  color: #545ca7;
+  padding-left: 0px;
+  margin-left: 0px;
 }
 </style>

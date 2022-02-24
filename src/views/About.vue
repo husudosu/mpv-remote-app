@@ -34,6 +34,12 @@
             <p>{{ version }}</p>
           </ion-label>
         </ion-item>
+        <ion-item>
+          <ion-label class="ion-text-wrap">
+            <h2>API version</h2>
+            <p>{{ MPVInfo.mpvremoteVersion }}</p>
+          </ion-label>
+        </ion-item>
       </ion-list>
 
       <ion-list-header>MPV Info</ion-list-header>

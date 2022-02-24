@@ -18,5 +18,9 @@
 	{
 		"pkg": "@capacitor/storage",
 		"classpath": "com.capacitorjs.plugins.storage.StoragePlugin"
+	},
+	{
+		"pkg": "@capacitor-community/sqlite",
+		"classpath": "com.getcapacitor.community.database.sqlite.CapacitorSQLitePlugin"
 	}
 ]
