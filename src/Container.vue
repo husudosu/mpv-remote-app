@@ -398,7 +398,7 @@ ion-item.selected {
   margin-top: 10px;
   margin-bottom: 10px;
   width: 100%;
-  border-bottom: 1px solid var(--ion-color-step-150, #d7d8da);
+  border-bottom: 1px solid var(--ion-item-border-color, #d7d8da);
 }
 .serverSelect {
   width: 100%;
@@ -407,7 +407,7 @@ ion-item.selected {
 }
 
 .serverSelect::part(text) {
-  color: #545ca7;
+  color: #04c8c5;
   padding-left: 0px;
   margin-left: 0px;
 }

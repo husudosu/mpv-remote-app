@@ -29,3 +29,10 @@ Important Android stuff:
 
 - Changed app id from "io.ionic.starter" to "com.husudosu.mpvremote"
 - From now on VersionCode will be increased after every release.
+
+## 1.0.7
+
+- Some code tidy-up, optimizations,
+- The app gonna check if the mpv-remote-node version is compatible with the app,
+- [CSS] Improved contrast,
+- Youtube quality settings on Open URL modal

@@ -17,8 +17,12 @@
       </ion-header>
 
       <ion-list>
-        <ion-item @click="onServersClicked"> Servers </ion-item>
+        <ion-item lines="full" @click="onServersClicked" button>
+          Servers
+        </ion-item>
         <ion-item
+          lines="full"
+          button
           @click="onCollectionsClicked"
           :disabled="!connectedState || !uselocaldb"
         >

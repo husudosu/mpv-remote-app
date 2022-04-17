@@ -6,14 +6,14 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <ion-item>
+      <ion-item lines="full">
         <ion-input
           placeholder="File/URL"
           type="text"
           v-model="dialog.filename"
         ></ion-input>
       </ion-item>
-      <ion-item>
+      <ion-item lines="full">
         <ion-label>Append to playlist</ion-label>
         <ion-checkbox
           type="text"

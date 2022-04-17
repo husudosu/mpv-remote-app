@@ -8,7 +8,7 @@
     <ion-content class="ion-padding">
       <ion-list-header>Collection info</ion-list-header>
       <ion-list>
-        <ion-item>
+        <ion-item lines="full">
           <ion-input
             placeholder="Name"
             type="text"
@@ -16,7 +16,7 @@
             :value="dialog.name"
           ></ion-input>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label>Media type</ion-label>
           <ion-select :value="dialog.type" v-model="dialog.type">
             <!-- // TYPE Can be: Movies - 1, TVShows - 2, Music - 3 !-->
@@ -28,8 +28,8 @@
       </ion-list>
 
       <ion-list-header>Paths</ion-list-header>
-      <ion-item @click="onAddPathClicked">Add path</ion-item>
-      <ion-item v-for="(path, i) in dialog.paths" :key="i">
+      <ion-item lines="full" @click="onAddPathClicked">Add path</ion-item>
+      <ion-item lines="full" v-for="(path, i) in dialog.paths" :key="i">
         <ion-label class="ion-text-wrap">
           {{ path.path }}
         </ion-label>

@@ -21,15 +21,10 @@ import "@ionic/vue/css/text-transformation.css";
 import "@ionic/vue/css/flex-utils.css";
 import "@ionic/vue/css/display.css";
 
-// vue-virtual-scroller@next
-import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
-import VueVirtualScroller from "vue-virtual-scroller";
-import { RecycleScroller, DynamicScroller } from "vue-virtual-scroller";
-
 /* Theme variables */
 import "./theme/variables.css";
-import "./theme/darkmode.css";
 
+// Activates dark mode by default, there's no proper theme for light mode currently
 document.body.classList.toggle("dark", true);
 
 import {
@@ -41,34 +36,10 @@ applyPolyfills().then(() => {
   jeepSqlite(window);
 });
 window.addEventListener("DOMContentLoaded", async () => {
-  const app = createApp(Container)
-    .use(IonicVue)
-    .use(router)
-    .use(store)
-    .use(VueVirtualScroller);
-  app.component("RecycleScroller", RecycleScroller);
-  app.component("DynamicScroller", DynamicScroller);
+  const app = createApp(Container).use(IonicVue).use(router).use(store);
   await store.dispatch("settings/initSQLITE");
   await store.dispatch("settings/loadSettings");
   router.isReady().then(() => {
     app.mount("#app");
   });
 });
-
-// const app = createApp(Container)
-//   .use(IonicVue, {
-//     platform: {
-//       /** The default `desktop` function returns false for devices with a touchscreen.
-//        * This is not always wanted, so this function tests the User Agent instead.
-//        **/
-//       desktop: (win) => {
-//         const isMobile =
-//           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-//             win.navigator.userAgent
-//           );
-//         return !isMobile;
-//       },
-//     },
-//   })
-//   .use(router)
-//   .use(store);

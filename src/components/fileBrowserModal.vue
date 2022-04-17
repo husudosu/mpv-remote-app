@@ -3,7 +3,12 @@
     <ion-loading :is-open="loading" message="Loading..."> </ion-loading>
     <ion-header>
       <ion-toolbar>
-        <ion-title>{{ titleText }}</ion-title>
+        <ion-title size="small">{{ titleText }}</ion-title>
+        <ion-buttons slot="start">
+          <ion-button fill="clear" @click="onCancelClicked">
+            <ion-icon :icon="arrowBackSharp" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
         <ion-buttons slot="end">
           <ion-button
             :disabled="Object.keys(files).length === 0"
@@ -35,33 +40,6 @@
       class="ion-padding"
       v-if="(files.cwd || files.collection_id) && connectionState"
     >
-      <!-- <ion-item
-          v-for="(entry, index) in browsableFiles"
-          :key="index"
-          @click="onEntryClicked(entry)"
-        >
-          <ion-icon
-            slot="start"
-            v-if="entry.mediaStatus && entry.mediaStatus.finished === 0"
-            class="mediaStatusProgress"
-            :icon="decideIcon(entry)"
-          ></ion-icon>
-          <ion-icon
-            slot="start"
-            v-else-if="entry.mediaStatus && entry.mediaStatus.finished === 1"
-            class="mediaStatusFinished"
-            :icon="decideIcon(entry)"
-          ></ion-icon>
-          <ion-icon
-            v-else-if="entry.type === 'subtitle'"
-            class="fileformatSubtitle"
-            :icon="journalOutline"
-            slot="start"
-          ></ion-icon>
-          <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
-          <ion-label class="ion-text-wrap">{{ entry.name }}</ion-label>
-        </ion-item>
-      </ion-list> -->
       <ion-list>
         <div class="row" @click="onPrevDirectoryClicked" v-if="files.prevDir">
           <div class="columnIcon">
@@ -147,10 +125,8 @@
         </ion-item>
       </ion-list>
     </ion-content>
-    <ion-footer>
-      <ion-button @click="onCancelClicked">Close</ion-button>
+    <ion-footer v-if="showOpenFolder">
       <ion-button
-        v-if="showOpenFolder"
         :disabled="!files.cwd"
         @click="onOpenDirectoryClicked"
         color="success"
@@ -197,6 +173,7 @@ import {
   film,
   journalOutline,
   funnelOutline,
+  arrowBackSharp,
 } from "ionicons/icons";
 import { formatTime } from "../tools";
 import {
@@ -231,7 +208,6 @@ export default {
     const filemanLastPath = store.state.settings.filemanLastPath;
     const sortBy = ref(FileBrowserSortBy.NAME);
 
-    // let history = store.state.settings.settings.history || [];
     let history = store.getters["settings/getServerHistory"];
 
     const titleText = computed(() => {
@@ -308,9 +284,6 @@ export default {
     };
 
     const getDirectoryContents = async (path = null, collectionId = null) => {
-      console.log(
-        `Get directory contents: path: ${path} collection:${collectionId}`
-      );
       let data = {};
       if (path) data.path = path;
       if (collectionId) data.collection_id = collectionId;
@@ -347,7 +320,6 @@ export default {
     const onInfiniteScroll = (ev) => {
       // Load more items
       if (browsableFiles.value.length !== files.value.content.length) {
-        console.log("Load more items");
         browsableFiles.value.push(
           ...files.value.content.slice(
             browsableFiles.value.length,
@@ -356,7 +328,6 @@ export default {
         );
       } else {
         infiniteScrollEnabled.value = false;
-        console.log("Reached end");
       }
       ev.target.complete();
     };
@@ -543,6 +514,7 @@ export default {
     const onSortByClicked = async () => {
       const alert = await alertController.create({
         header: "Sort by",
+        cssClass: "alert",
         inputs: [
           {
             type: "radio",
@@ -625,6 +597,7 @@ export default {
       onInfiniteScroll,
       infiniteScrollEnabled,
       browserContent,
+      arrowBackSharp,
     };
   },
   components: {
@@ -694,5 +667,11 @@ ion-footer ion-button {
   flex: 90%;
   min-width: 0px;
   padding-right: 10px;
+}
+
+.fileBrowserPath {
+  padding-top: 0px;
+  margin-top: 0px;
+  height: 40px;
 }
 </style>

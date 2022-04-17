@@ -16,25 +16,25 @@
         </ion-toolbar>
       </ion-header>
       <ion-list>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>License</h2>
             <p>MIT</p>
           </ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>Made by</h2>
             <p>Ferenc Nánási</p>
           </ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>Version</h2>
             <p>{{ version }}</p>
           </ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>API version</h2>
             <p>{{ MPVInfo.mpvremoteVersion }}</p>
@@ -44,19 +44,19 @@
 
       <ion-list-header>MPV Info</ion-list-header>
       <ion-list>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>Version</h2>
             <p>{{ MPVInfo["mpv-version"] }}</p>
           </ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>FFMPEG</h2>
             <p>{{ MPVInfo["ffmpeg-version"] }}</p>
           </ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>Libass</h2>
             <p>{{ MPVInfo["libass-version"] }}</p>
@@ -66,7 +66,11 @@
 
       <ion-list-header> MPVRemote plugin config </ion-list-header>
       <ion-list>
-        <ion-item v-for="(val, prop, i) in MPVInfo.mpvremoteConfig" :key="i">
+        <ion-item
+          lines="full"
+          v-for="(val, prop, i) in MPVInfo.mpvremoteConfig"
+          :key="i"
+        >
           <ion-label class="ion-text-wrap">
             <h2>{{ prop }}</h2>
             <p>{{ val }}</p>

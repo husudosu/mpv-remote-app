@@ -28,7 +28,11 @@
         </ion-fab-button>
       </ion-fab>
       <ion-list>
-        <ion-item v-for="collection in collections" :key="collection.id">
+        <ion-item
+          lines="full"
+          v-for="collection in collections"
+          :key="collection.id"
+        >
           <ion-label class="ion-text-wrap">
             <h2>{{ collection.name }}</h2>
             <p>{{ getCollectionType(collection.type) }}</p>
@@ -47,7 +51,9 @@
           </ion-button>
         </ion-item>
 
-        <ion-item v-if="collections.length == 0"> I'm empty </ion-item>
+        <ion-item lines="full" v-if="collections.length == 0">
+          I'm empty
+        </ion-item>
       </ion-list>
     </ion-content>
   </ion-page>

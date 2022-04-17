@@ -37,6 +37,7 @@ const initialState = {
       unsafefilebrowsing: false,
       uselocaldb: false,
     },
+    mpvremoteVersion: "0.0.0.0",
   },
   musicControlsActive: false,
   musicControlStatus: {

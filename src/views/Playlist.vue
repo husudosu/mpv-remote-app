@@ -22,6 +22,7 @@
         :disabled="playerData.playlist.length <= 1"
       >
         <ion-item
+          lines="full"
           @click="onItemClicked(item)"
           v-for="item in playerData.playlist"
           :key="item.id"
@@ -89,7 +90,7 @@ export default {
     );
     const playerData = computed(() => store.state.simpleapi.playerData);
     const isPlayerActive = computed(() => {
-      return store.state.simpleapi.playerData.filename ? true : false;
+      return playerData.value.filename ? true : false;
     });
     const DOUBLE_CLICK_THRESHOLD = 500;
     let lastOnStart = 0;
@@ -131,6 +132,7 @@ export default {
 
         if (index > -1) {
           apiInstance.post(`/playlist/play/${index}`);
+          console.log(playerData.value.playlist);
         }
         lastOnStart = 0;
       } else {

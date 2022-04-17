@@ -3,6 +3,8 @@ import { toastController } from "@ionic/core";
 
 import { store } from "./store";
 
+export const MINIMUM_API_VERSION = "1.0.6";
+
 export let apiInstance = axios.create({
   timeout: 10000,
 });
@@ -45,6 +47,14 @@ apiInstance.interceptors.response.use(
       // Get MPV Info
       apiInstance.get("mpvinfo").then((response) => {
         store.commit("simpleapi/setMPVInfo", response.data);
+        if (
+          !response.data.mpvremoteVersion ||
+          response.data.mpvremoteVersion < MINIMUM_API_VERSION
+        ) {
+          alert(
+            `The app not gonna work properly, please update your mpv-remote-node at least to ${MINIMUM_API_VERSION}`
+          );
+        }
       });
     }
     callsPending--;

@@ -34,12 +34,8 @@
         <ion-button @click="onPrevClicked" fill="clear">
           <ion-icon slot="icon-only" :icon="playSkipBackOutline"></ion-icon>
         </ion-button>
-        <ion-button @click="onSkip(-5)" fill="clear">
-          -5
-        </ion-button>
-        <ion-button @click="onSkip(5)" fill="clear">
-          +5
-        </ion-button>
+        <ion-button @click="onSkip(-5)" fill="clear"> -5 </ion-button>
+        <ion-button @click="onSkip(5)" fill="clear"> +5 </ion-button>
         <ion-button @click="onNextClicked" fill="clear">
           <ion-icon slot="icon-only" :icon="playSkipForwardOutline"></ion-icon>
         </ion-button>
@@ -66,11 +62,6 @@ export default {
   setup() {
     const store = useStore();
     const playerData = computed(() => store.state.simpleapi.playerData);
-    const connectedState = computed(() => store.state.simpleapi.connected);
-    const serverConfigured = computed(() => store.state.settings.configured);
-    const isPlayerActive = computed(() => {
-      return store.state.simpleapi.playerData.filename ? true : false;
-    });
 
     const onPlayPauseClicked = () => {
       apiInstance.post("/controls/play-pause").then((response) => {
@@ -118,16 +109,13 @@ export default {
         .then(() => {
           store.commit("simpleapi/setPlayerDataProperty", {
             key: "position",
-            value: playerData.value.position + seconds
+            value: playerData.value.position + seconds,
           });
         });
-    }
+    };
 
     return {
       playerData,
-      connectedState,
-      serverConfigured,
-      isPlayerActive,
       onPlayPauseClicked,
       onStopClicked,
       onPrevClicked,

@@ -28,6 +28,8 @@
       </ion-fab>
       <ion-list>
         <ion-item
+          lines="full"
+          button
           v-for="(item, i) in servers"
           :key="i"
           @click="onUpdateServerClicked(item)"
