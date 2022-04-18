@@ -13,7 +13,7 @@
     <ion-content class="ion-padding">
       <ion-list-header>Server info</ion-list-header>
       <ion-list>
-        <ion-item>
+        <ion-item lines="full">
           <ion-input
             placeholder="Name"
             type="text"
@@ -21,14 +21,14 @@
           ></ion-input>
         </ion-item>
 
-        <ion-item>
+        <ion-item lines="full">
           <ion-input
             placeholder="Host"
             type="text"
             v-model="dialog.host"
           ></ion-input>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-input
             placeholder="Host"
             type="number"

@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content v-if="playerData.filename" class="ion-padding">
-      <ion-item>
+      <ion-item lines="full">
         <ion-label>Audio track</ion-label>
         <ion-select
           :value="activeAudioTrackId"
@@ -22,7 +22,7 @@
           </ion-select-option>
         </ion-select>
       </ion-item>
-      <ion-item class="audioDelay">
+      <ion-item class="audioDelay" lines="full">
         <ion-label>Delay</ion-label>
         <ion-button @click="onAudioDelayChanged('decrease')"> - </ion-button>
         {{ playerData["audio-delay"] }}

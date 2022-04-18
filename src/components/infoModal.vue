@@ -8,19 +8,22 @@
     <ion-content class="ion-padding" v-if="playerData.filename">
       <ion-list-header>Basic Info</ion-list-header>
       <ion-list>
-        <ion-item v-if="playerData['media-title'] != playerData.filename">
+        <ion-item
+          lines="full"
+          v-if="playerData['media-title'] != playerData.filename"
+        >
           <ion-label class="ion-text-wrap">
             <h2>Title</h2>
             <p>{{ playerData["media-title"] }}</p>
           </ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>File name</h2>
             <p>{{ playerData.filename }}</p>
           </ion-label>
         </ion-item>
-        <ion-item>
+        <ion-item lines="full">
           <ion-label class="ion-text-wrap">
             <h2>Duration</h2>
             <p>{{ formatTime(playerData.duration) }}</p>
@@ -30,7 +33,11 @@
 
       <ion-list-header> Metadata </ion-list-header>
       <ion-list>
-        <ion-item v-for="(value, key, i) in playerData.metadata" :key="i">
+        <ion-item
+          v-for="(value, key, i) in playerData.metadata"
+          :key="i"
+          lines="full"
+        >
           <ion-label class="ion-text-wrap">
             <h2>{{ key }}</h2>
             <p>{{ value }}</p>
@@ -43,13 +50,13 @@
           {{ track.selected ? "(Selected)" : "" }}</ion-list-header
         >
         <ion-list>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Size</h2>
               <p>{{ track["demux-w"] }}x{{ track["demux-h"] }}</p>
             </ion-label>
           </ion-item>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Codec</h2>
               <p>{{ track.codec }}</p>
@@ -63,25 +70,25 @@
           {{ track.selected ? "(Selected)" : "" }}</ion-list-header
         >
         <ion-list>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Codec</h2>
               <p>{{ track.codec }}</p>
             </ion-label>
           </ion-item>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Language</h2>
               <p>{{ track.lang }}</p>
             </ion-label>
           </ion-item>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Channel count</h2>
               <p>{{ track["demux-channel-count"] }}</p>
             </ion-label>
           </ion-item>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Sample rate</h2>
               <p>{{ track["demux-samplerate"] }}</p>

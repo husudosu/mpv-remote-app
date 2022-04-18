@@ -4,7 +4,7 @@
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-button @click="onBackClicked">
-            <ion-icon :icon="arrowBack"></ion-icon>
+            <ion-icon slot="icon-only" :icon="arrowBack"></ion-icon>
           </ion-button>
         </ion-buttons>
         <ion-title>Servers</ion-title>
@@ -39,7 +39,7 @@
             <p>{{ item.host }}:{{ item.port }}</p>
           </ion-label>
         </ion-item>
-        <ion-item v-if="servers.length == 0"> I'm empty </ion-item>
+        <ion-item lines="full" v-if="servers.length == 0"> I'm empty </ion-item>
       </ion-list>
     </ion-content>
   </ion-page>

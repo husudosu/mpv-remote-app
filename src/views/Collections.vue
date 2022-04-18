@@ -1,10 +1,11 @@
 <template>
   <ion-page>
+    <ion-loading :is-open="loading" message="Loading..."></ion-loading>
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
           <ion-button @click="onBackClicked">
-            <ion-icon :icon="arrowBack"></ion-icon>
+            <ion-icon slot="icon-only" :icon="arrowBack"></ion-icon>
           </ion-button>
         </ion-buttons>
         <ion-title>Media collections</ion-title>
@@ -32,25 +33,14 @@
           lines="full"
           v-for="collection in collections"
           :key="collection.id"
+          button
+          @click="onEditCollectionClicked(collection)"
         >
           <ion-label class="ion-text-wrap">
             <h2>{{ collection.name }}</h2>
             <p>{{ getCollectionType(collection.type) }}</p>
           </ion-label>
-          <ion-button
-            :disabled="!connectedState"
-            @click="onEditCollectionClicked(collection)"
-          >
-            <ion-icon slot="icon-only" :icon="options"></ion-icon>
-          </ion-button>
-          <ion-button
-            :disabled="!connectedState"
-            @click="onDeleteCollectionClicked(collection)"
-          >
-            <ion-icon slot="icon-only" :icon="trashBin"></ion-icon>
-          </ion-button>
         </ion-item>
-
         <ion-item lines="full" v-if="collections.length == 0">
           I'm empty
         </ion-item>
@@ -75,6 +65,7 @@ import {
   IonFab,
   IonFabButton,
   IonButton,
+  IonLoading,
   modalController,
 } from "@ionic/vue";
 import { add, trashBin, options, arrowBack } from "ionicons/icons";
@@ -87,10 +78,19 @@ export default {
     const collections = ref([]);
     const store = useStore();
     const connectedState = computed(() => store.state.simpleapi.connected);
+    const loading = ref(true);
+
+    let loadingTimeout = setTimeout(() => {
+      loading.value = true;
+    }, 200);
 
     apiInstance
       .get("collections")
-      .then((response) => (collections.value = response.data));
+      .then((response) => (collections.value = response.data))
+      .finally(() => {
+        loading.value = false;
+        clearTimeout(loadingTimeout);
+      });
 
     const onAddNewCollectionClicked = async () => {
       const modal = await modalController.create({
@@ -109,15 +109,6 @@ export default {
       return await modal.present();
     };
 
-    const onDeleteCollectionClicked = async (item) => {
-      if (confirm(`Delete collection: ${item.name}?`)) {
-        apiInstance.delete(`/collections/${item.id}`).then(() => {
-          collections.value.splice(collections.value.indexOf(item), 1);
-          store.dispatch("settings/cleanFilemanHistory");
-        });
-      }
-    };
-
     const onEditCollectionClicked = async (item) => {
       const modal = await modalController.create({
         component: addCollectionModal,
@@ -127,7 +118,7 @@ export default {
         },
       });
       modal.onDidDismiss().then((response) => {
-        if (response.data) {
+        if (response.data && !response.data.deleted) {
           apiInstance
             .patch(`/collections/${response.data.id}`, response.data)
             .then((response) => {
@@ -136,6 +127,11 @@ export default {
                 response.data
               );
             });
+        } else if (response.data && response.data.deleted) {
+          apiInstance.delete(`/collections/${response.data.id}`).then(() => {
+            collections.value.splice(collections.value.indexOf(item), 1);
+            store.dispatch("settings/cleanFilemanHistory");
+          });
         }
       });
       await modal.present();
@@ -158,7 +154,6 @@ export default {
     };
     return {
       onAddNewCollectionClicked,
-      onDeleteCollectionClicked,
       getCollectionType,
       onEditCollectionClicked,
       onBackClicked,
@@ -168,6 +163,7 @@ export default {
       trashBin,
       options,
       arrowBack,
+      loading,
     };
   },
   components: {
@@ -184,6 +180,7 @@ export default {
     IonFab,
     IonFabButton,
     IonButton,
+    IonLoading,
   },
 };
 </script>

@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content v-if="playerData.filename" class="ion-padding">
-      <ion-item>
+      <ion-item lines="full">
         <ion-label>Track</ion-label>
         <ion-select
           v-model="selectedTrack"
@@ -22,23 +22,23 @@
           </ion-select-option>
         </ion-select>
       </ion-item>
-      <ion-item @click="onAddSubtitleClicked">
+      <ion-item lines="full" @click="onAddSubtitleClicked">
         <ion-label>Add subtitle</ion-label>
       </ion-item>
 
-      <ion-item class="subtitleDelay">
+      <ion-item lines="full" class="subtitleDelay">
         <ion-label>Delay</ion-label>
         <ion-button @click="onSubDelayChanged('decrease')"> - </ion-button>
         {{ playerData["sub-delay"] }}
         <ion-button @click="onSubDelayChanged('increase')"> + </ion-button>
       </ion-item>
-      <ion-item class="subtitleDelay">
+      <ion-item lines="full" class="subtitleDelay">
         <ion-label>Font size</ion-label>
         <ion-button @click="onSubFontSizeChanged('decrease')"> - </ion-button>
         {{ playerData["sub-font-size"] }}
         <ion-button @click="onSubFontSizeChanged('increase')"> + </ion-button>
       </ion-item>
-      <ion-item>
+      <ion-item lines="full">
         <ion-label>Show subtitle</ion-label>
         <ion-checkbox
           :checked="playerData['sub-visibility']"
@@ -47,7 +47,7 @@
         ></ion-checkbox>
       </ion-item>
 
-      <ion-item>
+      <ion-item lines="full">
         <ion-label>ASS Override</ion-label>
 
         <ion-select

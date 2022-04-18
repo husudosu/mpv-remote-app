@@ -100,13 +100,14 @@
       <ion-list-header>Collections</ion-list-header>
       <ion-list>
         <ion-item
+          lines="full"
           @click="getDirectoryContents(null, collection.id)"
           v-for="(collection, i) in collections"
           :key="i"
         >
           {{ collection.name }}
         </ion-item>
-        <ion-item v-if="collections.length == 0">
+        <ion-item lines="full" v-if="collections.length == 0">
           No collection created
         </ion-item>
       </ion-list>
@@ -114,13 +115,14 @@
       <ion-list-header>Drives</ion-list-header>
       <ion-list>
         <ion-item
+          lines="full"
           @click="getDirectoryContents(drive.path)"
           v-for="(drive, i) in drives"
           :key="i"
         >
           {{ drive.path }}
         </ion-item>
-        <ion-item v-if="drives.length == 0">
+        <ion-item lines="full" v-if="drives.length == 0">
           No available drive/path to browse
         </ion-item>
       </ion-list>
