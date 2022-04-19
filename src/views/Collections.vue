@@ -110,13 +110,19 @@ export default {
     };
 
     const onEditCollectionClicked = async (item) => {
+      // Load full collection object  before presenting modal.
+      let fullCollection = null;
+      await apiInstance
+        .get(`collections/${item.id}`)
+        .then((response) => (fullCollection = response.data));
       const modal = await modalController.create({
         component: addCollectionModal,
         componentProps: {
           modalController: modalController,
-          collection: item.id,
+          collection: fullCollection,
         },
       });
+
       modal.onDidDismiss().then((response) => {
         if (response.data && !response.data.deleted) {
           apiInstance

@@ -35,4 +35,3 @@ Important Android stuff:
 - Some code tidy-up, optimizations,
 - The app gonna check if the mpv-remote-node version is compatible with the app,
 - [CSS] Improved contrast,
-- Youtube quality settings on Open URL modal

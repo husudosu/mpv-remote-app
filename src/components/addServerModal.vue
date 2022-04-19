@@ -2,10 +2,16 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button @click="onCancelClicked">
+            <ion-icon slot="icon-only" :icon="arrowBack"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+
         <ion-title>{{ modalTitle }}</ion-title>
         <ion-buttons slot="end" v-if="allowDelete">
           <ion-button color="error" @click="onDeleteClicked">
-            <ion-icon :icon="trash"></ion-icon>
+            <ion-icon slot="icon-only" :icon="trash"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -36,11 +42,15 @@
           ></ion-input>
         </ion-item>
       </ion-list>
+
+      <ion-button
+        style="margin-top: 10px"
+        color="success"
+        expand="block"
+        @click="onSubmitClicked"
+        >Save</ion-button
+      >
     </ion-content>
-    <ion-footer>
-      <ion-button @click="onCancelClicked">Cancel</ion-button>
-      <ion-button color="success" @click="onSubmitClicked">Save</ion-button>
-    </ion-footer>
   </ion-page>
 </template>
 
@@ -54,14 +64,13 @@ import {
   IonContent,
   IonInput,
   IonItem,
-  IonFooter,
   IonButton,
   IonList,
   IonListHeader,
   IonButtons,
   IonIcon,
 } from "@ionic/vue";
-import { trash } from "ionicons/icons";
+import { trash, arrowBack } from "ionicons/icons";
 export default {
   props: ["modalController", "server"],
   components: {
@@ -72,7 +81,6 @@ export default {
     IonContent,
     IonInput,
     IonItem,
-    IonFooter,
     IonButton,
     IonList,
     IonListHeader,
@@ -119,7 +127,9 @@ export default {
     };
 
     const onDeleteClicked = () => {
-      props.modalController.dismiss({ delete: true });
+      if (confirm("Delete server?")) {
+        props.modalController.dismiss({ delete: true });
+      }
     };
 
     return {
@@ -130,18 +140,8 @@ export default {
       onSubmitClicked,
       onDeleteClicked,
       trash,
+      arrowBack,
     };
   },
 };
 </script>
-
-<style scoped>
-ion-footer {
-  padding: 10px;
-  text-align: right;
-}
-
-ion-footer ion-button {
-  width: 120px;
-}
-</style>

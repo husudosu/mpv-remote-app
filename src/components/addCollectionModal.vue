@@ -87,15 +87,13 @@ import { FileBrowserActions } from "../enums";
 export default {
   props: ["modalController", "collection"],
   setup(props) {
-    let dialog = ref({
+    const dialog = ref({
       name: "",
       type: 1,
       paths: [],
     });
     if (props.collection) {
-      apiInstance.get(`collections/${props.collection}`).then((response) => {
-        dialog.value = response.data;
-      });
+      dialog.value = structuredClone(props.collection);
     }
 
     const modalTitle = computed(() =>
@@ -179,13 +177,3 @@ export default {
   },
 };
 </script>
-<style scoped>
-ion-footer {
-  padding: 10px;
-  text-align: right;
-}
-
-ion-footer ion-button {
-  width: 120px;
-}
-</style>

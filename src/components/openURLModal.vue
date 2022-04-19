@@ -2,6 +2,11 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button @click="onCancelClicked">
+            <ion-icon slot="icon-only" :icon="arrowBack"></ion-icon>
+          </ion-button>
+        </ion-buttons>
         <ion-title>Open URL</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -20,16 +25,15 @@
           v-model="dialog.appendToPlaylist"
         ></ion-checkbox>
       </ion-item>
-    </ion-content>
-    <ion-footer>
-      <ion-button @click="onCancelClicked">Cancel</ion-button>
       <ion-button
+        expand="block"
+        style="margin-top: 10px"
         :disabled="dialog.filename.length == 0"
         color="success"
         @click="onAppendClicked"
-        >Ok</ion-button
-      >
-    </ion-footer>
+        >Open
+      </ion-button>
+    </ion-content>
   </ion-page>
 </template>
 <script>
@@ -44,16 +48,19 @@ import {
   IonCheckbox,
   IonItem,
   IonLabel,
-  IonFooter,
   IonButton,
+  IonButtons,
 } from "@ionic/vue";
-
+import { arrowBack } from "ionicons/icons";
 export default {
   props: ["modalController"],
   setup(props) {
     const dialog = ref({
       filename: "",
       appendToPlaylist: true,
+      "file-local-options": {
+        "ytdl-format": "bestvideo[height<=?720]+bestaudio/best",
+      },
     });
     const onAppendClicked = () => {
       props.modalController.dismiss(dialog);
@@ -63,6 +70,7 @@ export default {
       props.modalController.dismiss();
     };
     return {
+      arrowBack,
       dialog,
       onAppendClicked,
       onCancelClicked,
@@ -78,19 +86,8 @@ export default {
     IonCheckbox,
     IonLabel,
     IonItem,
-    IonFooter,
     IonButton,
+    IonButtons,
   },
 };
 </script>
-
-<style scoped>
-ion-footer {
-  padding: 10px;
-  text-align: right;
-}
-
-ion-footer ion-button {
-  width: 120px;
-}
-</style>

@@ -236,6 +236,7 @@ export default {
           apiInstance.post("playlist", {
             filename: response.data.value.filename,
             flag: mode,
+            "file-local-options": response.data.value["file-local-options"],
           });
         }
       });

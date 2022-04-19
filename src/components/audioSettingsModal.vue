@@ -2,6 +2,11 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button @click="onCancelClicked">
+            <ion-icon slot="icon-only" :icon="arrowBack"></ion-icon>
+          </ion-button>
+        </ion-buttons>
         <ion-title>Audio settings</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -32,9 +37,6 @@
     <ion-content class="ion-padding" v-else>
       <p>No playback.</p>
     </ion-content>
-    <ion-footer>
-      <ion-button @click="onCancelClicked">Close</ion-button>
-    </ion-footer>
   </ion-page>
 </template>
 <script>
@@ -48,14 +50,14 @@ import {
   IonTitle,
   IonContent,
   IonItem,
-  IonFooter,
   IonButton,
   IonSelect,
   IonSelectOption,
   IonLabel,
+  IonButtons,
 } from "@ionic/vue";
 import { apiInstance } from "../api";
-
+import { arrowBack } from "ionicons/icons";
 export default {
   props: ["modalController"],
   setup(props) {
@@ -117,6 +119,7 @@ export default {
       onSwitchAudioClicked,
       playerData,
       onAudioDelayChanged,
+      arrowBack,
     };
   },
   components: {
@@ -126,25 +129,16 @@ export default {
     IonTitle,
     IonContent,
     IonItem,
-    IonFooter,
     IonButton,
     IonSelect,
     IonSelectOption,
     IonLabel,
+    IonButtons,
   },
 };
 </script>
 
 <style scoped>
-ion-footer {
-  padding: 10px;
-  text-align: right;
-}
-
-ion-footer ion-button {
-  width: 120px;
-}
-
 .audioDelay ion-button {
   width: 26px;
   height: 26px;

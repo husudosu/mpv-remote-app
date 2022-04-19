@@ -2,6 +2,12 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button @click="onCancelClicked">
+            <ion-icon slot="icon-only" :icon="arrowBack"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+
         <ion-title>File info</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -126,9 +132,6 @@
     <ion-content class="ion-padding" v-else>
       <p>No playback.</p>
     </ion-content>
-    <ion-footer>
-      <ion-button @click="onCancelClicked">Close</ion-button>
-    </ion-footer>
   </ion-page>
 </template>
 
@@ -142,14 +145,14 @@ import {
   IonToolbar,
   IonTitle,
   IonContent,
-  IonFooter,
+  IonButtons,
   IonButton,
   IonListHeader,
   IonLabel,
   IonItem,
   IonList,
 } from "@ionic/vue";
-
+import { arrowBack } from "ionicons/icons";
 export default {
   props: ["modalController"],
   setup(props) {
@@ -175,6 +178,7 @@ export default {
       subtitleTracks,
       onCancelClicked,
       formatTime,
+      arrowBack,
     };
   },
   components: {
@@ -183,26 +187,17 @@ export default {
     IonToolbar,
     IonTitle,
     IonContent,
-    IonFooter,
     IonButton,
     IonListHeader,
     IonLabel,
     IonItem,
     IonList,
+    IonButtons,
   },
 };
 </script>
 
 <style scoped>
-ion-footer {
-  padding: 10px;
-  text-align: right;
-}
-
-ion-footer ion-button {
-  width: 120px;
-}
-
 .prop {
   overflow: scroll;
 }
