@@ -47,3 +47,5 @@ export const loadFileFlags = {
   APPEND_PLAY: "append-play",
   REPLACE: "replace",
 };
+
+export const youtubDLQualities = {};
