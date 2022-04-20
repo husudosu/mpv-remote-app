@@ -89,7 +89,6 @@ export default {
   setup() {
     const store = useStore();
     const servers = computed(() => store.getters["settings/servers"]);
-    // TODO: If active server edited, deleted reconnect/disconenct from server and connect to the next one.
 
     // Load servers from store
     const addNewserver = async () => {
@@ -118,7 +117,18 @@ export default {
         if (response.data) {
           if (response.data.delete)
             await store.dispatch("settings/removeServer", server.id);
-          else await store.dispatch("settings/updateServer", response.data);
+          else {
+            await store.dispatch("settings/updateServer", response.data);
+            // If current active server has been edited, reconnect
+            if (
+              response.data.id === store.getters["settings/currentServerId"]
+            ) {
+              await store.dispatch(
+                "settings/setCurrentServer",
+                store.getters["settings/currentServerId"]
+              );
+            }
+          }
         }
       });
       await modal.present();

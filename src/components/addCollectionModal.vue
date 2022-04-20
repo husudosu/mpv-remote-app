@@ -104,8 +104,25 @@ export default {
       props.modalController.dismiss();
     };
 
+    const validateForm = () => {
+      let errors = [];
+      if (dialog.value.name.length === 0) {
+        errors.push("Name required!");
+      }
+      if (dialog.value.paths.length === 0) {
+        errors.push("At least one path required!");
+      }
+
+      if (errors.length > 0) {
+        alert(`Validation errors:\n-${errors.join("\n-")}`);
+        return false;
+      } else return true;
+    };
+
     const onSubmitClicked = () => {
-      props.modalController.dismiss(dialog.value);
+      if (validateForm()) {
+        props.modalController.dismiss(dialog.value);
+      }
     };
 
     const onDeleteCollectionCliced = () => {
