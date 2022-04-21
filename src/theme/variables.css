@@ -157,3 +157,7 @@ ion-toolbar {
 ion-searchbar {
   color: #fff !important;
 }
+
+.alertbox .alert-wrapper button {
+  color: #04c8c5;
+}

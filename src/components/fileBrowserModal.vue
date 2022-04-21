@@ -38,6 +38,8 @@
     <ion-content
       ref="browserContent"
       class="ion-padding"
+      :scroll-events="true"
+      @ionScroll="logScroll($event)"
       v-if="(files.cwd || files.collection_id) && connectionState"
     >
       <ion-list>
@@ -127,6 +129,18 @@
         </ion-item>
       </ion-list>
     </ion-content>
+    <ion-fab
+      v-if="scrollToTopEnabled"
+      vertical="bottom"
+      horizontal="end"
+      slot="fixed"
+      @click="onScrollToTopClicked"
+    >
+      <ion-fab-button>
+        <ion-icon :icon="arrowUp"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+
     <ion-footer v-if="showOpenFolder">
       <ion-button
         :disabled="!files.cwd"
@@ -164,11 +178,13 @@ import {
   alertController,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonFab,
+  IonFabButton,
 } from "@ionic/vue";
 import {
+  arrowUp,
   folder,
   document,
-  add,
   fileTray,
   bookmarksOutline,
   musicalNotes,
@@ -198,6 +214,9 @@ export default {
     const INFINITE_SCROLL_STEP = 100;
     const infiniteScrollEnabled = ref(false);
 
+    // Scroll to top
+    const scrollToTopEnabled = ref(false);
+
     const filesBak = ref([]);
     const collections = ref([]);
     const search = ref("");
@@ -206,7 +225,6 @@ export default {
 
     const showOpenFolder = ref(props.action === FileBrowserActions.OPENFOLDER);
     const drives = ref([]);
-
     const filemanLastPath = store.state.settings.filemanLastPath;
     const sortBy = ref(FileBrowserSortBy.NAME);
 
@@ -516,7 +534,7 @@ export default {
     const onSortByClicked = async () => {
       const alert = await alertController.create({
         header: "Sort by",
-        cssClass: "alert",
+        cssClass: "alertbox",
         inputs: [
           {
             type: "radio",
@@ -563,8 +581,18 @@ export default {
       }
     };
 
+    const logScroll = async (event) => {
+      if (event.detail.scrollTop > 0) scrollToTopEnabled.value = true;
+      else scrollToTopEnabled.value = false;
+    };
+
+    const onScrollToTopClicked = () => {
+      browserContent.value.$el.scrollToPoint(0, 0, 500);
+    };
+
     loadFileBrowser();
     return {
+      logScroll,
       onCancelClicked,
       onPrevDirectoryClicked,
       onOpenDirectoryClicked,
@@ -574,6 +602,9 @@ export default {
       decideIcon,
       onCollectionsClicked,
       getDirectoryContents,
+      onSortByClicked,
+      onInfiniteScroll,
+      onScrollToTopClicked,
       browsableFiles,
       connectionState: computed(
         () => store.getters["simpleapi/connectionState"]
@@ -584,7 +615,6 @@ export default {
       files,
       folder,
       document,
-      add,
       fileTray,
       bookmarksOutline,
       search,
@@ -595,11 +625,11 @@ export default {
       drives,
       serverConfig,
       funnelOutline,
-      onSortByClicked,
-      onInfiniteScroll,
       infiniteScrollEnabled,
       browserContent,
       arrowBackSharp,
+      arrowUp,
+      scrollToTopEnabled,
     };
   },
   components: {
@@ -619,6 +649,8 @@ export default {
     IonListHeader,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
+    IonFab,
+    IonFabButton,
   },
 };
 </script>
@@ -630,7 +662,7 @@ ion-footer {
 }
 
 ion-footer ion-button {
-  width: 120px;
+  min-width: 120px;
 }
 
 .fileformatSubtitle {

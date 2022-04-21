@@ -29,7 +29,11 @@
         </ion-item>
         <ion-item lines="full">
           <ion-label>Media type</ion-label>
-          <ion-select :value="dialog.type" v-model="dialog.type">
+          <ion-select
+            :value="dialog.type"
+            v-model="dialog.type"
+            :interface-options="{ cssClass: 'alertbox' }"
+          >
             <!-- // TYPE Can be: Movies - 1, TVShows - 2, Music - 3 !-->
             <ion-select-option :value="1"> Movies </ion-select-option>
             <ion-select-option :value="2"> TVShows </ion-select-option>

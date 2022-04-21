@@ -27,7 +27,10 @@
       </ion-item>
       <ion-item lines="full">
         <ion-label>Youtube quality</ion-label>
-        <ion-select v-model="dialog['file-local-options']['ytdl-format']">
+        <ion-select
+          v-model="dialog['file-local-options']['ytdl-format']"
+          :interface-options="{ cssClass: 'alertbox' }"
+        >
           <ion-select-option value="">Default</ion-select-option>
           <ion-select-option value="bestvideo[height<=?2160]+bestaudio/best"
             >4k</ion-select-option

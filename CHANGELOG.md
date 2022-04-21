@@ -37,3 +37,4 @@ Important Android stuff:
 - [CSS] Improved contrast,
 - Made the whole app more consistent,
 - Set Youtube quality on "Open URL" dialog.
+- Scroll to top added to File browser

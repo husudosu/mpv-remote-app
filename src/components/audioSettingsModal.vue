@@ -17,6 +17,7 @@
           :value="activeAudioTrackId"
           @ionChange="onSwitchAudioClicked"
           v-model="selectedTrack"
+          :interface-options="{ cssClass: 'alertbox' }"
         >
           <ion-select-option
             :value="audio.id"

@@ -47,7 +47,11 @@
             fill="clear"
             slot="end"
           >
-            <ion-icon slot="icon-only" :icon="trashBin"></ion-icon>
+            <ion-icon
+              style="color: white"
+              slot="icon-only"
+              :icon="trashBin"
+            ></ion-icon>
           </ion-button>
           <ion-reorder slot="end"></ion-reorder>
         </ion-item>

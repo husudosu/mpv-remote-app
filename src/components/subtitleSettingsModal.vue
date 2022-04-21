@@ -17,6 +17,7 @@
           v-model="selectedTrack"
           @ionChange="onSubtitleTrackChanged"
           :value="activeSubTrackId"
+          :interface-options="{ cssClass: 'alertbox' }"
         >
           <ion-select-option
             :value="sub.id"
@@ -56,6 +57,7 @@
         <ion-label>ASS Override</ion-label>
 
         <ion-select
+          :interface-options="{ cssClass: 'alertbox' }"
           @ionChange="onAssOverridechanged"
           :value="currentAssOverride"
         >
