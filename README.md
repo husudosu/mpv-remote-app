@@ -1,17 +1,11 @@
 ## MPV-Remote Android app
 
-MPV Remote application for controlling your media player
-
-## Why am I doing this?
-
-I don't have too much experince with Ionic VUE, Node.JS developmment and want improve.
-
-Kodi not renders properly some ASS/SSA subtitles some anime have overanimated subtitles. Kodi not likes it much. MPV plays everything fine, but did not find a proper featureful remote app.
+MPV Remote is an application for controlling MPV media player.
 
 ## Functions
 
 - Basic media controls,
-- Open Youtube videos (youtube-dl required),
+- Open Youtube videos (youtube-dl/yt-dlp required),
 - Open files from your host computer, network storage also supported,
 - Audio & Subtitle track selector,
 - Playlist handling,
@@ -41,13 +35,13 @@ The app not available on Google Play yet. I want improve my application before p
     </a>
 </p>
 
-## Screnshoots (2021-08-07) state
+## Screnshoots taken from 1.0.7
 
 |                          Player                          |                           Media info                           |
 | :------------------------------------------------------: | :------------------------------------------------------------: |
 | <img src="images/player.png" alt="player" height="500"/> | <img src="images/mediainfo.png" alt="mediainfo" height="500"/> |
 
-|                        Subtitle panel                        |     Filebrowser at collection presenting media continue screen     |
+|                        Subtitle panel                        |            Filebrowser presenting media continue screen            |
 | :----------------------------------------------------------: | :----------------------------------------------------------------: |
 | <img src="images/subtitle.png" alt="subtitle" height="500"/> | <img src="images/filebrowser.png" alt="filebrowser" height="500"/> |
 
