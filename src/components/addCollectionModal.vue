@@ -9,7 +9,7 @@
           </ion-button>
         </ion-buttons>
 
-        <ion-buttons slot="end">
+        <ion-buttons slot="end" v-if="allowDelete">
           <ion-button @click="onDeleteCollectionCliced">
             <ion-icon slot="icon-only" :icon="trash"></ion-icon>
           </ion-button>
@@ -83,6 +83,7 @@ import {
   IonListHeader,
   IonIcon,
   modalController,
+  IonButtons,
 } from "@ionic/vue";
 import fileBrowserModal from "../components/fileBrowserModal.vue";
 import { apiInstance } from "../api";
@@ -91,6 +92,7 @@ import { FileBrowserActions } from "../enums";
 export default {
   props: ["modalController", "collection"],
   setup(props) {
+    const allowDelete = ref(false);
     const dialog = ref({
       name: "",
       type: 1,
@@ -98,6 +100,7 @@ export default {
     });
     if (props.collection) {
       dialog.value = structuredClone(props.collection);
+      allowDelete.value = true;
     }
 
     const modalTitle = computed(() =>
@@ -178,6 +181,7 @@ export default {
       arrowBack,
       trashBin,
       onDeleteCollectionCliced,
+      allowDelete,
     };
   },
   components: {
@@ -195,6 +199,7 @@ export default {
     IonList,
     IonListHeader,
     IonIcon,
+    IonButtons,
   },
 };
 </script>
