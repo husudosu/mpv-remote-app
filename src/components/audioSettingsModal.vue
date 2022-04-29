@@ -56,6 +56,7 @@ import {
   IonSelectOption,
   IonLabel,
   IonButtons,
+  IonIcon,
 } from "@ionic/vue";
 import { apiInstance } from "../api";
 import { arrowBack } from "ionicons/icons";
@@ -135,6 +136,7 @@ export default {
     IonSelectOption,
     IonLabel,
     IonButtons,
+    IonIcon,
   },
 };
 </script>

@@ -36,20 +36,21 @@
           </ion-label>
         </ion-item>
       </ion-list>
-
-      <ion-list-header> Metadata </ion-list-header>
-      <ion-list>
-        <ion-item
-          v-for="(value, key, i) in playerData.metadata"
-          :key="i"
-          lines="full"
-        >
-          <ion-label class="ion-text-wrap">
-            <h2>{{ key }}</h2>
-            <p>{{ value }}</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
+      <template v-if="Object.keys(playerData.metadata).length > 0">
+        <ion-list-header> Metadata </ion-list-header>
+        <ion-list>
+          <ion-item
+            v-for="(value, key, i) in playerData.metadata"
+            :key="i"
+            lines="full"
+          >
+            <ion-label class="ion-text-wrap">
+              <h2>{{ key }}</h2>
+              <p>{{ value }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </template>
       <template v-for="track in videoTracks" :key="track.id">
         <ion-list-header
           >Video {{ track.id }}
@@ -108,19 +109,19 @@
           {{ track.selected ? "(Selected)" : "" }}</ion-list-header
         >
         <ion-list>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Codec</h2>
               <p>{{ track.codec }}</p>
             </ion-label>
           </ion-item>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Language</h2>
               <p>{{ track.lang }}</p>
             </ion-label>
           </ion-item>
-          <ion-item v-if="track.external_filename">
+          <ion-item v-if="track.external_filename" lines="full">
             <ion-label class="ion-text-wrap">
               <h2>Filename</h2>
               <p>{{ track.external_filename }}</p>
@@ -151,6 +152,7 @@ import {
   IonLabel,
   IonItem,
   IonList,
+  IonIcon,
 } from "@ionic/vue";
 import { arrowBack } from "ionicons/icons";
 export default {
@@ -193,12 +195,7 @@ export default {
     IonItem,
     IonList,
     IonButtons,
+    IonIcon,
   },
 };
 </script>
-
-<style scoped>
-.prop {
-  overflow: scroll;
-}
-</style>

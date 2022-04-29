@@ -76,6 +76,7 @@ import {
   IonButtons,
   IonSelect,
   IonSelectOption,
+  IonIcon,
 } from "@ionic/vue";
 import { arrowBack } from "ionicons/icons";
 import { loadFileFlags } from "../tools";
@@ -130,6 +131,7 @@ export default {
     IonButtons,
     IonSelect,
     IonSelectOption,
+    IonIcon,
   },
 };
 </script>

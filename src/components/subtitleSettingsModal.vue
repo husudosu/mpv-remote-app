@@ -92,6 +92,7 @@ import {
   IonSelectOption,
   IonLabel,
   IonCheckbox,
+  IonIcon,
   modalController,
 } from "@ionic/vue";
 import filebrowsermodal from "./fileBrowserModal.vue";
@@ -125,7 +126,6 @@ export default {
         selectedTrack.value = activeSubTrackId.value;
       }
     };
-    console.log(playerData.value["sub-ass-override"]);
     const onAppendClicked = () => {
       props.modalController.dismiss();
     };
@@ -214,9 +214,7 @@ export default {
       }
     };
     const onAssOverridechanged = (event) => {
-      apiInstance
-        .post(`/tracks/sub/ass-override/${event.target.value}`)
-        .then(() => console.log("changed"));
+      apiInstance.post(`/tracks/sub/ass-override/${event.target.value}`);
     };
 
     loadTracks();
@@ -253,6 +251,7 @@ export default {
     IonSelectOption,
     IonLabel,
     IonCheckbox,
+    IonIcon,
   },
 };
 </script>
