@@ -159,6 +159,7 @@ export default defineComponent({
         window.plugins.intentShim.onIntent((intent) => {
           handleIntent(intent);
         });
+        // await store.dispatch("notificationController/createController");
       }
     };
 
@@ -240,6 +241,11 @@ export default defineComponent({
         store.commit("app/setScreenOrinetation", screen.orientation.type);
         apiInstance.get("/status").then((response) => {
           store.commit("simpleapi/setPlayerData", response.data);
+          if (
+            platforms.includes("hybrid") &&
+            store.getters["settings/androidNotificationEnabled"] === true
+          )
+            store.dispatch("simpleapi/handleMusicControls");
         });
 
         if (!store.state.simpleapi.playbackRefreshInterval)
@@ -250,7 +256,11 @@ export default defineComponent({
         if (platforms.includes("hybrid")) registerBroadcastReceiver();
       } else {
         // Battery saving stuff
-        store.commit("simpleapi/clearPlaybackRefreshInterval");
+
+        // Clear update interval only if notiifcations disabled
+        if (store.getters["settings/androidNotificationEnabled"] === false) {
+          store.commit("simpleapi/clearPlaybackRefreshInterval");
+        }
         await store.dispatch("settings/closeDbConnection");
         if (platforms.includes("hybrid")) unregisterBroadcastReceiver();
       }

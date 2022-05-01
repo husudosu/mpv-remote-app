@@ -23,6 +23,7 @@
     "@ionic/vue-router": "^6.0.3",
     "axios": "^0.24.0",
     "com-darryncampbell-cordova-plugin-intent": "^2.2.0",
+    "cordova-plugin-music-controls2": "github:Arzio/cordova-plugin-music-controls2",
     "core-js": "^3.6.5",
     "vue": "^3.2.28",
     "vue-router": "^4.0.12",

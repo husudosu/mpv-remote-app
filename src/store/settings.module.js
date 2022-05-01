@@ -46,6 +46,9 @@ export const settings = {
     getServerHistory: (state) => {
       return state.history;
     },
+    androidNotificationEnabled: (state) => {
+      return state.settings.androidNotificationEnabled;
+    },
   },
   mutations: {
     setAppSettings(state, value) {
@@ -105,6 +108,17 @@ export const settings = {
         await Storage.remove({ key: "server_port" });
       }
 
+      const androidNotificationEnabled = await Storage.get({
+        key: "androidNotificationEnabled",
+      });
+
+      if (androidNotificationEnabled.value == null) {
+        await dispatch("setSetting", {
+          key: "androidNotificationEnabled",
+          value: false,
+        });
+      }
+
       const servers = await getServer(state.dbSession);
       const currentServerId = await Storage.get({ key: "currentServerId" });
       if (servers.length > 0) {
@@ -121,6 +135,7 @@ export const settings = {
       commit("setAppSettings", {
         servers,
         currentServerId: parseInt(currentServerId.value),
+        androidNotificationEnabled: androidNotificationEnabled.value,
       });
     },
     setSetting: async function ({ commit }, payload) {

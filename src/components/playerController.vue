@@ -47,7 +47,7 @@
 <script>
 import { computed } from "vue";
 import { useStore } from "vuex";
-
+import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 import { IonFooter, IonRow, IonCol, IonIcon, IonButton } from "@ionic/vue";
 import {
   playOutline,
@@ -70,6 +70,7 @@ export default {
             key: "pause",
             value: !playerData.value.pause,
           });
+          musicControls.updateIsPlaying(!playerData.value.pause);
         }
       });
     };

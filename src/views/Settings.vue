@@ -28,6 +28,15 @@
         >
           <ion-label>Media collections</ion-label>
         </ion-item>
+
+        <ion-item lines="full">
+          <ion-label>Android notification (Experimental)</ion-label>
+          <ion-checkbox
+            :checked="androidNotificationEnabled"
+            @ionChange="onAndroidNotificationEnabledChange($event)"
+            slot="end"
+          ></ion-checkbox>
+        </ion-item>
       </ion-list>
     </ion-content>
   </ion-page>
@@ -47,12 +56,13 @@ import {
   IonList,
   IonItem,
   IonLabel,
+  IonCheckbox,
   // useIonRouter,
   modalController,
 } from "@ionic/vue";
 import Servers from "./Servers.vue";
 import Collections from "./Collections.vue";
-
+import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 export default {
   setup() {
     const store = useStore();
@@ -62,7 +72,7 @@ export default {
     const uselocaldb = computed(
       () => store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb
     );
-
+    // TODO also implesment androidNotificationEnabled on contanier, turn off battery saving if it's enabled
     /* FIXME: Need to use modals here because router messing up when changing between Servers and Media collections
     Please help me with this problem!
     Routes also disabled on router/index.js if you want to experiment with this uncomment routes.
@@ -82,11 +92,26 @@ export default {
       });
       await modal.present();
     };
+
+    const onAndroidNotificationEnabledChange = async (event) => {
+      await store.dispatch("settings/setSetting", {
+        key: "androidNotificationEnabled",
+        value: event.target.checked,
+      });
+      if (!event.target.checked) {
+        console.log("Remove notification if exists");
+        musicControls.destroy();
+      }
+    };
     return {
       connectedState,
       uselocaldb,
       onServersClicked,
       onCollectionsClicked,
+      androidNotificationEnabled: computed(
+        () => store.getters["settings/androidNotificationEnabled"]
+      ),
+      onAndroidNotificationEnabledChange,
     };
   },
   components: {
@@ -100,6 +125,7 @@ export default {
     IonList,
     IonItem,
     IonLabel,
+    IonCheckbox,
   },
 };
 </script>

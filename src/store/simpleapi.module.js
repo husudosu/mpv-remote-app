@@ -1,5 +1,5 @@
 import { apiInstance } from "../api";
-// import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
+import musicControls from "cordova-plugin-music-controls2/www/MusicControls.js";
 const initialState = {
   playerData: {
     "audio-delay": 0, // <-- milliseconds
@@ -42,57 +42,31 @@ const initialState = {
   musicControlsActive: false,
   musicControlStatus: {
     artist: "",
-    isPlaying: false,
-    filename: "",
-    "media-title": "",
   },
 };
 
-// async function postData(url = "", data = {}) {
-//   // Default options are marked with *
-//   const response = await fetch(url, {
-//     method: "POST", // *GET, POST, PUT, DELETE, etc.
-//     mode: "cors", // no-cors, *cors, same-origin
-//     cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-//     credentials: "same-origin", // include, *same-origin, omit
-//     headers: {
-//       "Content-Type": "application/json",
-//       // 'Content-Type': 'application/x-www-form-urlencoded',
-//     },
-//     redirect: "follow", // manual, *follow, error
-//     referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-//     body: JSON.stringify(data), // body data type must match "Content-Type" header
-//   });
-//   return response.json(); // parses JSON response into native JavaScript objects
-// }
+const musicControlsSettings = {
+  hasPrev: false,
+  hasNext: false,
+  cover: null,
+};
 
-// function events(action) {
-//   const message = JSON.parse(action).message;
-//   switch (message) {
-//     case "music-controls-next":
-//       apiInstance.post("controls/next");
-//       break;
-//     case "music-controls-previous":
-//       apiInstance.post("controls/prev");
-//       break;
-//     case "music-controls-pause":
-//       // Do something
-//       console.log("MusicController: Pause");
-//       musicControls.updateIsPlaying(false);
-//       break;
-//     case "music-controls-play":
-//       console.log("MusicController: Play");
-//       musicControls.updateIsPlaying(true);
-//       break;
-//     case "music-controls-destroy":
-//       // Do something
-//       console.log("Destroy music controls");
-//       break;
-//     default:
-//       break;
-//   }
-// }
-
+const musicEventHandler = async (action) => {
+  const message = JSON.parse(action).message;
+  console.log(`Message from controller: ${message}`);
+  switch (message) {
+    case "music-controls-pause":
+      await apiInstance
+        .post("/controls/play-pause")
+        .then(() => musicControls.updateIsPlaying(false));
+      break;
+    case "music-controls-play":
+      await apiInstance
+        .post("/controls/play-pause")
+        .then(() => musicControls.updateIsPlaying(true));
+      break;
+  }
+};
 export const simpleapi = {
   namespaced: true,
   state: { ...initialState },
@@ -130,43 +104,6 @@ export const simpleapi = {
   mutations: {
     setPlayerData(state, value) {
       state.playerData = value;
-
-      // If music controls enabled
-      // if (state.connected && state.playerData.filename) {
-      //   if (!state.musicControlsActive) {
-      //     musicControls.create(
-      //       {
-      //         artist:
-      //           state.playerData["media-title"] || state.playerData.filename,
-      //         dismissable: false,
-      //       },
-      //       () => {
-      //         state.musicControlsActive = true;
-      //       }
-      //     );
-      //     state.musicControlStatus["media-title"] =
-      //       state.playerData["media-title"];
-      //     state.musicControlStatus.filename = state.playerData.filename;
-
-      //     musicControls.updateIsPlaying(!state.playerData.pause);
-      //     musicControls.subscribe(events);
-      //     musicControls.listen();
-      //   } else {
-      //     // Media have changed.
-      //     if (
-      //       state.musicControlStatus["media-title"] !=
-      //         state.playerData["media-title"] ||
-      //       state.musicControlStatus.filename != state.playerData.filename
-      //     ) {
-      //       musicControls.destroy();
-      //       state.musicControlsActive = false;
-      //       // } else {
-      //       //   console.log("T");
-      //       //   // musicControls.updateIsPlaying(!state.playerData.pause);
-      //       // }
-      //     }
-      //   }
-      // }
     },
     setPlayerDataProperty(state, value) {
       state.playerData[value.key] = value.value;
@@ -178,8 +115,8 @@ export const simpleapi = {
       state.MPVInfo = value;
     },
     clearPlaybackRefreshInterval(state) {
+      console.log("clear playback refresh interval");
       if (state.playbackRefreshInterval != null) {
-        console.log("Store playbackRefreshInterval should be cleared.");
         clearInterval(state.playbackRefreshInterval);
         state.playbackRefreshInterval = null;
       }
@@ -187,17 +124,55 @@ export const simpleapi = {
     clearPlayerData(state) {
       state.playerData = { ...initialState.playerData };
     },
+    setMusicControlsActive(state, value) {
+      state.musicControlsActive = value;
+    },
+    setMusicControlsTitle(state, value) {
+      state.musicControlStatus.artist = value;
+    },
   },
   actions: {
-    setPlaybackRefreshInterval({ commit, state }) {
+    setPlaybackRefreshInterval({ commit, state, dispatch, rootGetters }) {
       if (state.playbackRefreshInterval == null) {
         state.playbackRefreshInterval = setInterval(() => {
           apiInstance.get("/status").then((response) => {
             commit("setPlayerData", response.data);
+            if (rootGetters["settings/androidNotificationEnabled"] === true) {
+              dispatch("handleMusicControls");
+            }
           });
         }, 1500);
       }
-      // Also setup local notifcations
+    },
+    handleMusicControls({ commit, state }) {
+      if (state.playerData.filename) {
+        const title =
+          state.playerData["media-title"] || state.playerData.filename;
+
+        if (title != state.musicControlStatus.artist) {
+          console.log("Have to change title");
+
+          if (state.musicControlsActive) {
+            musicControls.destroy();
+            musicControls.create({ ...musicControlsSettings, track: title });
+            musicControls.subscribe(musicEventHandler);
+            musicControls.listen();
+          } else {
+            musicControls.create({ ...musicControlsSettings, track: title });
+            musicControls.subscribe(musicEventHandler);
+            musicControls.listen();
+          }
+          commit("setMusicControlsTitle", title);
+          commit("setMusicControlsActive", true);
+          musicControls.updateIsPlaying(!state.playerData.pause);
+        } else {
+          musicControls.updateIsPlaying(!state.playerData.pause);
+        }
+      } else if (state.musicControlsActive) {
+        console.log("Music controls should be destroyed");
+        musicControls.destroy();
+        commit("setMusicControlsActive", false);
+      }
     },
   },
 };
