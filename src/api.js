@@ -2,6 +2,7 @@ import axios from "axios";
 import { toastController } from "@ionic/core";
 
 import { store } from "./store";
+import musicControls from "cordova-plugin-music-controls2/www/MusicControls";
 
 export const MINIMUM_API_VERSION = "1.0.6";
 
@@ -22,10 +23,21 @@ function requestOnRejected(error) {
   Promise.reject(error);
 }
 
-export function disconnect() {
-  store.commit("simpleapi/clearPlaybackRefreshInterval");
+// FIXME: App still creates musicController when it's disabled on settings.
+function handleDisconnect(auto_reconnect = false) {
+  if (!auto_reconnect) store.commit("simpleapi/clearPlaybackRefreshInterval");
   store.commit("simpleapi/setConnectedState", false);
   store.commit("simpleapi/clearPlayerData");
+  if (store.state.simpleapi.musicControlsActive) {
+    console.log("remove music controls");
+    store.commit("simpleapi/setMusicControlsActive", false);
+    musicControls.destroy();
+  }
+}
+
+export function disconnect() {
+  handleDisconnect();
+
   if (callsPending > 0) {
     callsPending = 0;
     cancelSource.cancel("Cancel pending requests");
@@ -41,7 +53,7 @@ export function configureInstance(host, port) {
 }
 
 apiInstance.interceptors.response.use(
-  (response) => {
+  async (response) => {
     if (!store.state.simpleapi.connected) {
       store.commit("simpleapi/setConnectedState", true);
       // Get MPV Info
@@ -56,6 +68,17 @@ apiInstance.interceptors.response.use(
           );
         }
       });
+      console.log("Reconnected");
+      // Get status after connecting immediately.
+      await apiInstance.get("/status").then((response) => {
+        console.log("Got initial status");
+        store.commit("simpleapi/setPlayerData", response.data);
+      });
+
+      if (store.getters["settings/androidNotificationEnabled"]) {
+        console.log("Handle music controls");
+        store.dispatch("simpleapi/handleMusicControls");
+      }
     }
     callsPending--;
     return response;
@@ -65,8 +88,7 @@ apiInstance.interceptors.response.use(
     // Ignore 403 if getting drives
     callsPending--;
     if (error.message == "Network Error") {
-      store.commit("simpleapi/setConnectedState", false);
-      store.commit("simpleapi/clearPlayerData");
+      handleDisconnect(true);
       return Promise.reject(error);
     } else if (
       error.response &&
@@ -88,8 +110,7 @@ apiInstance.interceptors.response.use(
       }
     } else {
       if (store.state.simpleapi.connected) {
-        store.commit("simpleapi/setConnectedState", false);
-        store.commit("simpleapi/clearPlayerData");
+        handleDisconnect(true);
       }
     }
     return Promise.reject(error);

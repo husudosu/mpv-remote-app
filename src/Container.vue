@@ -159,7 +159,6 @@ export default defineComponent({
         window.plugins.intentShim.onIntent((intent) => {
           handleIntent(intent);
         });
-        // await store.dispatch("notificationController/createController");
       }
     };
 

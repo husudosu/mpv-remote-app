@@ -13,12 +13,13 @@ import {
 import { Capacitor } from "@capacitor/core";
 import { CapacitorSQLite, SQLiteConnection } from "@capacitor-community/sqlite";
 import { useSQLite } from "vue-sqlite-hook";
-import { apiInstance, configureInstance, disconnect } from "../api";
+import { configureInstance, disconnect } from "../api";
 
 const initialState = {
   settings: {
     servers: [],
     currentServerId: null,
+    androidNotificationEnabled: false,
   },
   configured: false,
   sqlite: null,
@@ -108,17 +109,19 @@ export const settings = {
         await Storage.remove({ key: "server_port" });
       }
 
-      const androidNotificationEnabled = await Storage.get({
+      let androidNotificationEnabled = await Storage.get({
         key: "androidNotificationEnabled",
       });
-
       if (androidNotificationEnabled.value == null) {
         await dispatch("setSetting", {
           key: "androidNotificationEnabled",
           value: false,
         });
+        androidNotificationEnabled = false;
+      } else {
+        androidNotificationEnabled =
+          androidNotificationEnabled.value === "true";
       }
-
       const servers = await getServer(state.dbSession);
       const currentServerId = await Storage.get({ key: "currentServerId" });
       if (servers.length > 0) {
@@ -135,7 +138,7 @@ export const settings = {
       commit("setAppSettings", {
         servers,
         currentServerId: parseInt(currentServerId.value),
-        androidNotificationEnabled: androidNotificationEnabled.value,
+        androidNotificationEnabled: androidNotificationEnabled,
       });
     },
     setSetting: async function ({ commit }, payload) {
@@ -164,10 +167,6 @@ export const settings = {
           { root: true }
         );
         configureInstance(server.host, server.port);
-        // Get status after connecting immediately.
-        apiInstance.get("/status").then((response) => {
-          commit("simpleapi/setPlayerData", response.data, { root: true });
-        });
         // Load fileman history
         await dispatch("loadFilemanHistory");
         await dispatch(

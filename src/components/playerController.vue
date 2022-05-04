@@ -70,7 +70,8 @@ export default {
             key: "pause",
             value: !playerData.value.pause,
           });
-          musicControls.updateIsPlaying(!playerData.value.pause);
+          if (store.getters["settings/androidNotificationEnabled"] == true)
+            musicControls.updateIsPlaying(!playerData.value.pause);
         }
       });
     };

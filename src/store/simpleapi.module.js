@@ -42,6 +42,7 @@ const initialState = {
   musicControlsActive: false,
   musicControlStatus: {
     artist: "",
+    pause: true,
   },
 };
 
@@ -126,9 +127,13 @@ export const simpleapi = {
     },
     setMusicControlsActive(state, value) {
       state.musicControlsActive = value;
+      if (!value) state.musicControlStatus.artist = "";
     },
     setMusicControlsTitle(state, value) {
       state.musicControlStatus.artist = value;
+    },
+    setMusicControlsPuasedState(state, value) {
+      state.musicControlStatus.pause = value;
     },
   },
   actions: {
@@ -137,7 +142,8 @@ export const simpleapi = {
         state.playbackRefreshInterval = setInterval(() => {
           apiInstance.get("/status").then((response) => {
             commit("setPlayerData", response.data);
-            if (rootGetters["settings/androidNotificationEnabled"] === true) {
+            if (rootGetters["settings/androidNotificationEnabled"] == true) {
+              console.log("handle music controls");
               dispatch("handleMusicControls");
             }
           });
@@ -150,23 +156,31 @@ export const simpleapi = {
           state.playerData["media-title"] || state.playerData.filename;
 
         if (title != state.musicControlStatus.artist) {
-          console.log("Have to change title");
-
           if (state.musicControlsActive) {
             musicControls.destroy();
             musicControls.create({ ...musicControlsSettings, track: title });
             musicControls.subscribe(musicEventHandler);
             musicControls.listen();
+            musicControls.updateIsPlaying(!state.playerData.pause);
           } else {
             musicControls.create({ ...musicControlsSettings, track: title });
             musicControls.subscribe(musicEventHandler);
             musicControls.listen();
+            musicControls.updateIsPlaying(!state.playerData.pause);
           }
           commit("setMusicControlsTitle", title);
           commit("setMusicControlsActive", true);
-          musicControls.updateIsPlaying(!state.playerData.pause);
+          /* Update isPlaying on some phones keeps sending notification to phone when it's on sleep.
+           So we have handle that by only updating when the the playback paused/unpaused*/
+          if (state.musicControlStatus.pause != state.playerData.pause) {
+            musicControls.updateIsPlaying(!state.playerData.pause);
+            commit("setMusicControlsPuasedState", state.playerData.pause);
+          }
         } else {
-          musicControls.updateIsPlaying(!state.playerData.pause);
+          if (state.musicControlStatus.pause != state.playerData.pause) {
+            musicControls.updateIsPlaying(!state.playerData.pause);
+            commit("setMusicControlsPuasedState", state.playerData.pause);
+          }
         }
       } else if (state.musicControlsActive) {
         console.log("Music controls should be destroyed");

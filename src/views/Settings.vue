@@ -101,6 +101,7 @@ export default {
       if (!event.target.checked) {
         console.log("Remove notification if exists");
         musicControls.destroy();
+        store.commit("simpleapi/setMusicControlsActive", false);
       }
     };
     return {
