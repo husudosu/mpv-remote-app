@@ -22,7 +22,6 @@ ionic capacitor run android -l --host=host
 
 - By some reasons routing not working properly, when not using modals on Settings -> Servers and Media collections
 - Better handling for playlist
-- Need someone who can design a proper icon for the app (currently using Ionic default app icon),
 - Need some help with [cordova-plugin-music-controls2](https://github.com/Arzio/cordova-plugin-music-controls2) plugin:
   - When the app is not active, playback status not refreshing for notification,
   - I'd like remove album cover from notification.

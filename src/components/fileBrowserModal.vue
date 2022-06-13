@@ -157,7 +157,7 @@
 /*eslint no-unused-vars: "error"*/
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
-import { apiInstance, openToast } from "../api";
+import { apiInstance } from "../api";
 
 import {
   IonPage,
@@ -327,7 +327,7 @@ export default {
             infiniteScrollEnabled.value = true;
           // Render IO related errors
           if (response.data.errors && response.data.errors.length > 0) {
-            openToast(response.data.errors, 3000);
+            store.dispatch("app/showToast", { message: response.data.errors });
           }
         })
         .finally(() => {

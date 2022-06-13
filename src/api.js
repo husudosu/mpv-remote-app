@@ -1,8 +1,5 @@
 import axios from "axios";
-import { toastController } from "@ionic/core";
-
 import { store } from "./store";
-import musicControls from "cordova-plugin-music-controls2/www/MusicControls";
 
 export const MINIMUM_API_VERSION = "1.0.6";
 
@@ -19,7 +16,7 @@ function requestOnFulfilled(config) {
 }
 
 function requestOnRejected(error) {
-  openToast(JSON.stringify(error));
+  store.dispatch("app/showToast", { message: JSON.stringify(error) });
   Promise.reject(error);
 }
 
@@ -28,11 +25,6 @@ function handleDisconnect(auto_reconnect = false) {
   if (!auto_reconnect) store.commit("simpleapi/clearPlaybackRefreshInterval");
   store.commit("simpleapi/setConnectedState", false);
   store.commit("simpleapi/clearPlayerData");
-  if (store.state.simpleapi.musicControlsActive) {
-    console.log("remove music controls");
-    store.commit("simpleapi/setMusicControlsActive", false);
-    musicControls.destroy();
-  }
 }
 
 export function disconnect() {
@@ -45,20 +37,47 @@ export function disconnect() {
   }
 }
 
-export function configureInstance(host, port) {
+export async function configureInstance(host, port) {
   // Before reconfiguration set store states.
   disconnect();
   apiInstance.defaults.baseURL = `http://${host}:${port}/api/v1/`;
   apiInstance.interceptors.request.use(requestOnFulfilled, requestOnRejected);
+
+  await apiInstance.get("mpvinfo").then((response) => {
+    store.commit("simpleapi/setMPVInfo", response.data);
+    // Change connected state to True
+    store.commit("simpleapi/setConnectedState", true);
+    if (
+      !response.data.mpvremoteVersion ||
+      response.data.mpvremoteVersion < MINIMUM_API_VERSION
+    ) {
+      alert(
+        `The app not gonna work properly, please update your mpv-remote-node at least to ${MINIMUM_API_VERSION}`
+      );
+    }
+  });
+
+  // Get status after configuring
+  await apiInstance.get("/status").then((response) => {
+    console.log("Got initial status");
+    store.commit("simpleapi/setPlayerData", response.data);
+  });
+  // Handle music controls if needed
+  if (store.getters["settings/androidNotificationEnabled"]) {
+    console.log("Handle music controls");
+    store.dispatch("simpleapi/handleMusicControls");
+  }
 }
 
 apiInstance.interceptors.response.use(
   async (response) => {
     if (!store.state.simpleapi.connected) {
       store.commit("simpleapi/setConnectedState", true);
-      // Get MPV Info
-      apiInstance.get("mpvinfo").then((response) => {
+      // Check mpv-remote-node version
+      await apiInstance.get("mpvinfo").then((response) => {
         store.commit("simpleapi/setMPVInfo", response.data);
+        // Change connected state to True
+        store.commit("simpleapi/setConnectedState", true);
         if (
           !response.data.mpvremoteVersion ||
           response.data.mpvremoteVersion < MINIMUM_API_VERSION
@@ -68,17 +87,6 @@ apiInstance.interceptors.response.use(
           );
         }
       });
-      console.log("Reconnected");
-      // Get status after connecting immediately.
-      await apiInstance.get("/status").then((response) => {
-        console.log("Got initial status");
-        store.commit("simpleapi/setPlayerData", response.data);
-      });
-
-      if (store.getters["settings/androidNotificationEnabled"]) {
-        console.log("Handle music controls");
-        store.dispatch("simpleapi/handleMusicControls");
-      }
     }
     callsPending--;
     return response;
@@ -98,13 +106,13 @@ apiInstance.interceptors.response.use(
     ) {
       return Promise.reject(error);
     } else if (error.response) {
-      openToast(
-        JSON.stringify(
+      store.dispatch("app/showToast", {
+        message: JSON.stringify(
           error.response.data
             ? error.response.data.message
             : error.response.message
-        )
-      );
+        ),
+      });
       if (!store.state.simpleapi.connected) {
         store.commit("simpleapi/setConnectedState", true);
       }
@@ -116,11 +124,3 @@ apiInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-export async function openToast(text, duration = 2000) {
-  const toast = await toastController.create({
-    message: text,
-    duration: duration,
-  });
-  return toast.present();
-}

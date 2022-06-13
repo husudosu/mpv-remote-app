@@ -3,6 +3,12 @@
     <IonSplitPane content-id="main-content">
       <ion-menu content-id="main-content" type="overlay">
         <ion-content>
+          <ion-toast
+            :is-open="toast.isOpen"
+            :message="toast.message"
+            :duration="toast.duration"
+            @didDismiss="setToastState(false)"
+          />
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
             <template v-if="servers.length > 0">
@@ -51,6 +57,7 @@
           </ion-list>
         </ion-content>
       </ion-menu>
+
       <ion-router-outlet id="main-content"></ion-router-outlet>
     </IonSplitPane>
   </IonApp>
@@ -72,6 +79,7 @@ import {
   IonSplitPane,
   IonSelect,
   IonSelectOption,
+  IonToast,
 } from "@ionic/vue";
 import {
   playCircleOutline,
@@ -102,6 +110,7 @@ export default defineComponent({
     IonSplitPane,
     IonSelect,
     IonSelectOption,
+    IonToast,
   },
   setup() {
     const store = useStore();
@@ -238,7 +247,7 @@ export default defineComponent({
       if (isActive) {
         // Set screen orientation if active
         store.commit("app/setScreenOrinetation", screen.orientation.type);
-        apiInstance.get("/status").then((response) => {
+        await apiInstance.get("/status").then((response) => {
           store.commit("simpleapi/setPlayerData", response.data);
           if (
             platforms.includes("hybrid") &&
@@ -264,6 +273,11 @@ export default defineComponent({
         if (platforms.includes("hybrid")) unregisterBroadcastReceiver();
       }
     });
+
+    const setToastState = async (state) => {
+      store.commit("app/setToastState", state);
+    };
+
     return {
       selectedPageIndex,
       appPages,
@@ -273,6 +287,8 @@ export default defineComponent({
       ),
       setCurrentServer: (serverId) =>
         store.dispatch("settings/setCurrentServer", serverId),
+      setToastState,
+      toast: computed(() => store.state.app.toast),
     };
   },
 });
