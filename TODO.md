@@ -25,3 +25,4 @@ ionic capacitor run android -l --host=host
 - Need some help with [cordova-plugin-music-controls2](https://github.com/Arzio/cordova-plugin-music-controls2) plugin:
   - When the app is not active, playback status not refreshing for notification,
   - I'd like remove album cover from notification.
+  - When the app not active notification still rendered but the app not sending API requests after a while

@@ -116,7 +116,6 @@ export default defineComponent({
     const store = useStore();
     const platforms = getPlatforms();
     const selectedPageIndex = ref(0);
-
     /*
     Side menu handler
     */
