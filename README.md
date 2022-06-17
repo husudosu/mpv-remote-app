@@ -27,6 +27,12 @@ Configure IP & Port in your application and run mpv with --idle flag on your hos
 
 The app not available on Google Play yet. I want improve my application before putting it to wider public.
 
+## Troubleshooting
+
+### When I start the app only a blank screen appears
+
+You can fix this by deleting all data for app. **Reinstalling the app is not enough,** you have to delete all stored data related to the app.
+
 ## Experimental features
 
 - Android notification by using `cordova-plugin-music-controls2` (disabled by default, it has issues) check out [TODO file](https://github.com/husudosu/mpv-remote-app/blob/master/TODO.md)

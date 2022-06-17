@@ -39,10 +39,14 @@ Important Android stuff:
 - Set Youtube quality on "Open URL" dialog.
 - Scroll to top added to File browser
 
-## 1.0.8 (Not released yet)
+## 1.0.8
 
 - API connection handling works way better,
 - Added Android notification to control playback (It's an experimental feauture should be enabled manually, you can find the option on settings. It has lot of issues)
 - Minor optimizations,
 - Created a basic clipart icon with Android studio
 - Toast rendering improved
+
+## 1.0.9
+
+- Fixed icon for older Android versions
