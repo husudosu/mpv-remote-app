@@ -143,7 +143,6 @@ export const simpleapi = {
           apiInstance.get("/status").then((response) => {
             commit("setPlayerData", response.data);
             if (rootGetters["settings/androidNotificationEnabled"] == true) {
-              console.log("handle music controls");
               dispatch("handleMusicControls");
             }
           });

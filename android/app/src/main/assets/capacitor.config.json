@@ -2,8 +2,5 @@
 	"appId": "com.husudosu.mpvremote",
 	"appName": "MPV Remote",
 	"webDir": "dist",
-	"bundledWebRuntime": false,
-	"server": {
-		"url": "http://192.168.88.249:8100"
-	}
+	"bundledWebRuntime": false
 }
