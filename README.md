@@ -4,7 +4,7 @@
 <img src="images/icon.png" >
 </p>
 
-MPV Remote is a mobile application for controlling remotely MPV media player running on your PC.
+MPV Remote is a mobile application for controlling MPV media player remotely running on your PC.
 
 # Features
 
@@ -43,7 +43,7 @@ Debug message (Release):
 open libmigui.so failed! dlopen - dlopen failed: library "libmigui.so" not found
 ```
 
-[Probably something Miui related error](https://github.com/evilrat/flutter_zoom_sdk/issues/65)
+[Probably a Miui related error](https://github.com/evilrat/flutter_zoom_sdk/issues/65)
 
 # Note for older Android users
 
