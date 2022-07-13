@@ -47,9 +47,10 @@ Important Android stuff:
 - Created a basic clipart icon with Android studio
 - Toast rendering improved
 
-## 1.0.9
+## 1.0.9 (Draft not released yet)
 
 - Fixed icon for older Android versions,
 - [Android project]: minSdkVersion have changed to 24 (Android 7.0)
 - [Android project]: compileSdkVersion have changed from 30 to 32
 - [Android project]: Upgraded gradle, some ionic versions etc...
+- Filebrowser minor improvemnts

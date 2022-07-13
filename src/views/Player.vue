@@ -160,7 +160,6 @@ export default {
       const modal = await modalController.create({
         component: fileBrowserModal,
         componentProps: {
-          modalController: modalController,
           action: FileBrowserActions.PLAY,
         },
       });

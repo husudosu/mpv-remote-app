@@ -154,7 +154,6 @@
 </template>
 
 <script>
-/*eslint no-unused-vars: "error"*/
 import { ref, computed } from "vue";
 import { useStore } from "vuex";
 import { apiInstance } from "../api";
@@ -180,6 +179,7 @@ import {
   IonInfiniteScrollContent,
   IonFab,
   IonFabButton,
+  modalController,
 } from "@ionic/vue";
 import {
   arrowUp,
@@ -201,7 +201,7 @@ import {
 } from "../enums";
 
 export default {
-  props: ["modalController", "action"],
+  props: ["action"],
   setup(props) {
     const store = useStore();
     const serverConfig = computed(
@@ -243,47 +243,55 @@ export default {
     });
 
     const loadFilebrowserSettings = async () => {
-      // Get paths or drives
-      if (store.state.simpleapi.MPVInfo.mpvremoteConfig.unsafefilebrowsing) {
-        await apiInstance.get("/drives").then((response) => {
-          drives.value = response.data;
-        });
-      } else {
-        await apiInstance
-          .get("filebrowser/paths")
-          .then((response) => (drives.value = response.data));
-      }
+      try {
+        // Get paths or drives
+        if (serverConfig.value.unsafefilebrowsing) {
+          await apiInstance
+            .get("/drives")
+            .then((response) => {
+              drives.value = response.data;
+            })
+            .catch(async () => {
+              // If got error fetching driver fallback to filebrowser paths
+              await apiInstance
+                .get("filebrowser/paths")
+                .then((response) => (drives.value = response.data));
+            });
+        } else {
+          await apiInstance
+            .get("filebrowser/paths")
+            .then((response) => (drives.value = response.data));
+        }
 
-      // Get collections.
-      if (store.state.simpleapi.MPVInfo.mpvremoteConfig.uselocaldb) {
-        await apiInstance
-          .get("/collections")
-          .then((response) => (collections.value = response.data));
+        // Get collections.
+        if (serverConfig.value.uselocaldb) {
+          await apiInstance
+            .get("/collections")
+            .then((response) => (collections.value = response.data));
+        }
+      } catch (err) {
+        console.log(err);
+        store.dispatch("app/showToast", {
+          message: `Failed to load settings: ${err}`,
+          duration: 5000,
+        });
       }
     };
 
     const loadFileBrowser = async () => {
       await loadFilebrowserSettings();
       if (filemanLastPath) {
-        console.log("Fileman last path exists ");
         if (filemanLastPath.type == "collection") {
-          console.log("Collection should be loaded");
-          getDirectoryContents(null, filemanLastPath.collection_id).catch(
-            () => {
-              console.log("Got error, loading basic");
-              getDirectoryContents();
+          await getDirectoryContents(null, filemanLastPath.collection_id).catch(
+            async () => {
+              await getDirectoryContents();
             }
           );
         } else if (filemanLastPath.type == "directory") {
-          getDirectoryContents(filemanLastPath.cwd).catch(() => {
-            getDirectoryContents();
+          await getDirectoryContents(filemanLastPath.cwd).catch(async () => {
+            await getDirectoryContents();
           });
-        } else {
-          // No valid directory content detected
-          loading.value = false;
         }
-      } else {
-        loading.value = false;
       }
     };
 
@@ -353,7 +361,7 @@ export default {
     };
 
     const onCancelClicked = () => {
-      saveLastPath().then(() => props.modalController.dismiss());
+      saveLastPath().then(() => modalController.dismiss());
     };
 
     const handlePlayAction = async (entry) => {
@@ -382,23 +390,22 @@ export default {
 
         if (role === "continue") {
           saveLastPath().then(() => {
-            props.modalController.dismiss({
+            modalController.dismiss({
               filename: entry.fullPath,
               seekTo: entry.mediaStatus.current_time,
             });
           });
         } else if (role === "play") {
           saveLastPath().then(() => {
-            props.modalController.dismiss({
+            modalController.dismiss({
               filename: entry.fullPath,
               appendToPlaylist: true,
             });
-            console.log("Play from start");
           });
         }
       } else {
         saveLastPath().then(() => {
-          props.modalController.dismiss({
+          modalController.dismiss({
             filename: entry.fullPath,
             appendToPlaylist: true,
           });
@@ -421,7 +428,7 @@ export default {
         props.action == FileBrowserActions.OPENSUB &&
         entry.type == FileBrowserEntryTypes.SUBTITLE
       ) {
-        props.modalController.dismiss({ filename: entry.fullPath });
+        modalController.dismiss({ filename: entry.fullPath });
       }
     };
 
@@ -497,7 +504,7 @@ export default {
       browsableFiles.value = files.value.content.slice(0, INFINITE_SCROLL_STEP);
     };
     const onOpenDirectoryClicked = () => {
-      saveLastPath().then(() => props.modalController.dismiss(files.value.cwd));
+      saveLastPath().then(() => modalController.dismiss(files.value.cwd));
     };
 
     const doSort = () => {
@@ -590,7 +597,7 @@ export default {
       browserContent.value.$el.scrollToPoint(0, 0, 500);
     };
 
-    loadFileBrowser();
+    loadFileBrowser().finally(() => (loading.value = false));
     return {
       logScroll,
       onCancelClicked,
