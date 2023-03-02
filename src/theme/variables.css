@@ -161,3 +161,8 @@ ion-searchbar {
 .alertbox .alert-wrapper button {
   color: #04c8c5;
 }
+
+.actionSheetCurrentChapter {
+  color: #04c8c5 !important;
+  font-weight: bold;
+}

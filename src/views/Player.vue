@@ -14,69 +14,38 @@
       <ion-grid style="height: 100%">
         <ion-row class="remoteButtons">
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button
-              :disabled="!connectionState || !playerData.filename"
-              @click="changeVolume('decrease')"
-            >
+            <ion-button :disabled="!connectionState || !playerData.filename" @click="changeVolume('decrease')">
               <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectionState || !playerData.filename"
-              @click="changeVolume('mute')"
-            >
+            <ion-button :disabled="!connectionState || !playerData.filename" @click="changeVolume('mute')">
               <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectionState || !playerData.filename"
-              @click="changeVolume('increase')"
-            >
+            <ion-button :disabled="!connectionState || !playerData.filename" @click="changeVolume('increase')">
               <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button
-              :disabled="!connectionState || !playerData.filename"
-              @click="onInfoClicked"
-            >
+            <ion-button :disabled="!connectionState || !playerData.filename" @click="onInfoClicked">
               <ion-icon slot="icon-only" :icon="informationCircle"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectionState || !playerData.filename"
-              @click="onFullscreenClicked"
-            >
+            <ion-button :disabled="!connectionState || !playerData.filename" @click="onFullscreenClicked">
               <ion-icon slot="icon-only" :icon="scanOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectionState || !playerData.filename"
-              @click="onAudioSettingsClicked"
-            >
+            <ion-button :disabled="!connectionState || !playerData.filename" @click="onAudioSettingsClicked">
               <ion-icon slot="icon-only" :icon="earOutline"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="!connectionState || !playerData.filename"
-              @click="onSubtitleSettingsClicked"
-            >
-              <ion-icon
-                class="rotateIcon"
-                slot="icon-only"
-                :icon="journalOutline"
-              ></ion-icon>
+            <ion-button :disabled="!connectionState || !playerData.filename" @click="onSubtitleSettingsClicked">
+              <ion-icon class="rotateIcon" slot="icon-only" :icon="journalOutline"></ion-icon>
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button
-              :disabled="!connectionState || !filebrowserEnabled"
-              @click="onFileBrowserClicked"
-            >
+            <ion-button :disabled="!connectionState || !filebrowserEnabled" @click="onFileBrowserClicked">
               <ion-icon slot="icon-only" :icon="folder"></ion-icon>
             </ion-button>
             <ion-button :disabled="!connectionState" @click="onOpenURLClicked">
               <ion-icon slot="icon-only" :icon="logoYoutube"></ion-icon>
             </ion-button>
-            <ion-button
-              :disabled="playerData['chapter-list'].length == 0"
-              @click="onChaptersClicked"
-            >
+            <ion-button :disabled="playerData['chapter-list'].length == 0" @click="onChaptersClicked">
               <ion-icon slot="icon-only" :icon="bookOutline"></ion-icon>
             </ion-button>
             <ion-button :disabled="!connectionState" @click="onShutdownClicked">
@@ -89,21 +58,16 @@
     <ion-content v-else>
       <ion-grid>
         <ion-row>
-          <ion-col
-            >Server not configued yet.
+          <ion-col>Server not configued yet.
             <p>
               If you need help
-              <a @click="openURL('https://github.com/husudosu/mpv-remote-app')"
-                >check tutorial here</a
-              >
+              <a @click="openURL('https://github.com/husudosu/mpv-remote-app')">check tutorial here</a>
             </p>
           </ion-col>
         </ion-row>
       </ion-grid>
     </ion-content>
-    <playerController
-      v-if="configured && playerData.filename"
-    ></playerController>
+    <playerController v-if="configured && playerData.filename"></playerController>
   </ion-page>
 </template>
 
@@ -263,10 +227,11 @@ export default {
     };
 
     const onChaptersClicked = async () => {
-      const buttons = playerData.value["chapter-list"].map((chapter) => {
+      const buttons = playerData.value["chapter-list"].map((chapter, index) => {
         return {
           role: chapter.time,
           text: `${chapter.title} (${formatTime(chapter.time)})`,
+          cssClass: playerData.value["chapter"] === index ? "actionSheetCurrentChapter" : ""
         };
       });
 
@@ -397,6 +362,7 @@ export default {
   .remoteButtons {
     text-align: left;
   }
+
   .remoteButtons ion-button {
     margin: 5px;
     width: 50px;
@@ -408,6 +374,7 @@ export default {
   .remoteButtons {
     text-align: center;
   }
+
   .remoteButtons ion-button {
     margin: 7px;
     width: 60px;
