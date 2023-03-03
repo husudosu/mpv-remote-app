@@ -54,3 +54,9 @@ Important Android stuff:
 - [Android project]: compileSdkVersion have changed from 30 to 32
 - [Android project]: Upgraded gradle, some ionic versions etc...
 - Filebrowser minor improvemnts
+
+## 1.0.10
+
+**Note about MPV versions: On older MPV versions the current chapter detection not working properly, if you experience issues with current chapter detection, please update your MPV version!**
+
+- [Feature request]: Current playing chapter in bold and has other color.
