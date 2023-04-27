@@ -227,11 +227,12 @@ export default {
     };
 
     const onChaptersClicked = async () => {
+      const currentChapter = playerData.value["current-chapter"] || playerData.value["chapter"];
       const buttons = playerData.value["chapter-list"].map((chapter, index) => {
         return {
           role: chapter.time,
           text: `${chapter.title} (${formatTime(chapter.time)})`,
-          cssClass: playerData.value["chapter"] === index ? "actionSheetCurrentChapter" : ""
+          cssClass: currentChapter === index ? "actionSheetCurrentChapter" : ""
         };
       });
 
