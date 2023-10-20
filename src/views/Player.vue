@@ -14,27 +14,27 @@
       <ion-grid style="height: 100%">
         <ion-row class="remoteButtons">
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button :disabled="!connectionState || !playerData.filename" @click="changeVolume('decrease')">
+            <ion-button :disabled="isControlButtonDisabled" @click="changeVolume('decrease')">
               <ion-icon slot="icon-only" :icon="volumeLowOutline"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectionState || !playerData.filename" @click="changeVolume('mute')">
+            <ion-button :disabled="isControlButtonDisabled" @click="changeVolume('mute')">
               <ion-icon slot="icon-only" :icon="volumeMuteOutline"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectionState || !playerData.filename" @click="changeVolume('increase')">
+            <ion-button :disabled="isControlButtonDisabled" @click="changeVolume('increase')">
               <ion-icon slot="icon-only" :icon="volumeHighOutline"></ion-icon>
             </ion-button>
           </ion-col>
           <ion-col :size="screenOrientation.startsWith('landscape') ? 6 : 12">
-            <ion-button :disabled="!connectionState || !playerData.filename" @click="onInfoClicked">
+            <ion-button :disabled="isControlButtonDisabled" @click="onInfoClicked">
               <ion-icon slot="icon-only" :icon="informationCircle"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectionState || !playerData.filename" @click="onFullscreenClicked">
+            <ion-button :disabled="isControlButtonDisabled" @click="onFullscreenClicked">
               <ion-icon slot="icon-only" :icon="scanOutline"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectionState || !playerData.filename" @click="onAudioSettingsClicked">
+            <ion-button :disabled="isControlButtonDisabled" @click="onAudioSettingsClicked">
               <ion-icon slot="icon-only" :icon="earOutline"></ion-icon>
             </ion-button>
-            <ion-button :disabled="!connectionState || !playerData.filename" @click="onSubtitleSettingsClicked">
+            <ion-button :disabled="isControlButtonDisabled" @click="onSubtitleSettingsClicked">
               <ion-icon class="rotateIcon" slot="icon-only" :icon="journalOutline"></ion-icon>
             </ion-button>
           </ion-col>
@@ -120,6 +120,9 @@ export default {
     const store = useStore();
     const screenOrientation = computed(() => store.state.app.screenOrientation);
     const playerData = computed(() => store.getters["simpleapi/playerData"]);
+
+    const isControlButtonDisabled = computed(() => !store.getters["simpleapi/connectionState"] || !playerData.value.filename);
+
     const onFileBrowserClicked = async () => {
       const modal = await modalController.create({
         component: fileBrowserModal,
@@ -303,6 +306,7 @@ export default {
       ),
       configured: computed(() => store.getters["settings/configured"]),
       changeVolume,
+      isControlButtonDisabled,
       volumeHighOutline,
       volumeLowOutline,
       volumeMuteOutline,
