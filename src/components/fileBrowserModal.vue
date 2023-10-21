@@ -131,6 +131,7 @@ import {
   IonList,
   IonListHeader,
   IonPopover,
+  IonLabel,
   actionSheetController,
   alertController,
   IonInfiniteScroll,
@@ -630,6 +631,7 @@ export default {
     IonFab,
     IonFabButton,
     IonPopover,
+    IonLabel
   },
 };
 </script>
