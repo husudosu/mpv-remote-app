@@ -18,24 +18,14 @@
           <ion-title size="large">Media collections</ion-title>
         </ion-toolbar>
       </ion-header>
-      <ion-fab
-        vertical="bottom"
-        horizontal="end"
-        slot="fixed"
-        @click="onAddNewCollectionClicked"
-      >
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed" @click="onAddNewCollectionClicked">
         <ion-fab-button color="success">
           <ion-icon :icon="add"></ion-icon>
         </ion-fab-button>
       </ion-fab>
       <ion-list>
-        <ion-item
-          lines="full"
-          v-for="collection in collections"
-          :key="collection.id"
-          button
-          @click="onEditCollectionClicked(collection)"
-        >
+        <ion-item lines="full" v-for="collection in collections" :key="collection.id" button
+          @click="onEditCollectionClicked(collection)">
           <ion-label class="ion-text-wrap">
             <h2>{{ collection.name }}</h2>
             <p>{{ getCollectionType(collection.type) }}</p>
@@ -78,18 +68,18 @@ export default {
     const collections = ref([]);
     const store = useStore();
     const connectedState = computed(() => store.state.simpleapi.connected);
-    const loading = ref(true);
+    const loading = ref(false);
 
     let loadingTimeout = setTimeout(() => {
       loading.value = true;
-    }, 200);
+    }, 150);
 
     apiInstance
       .get("collections")
       .then((response) => (collections.value = response.data))
       .finally(() => {
-        loading.value = false;
         clearTimeout(loadingTimeout);
+        loading.value = false;
       });
 
     const onAddNewCollectionClicked = async () => {

@@ -20,20 +20,11 @@
       <ion-list-header>Collection info</ion-list-header>
       <ion-list>
         <ion-item lines="full">
-          <ion-input
-            placeholder="Name"
-            type="text"
-            v-model="dialog.name"
-            :value="dialog.name"
-          ></ion-input>
+          <ion-input placeholder="Name" type="text" v-model="dialog.name" :value="dialog.name"></ion-input>
         </ion-item>
         <ion-item lines="full">
-          <ion-label>Media type</ion-label>
-          <ion-select
-            :value="dialog.type"
-            v-model="dialog.type"
-            :interface-options="{ cssClass: 'alertbox' }"
-          >
+          <ion-select label="Media Type" :value="dialog.type" v-model="dialog.type"
+            :interface-options="{ cssClass: 'alertbox' }">
             <!-- // TYPE Can be: Movies - 1, TVShows - 2, Music - 3 !-->
             <ion-select-option :value="1"> Movies </ion-select-option>
             <ion-select-option :value="2"> TVShows </ion-select-option>
@@ -43,24 +34,15 @@
       </ion-list>
 
       <ion-list-header>Paths</ion-list-header>
-      <ion-item lines="full" @click="onAddPathClicked" button
-        >Add path</ion-item
-      >
+      <ion-item lines="full" @click="onAddPathClicked" button>Add path</ion-item>
       <ion-item lines="full" v-for="(path, i) in dialog.paths" :key="i">
         <ion-label class="ion-text-wrap">
           {{ path.path }}
         </ion-label>
-        <ion-button fill="none" slot="end" @click="onDeletePathClicked(path)"
-          ><ion-icon slot="icon-only" :icon="trashBin"></ion-icon
-        ></ion-button>
+        <ion-button fill="none" slot="end" @click="onDeletePathClicked(path)"><ion-icon slot="icon-only"
+            :icon="trashBin"></ion-icon></ion-button>
       </ion-item>
-      <ion-button
-        style="margin-top: 10px"
-        color="success"
-        expand="block"
-        @click="onSubmitClicked"
-        >Save</ion-button
-      >
+      <ion-button style="margin-top: 10px" color="success" expand="block" @click="onSubmitClicked">Save</ion-button>
     </ion-content>
   </ion-page>
 </template>

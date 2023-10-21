@@ -12,18 +12,9 @@
     </ion-header>
     <ion-content v-if="playerData.filename" class="ion-padding">
       <ion-item lines="full">
-        <ion-label>Track</ion-label>
-        <ion-select
-          v-model="selectedTrack"
-          @ionChange="onSubtitleTrackChanged"
-          :value="activeSubTrackId"
-          :interface-options="{ cssClass: 'alertbox' }"
-        >
-          <ion-select-option
-            :value="sub.id"
-            v-for="sub in subTracks"
-            :key="sub.id"
-          >
+        <ion-select label="Track" v-model="selectedTrack" @ionChange="onSubtitleTrackChanged" :value="activeSubTrackId"
+          :interface-options="{ cssClass: 'alertbox' }">
+          <ion-select-option :value="sub.id" v-for="sub in subTracks" :key="sub.id">
             {{ sub.lang || sub["external-filename"] }}
           </ion-select-option>
         </ion-select>
@@ -46,26 +37,15 @@
       </ion-item>
       <ion-item lines="full">
         <ion-label>Show subtitle</ion-label>
-        <ion-checkbox
-          :checked="playerData['sub-visibility']"
-          @ionChange="changeSubtitleVisibility($event)"
-          slot="end"
-        ></ion-checkbox>
+        <ion-checkbox aria-label="Show subtitle" :checked="playerData['sub-visibility']"
+          @ionChange="changeSubtitleVisibility($event)" slot="end"></ion-checkbox>
       </ion-item>
 
       <ion-item lines="full">
-        <ion-label>ASS Override</ion-label>
 
-        <ion-select
-          :interface-options="{ cssClass: 'alertbox' }"
-          @ionChange="onAssOverridechanged"
-          :value="currentAssOverride"
-        >
-          <ion-select-option
-            v-for="(item, index) in assOverride"
-            :key="index"
-            :value="item"
-          >
+        <ion-select label="ASS Override" :interface-options="{ cssClass: 'alertbox' }" @ionChange="onAssOverridechanged"
+          :value="currentAssOverride">
+          <ion-select-option v-for="(item, index) in assOverride" :key="index" :value="item">
             {{ item }}
           </ion-select-option>
         </ion-select>

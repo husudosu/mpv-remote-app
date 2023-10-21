@@ -12,18 +12,9 @@
     </ion-header>
     <ion-content v-if="playerData.filename" class="ion-padding">
       <ion-item lines="full">
-        <ion-label>Audio track</ion-label>
-        <ion-select
-          :value="activeAudioTrackId"
-          @ionChange="onSwitchAudioClicked"
-          v-model="selectedTrack"
-          :interface-options="{ cssClass: 'alertbox' }"
-        >
-          <ion-select-option
-            :value="audio.id"
-            v-for="audio in audioTracks"
-            :key="audio.id"
-          >
+        <ion-select label="Audio track" :value="activeAudioTrackId" @ionChange="onSwitchAudioClicked"
+          v-model="selectedTrack" :interface-options="{ cssClass: 'alertbox' }">
+          <ion-select-option :value="audio.id" v-for="audio in audioTracks" :key="audio.id">
             {{ audio.lang || `unknown${audio.id}` }}
           </ion-select-option>
         </ion-select>

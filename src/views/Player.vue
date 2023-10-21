@@ -172,7 +172,6 @@ export default {
           }
           break;
         case "decrease":
-          console.log(playerData.value.volume);
           if (playerData.value.volume > 0) {
             const newVolume = Math.max(0, playerData.value.volume - 5);
             apiInstance.post(`controls/volume/${newVolume}`).then(() =>

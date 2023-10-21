@@ -1,4 +1,6 @@
-> 1%
-last 2 versions
-not dead
-not ie 11
+Chrome >=79
+ChromeAndroid >=79
+Firefox >=70
+Edge >=79
+Safari >=14
+iOS >=14

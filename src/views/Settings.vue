@@ -20,22 +20,14 @@
         <ion-item lines="full" @click="onServersClicked" button>
           Servers
         </ion-item>
-        <ion-item
-          lines="full"
-          button
-          @click="onCollectionsClicked"
-          :disabled="!connectedState || !uselocaldb"
-        >
+        <ion-item lines="full" button @click="onCollectionsClicked" :disabled="!connectedState || !uselocaldb">
           <ion-label>Media collections</ion-label>
         </ion-item>
 
         <ion-item lines="full">
           <ion-label>Android notification (Experimental)</ion-label>
-          <ion-checkbox
-            :checked="androidNotificationEnabled"
-            @ionChange="onAndroidNotificationEnabledChange($event)"
-            slot="end"
-          ></ion-checkbox>
+          <ion-checkbox aria-label="Android notification (Experimental)" :checked="androidNotificationEnabled"
+            @ionChange="onAndroidNotificationEnabledChange($event)" slot="end"></ion-checkbox>
         </ion-item>
       </ion-list>
     </ion-content>

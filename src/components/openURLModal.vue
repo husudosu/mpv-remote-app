@@ -12,50 +12,26 @@
     </ion-header>
     <ion-content class="ion-padding">
       <ion-item lines="full">
-        <ion-input
-          placeholder="File/URL"
-          type="text"
-          v-model="dialog.filename"
-        ></ion-input>
+        <ion-input placeholder="File/URL" type="text" v-model="dialog.filename"></ion-input>
       </ion-item>
       <ion-item lines="full">
         <ion-label>Append to playlist</ion-label>
-        <ion-checkbox
-          type="text"
-          v-model="dialog.appendToPlaylist"
-        ></ion-checkbox>
+        <ion-checkbox aria-label="Append to playlist" type="text" v-model="dialog.appendToPlaylist"></ion-checkbox>
       </ion-item>
       <ion-item lines="full">
-        <ion-label>Youtube quality</ion-label>
-        <ion-select
-          v-model="dialog['file-local-options']['ytdl-format']"
-          :interface-options="{ cssClass: 'alertbox' }"
-        >
+
+        <ion-select label="Youtube quality" v-model="dialog['file-local-options']['ytdl-format']"
+          :interface-options="{ cssClass: 'alertbox' }">
           <ion-select-option value="">Default</ion-select-option>
-          <ion-select-option value="bestvideo[height<=?2160]+bestaudio/best"
-            >4k</ion-select-option
-          >
-          <ion-select-option value="bestvideo[height<=?1440]+bestaudio/best"
-            >1440p</ion-select-option
-          >
-          <ion-select-option value="bestvideo[height<=?1080]+bestaudio/best"
-            >1080p</ion-select-option
-          >
-          <ion-select-option value="bestvideo[height<=?720]+bestaudio/best"
-            >720p</ion-select-option
-          >
-          <ion-select-option value="bestvideo[height<=?480]+bestaudio/best"
-            >480p</ion-select-option
-          >
+          <ion-select-option value="bestvideo[height<=?2160]+bestaudio/best">4k</ion-select-option>
+          <ion-select-option value="bestvideo[height<=?1440]+bestaudio/best">1440p</ion-select-option>
+          <ion-select-option value="bestvideo[height<=?1080]+bestaudio/best">1080p</ion-select-option>
+          <ion-select-option value="bestvideo[height<=?720]+bestaudio/best">720p</ion-select-option>
+          <ion-select-option value="bestvideo[height<=?480]+bestaudio/best">480p</ion-select-option>
         </ion-select>
       </ion-item>
-      <ion-button
-        expand="block"
-        style="margin-top: 10px"
-        :disabled="dialog.filename.length == 0"
-        color="success"
-        @click="onAppendClicked"
-        >Open
+      <ion-button expand="block" style="margin-top: 10px" :disabled="dialog.filename.length == 0" color="success"
+        @click="onAppendClicked">Open
       </ion-button>
     </ion-content>
   </ion-page>
