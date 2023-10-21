@@ -10,15 +10,27 @@
           </ion-button>
         </ion-buttons>
         <ion-buttons slot="end">
-          <ion-button :disabled="Object.keys(files).length === 0" @click="onSortByClicked">
-            <ion-icon :icon="funnelOutline" slot="icon-only"></ion-icon>
+          <ion-button id="click-trigger">
+            <ion-icon :icon="ellipsisVerticalSharp" slot="icon-only"></ion-icon>
           </ion-button>
-          <ion-button @click="onChangeDriveClicked">
-            <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
-          </ion-button>
-          <ion-button :disabled="!serverConfig.uselocaldb" @click="onCollectionsClicked">
-            <ion-icon :icon="bookmarksOutline" slot="icon-only"></ion-icon>
-          </ion-button>
+          <ion-popover trigger="click-trigger" trigger-action="click" :is-open="popoverOpen" dismissOnSelect>
+            <ion-content class="ion-padding">
+              <ion-list lines="full">
+                <ion-item button @click="onSortByClicked">
+                  <ion-icon :icon="funnelOutline" slot="start"></ion-icon>
+                  <ion-label>Sort by</ion-label>
+                </ion-item>
+                <ion-item button @click="onChangeDriveClicked">
+                  <ion-icon :icon="fileTray" slot="start"></ion-icon>
+                  <ion-label>Drives</ion-label>
+                </ion-item>
+                <ion-item button @click="onCollectionsClicked">
+                  <ion-icon :icon="bookmarksOutline" slot="start"></ion-icon>
+                  <ion-label>Collections</ion-label>
+                </ion-item>
+              </ion-list>
+            </ion-content>
+          </ion-popover>
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
@@ -48,6 +60,9 @@
           <div class="column">
             {{ entry.name }}
           </div>
+        </div>
+        <div class="row" v-if="browsableFiles.length === 0">
+          No files found.
         </div>
       </ion-list>
       <ion-infinite-scroll @ionInfinite="onInfiniteScroll($event)" threshold="1000px" id="infinite-scroll"
@@ -115,6 +130,7 @@ import {
   IonLoading,
   IonList,
   IonListHeader,
+  IonPopover,
   actionSheetController,
   alertController,
   IonInfiniteScroll,
@@ -134,6 +150,7 @@ import {
   journalOutline,
   funnelOutline,
   arrowBackSharp,
+  ellipsisVerticalSharp
 } from "ionicons/icons";
 import { formatTime } from "../tools";
 import {
@@ -170,6 +187,8 @@ export default {
     const filemanLastPath = store.state.settings.filemanLastPath;
     const sortBy = ref(FileBrowserSortBy.NAME);
 
+    const popoverOpen = ref(false);
+    const popoverEvent = ref(null);
     let history = store.getters["settings/getServerHistory"];
 
     const titleText = computed(() => {
@@ -435,7 +454,6 @@ export default {
     };
 
     const onSearch = () => {
-      console.log("Search");
       files.value = Object.assign({}, filesBak.value);
       files.value.content = files.value.content.filter(
         (el) => el.name.toLowerCase().indexOf(search.value.toLowerCase()) > -1
@@ -540,6 +558,12 @@ export default {
       browserContent.value.$el.scrollToPoint(0, 0, 500);
     };
 
+
+    const openPopover = (e) => {
+      popoverEvent.value = e;
+      popoverOpen.value = true;
+    };
+
     loadFileBrowser().finally(() => (loading.value = false));
     return {
       logScroll,
@@ -580,6 +604,10 @@ export default {
       arrowBackSharp,
       arrowUp,
       scrollToTopEnabled,
+      popoverOpen,
+      popoverEvent,
+      ellipsisVerticalSharp,
+      openPopover
     };
   },
   components: {
@@ -601,6 +629,7 @@ export default {
     IonInfiniteScrollContent,
     IonFab,
     IonFabButton,
+    IonPopover,
   },
 };
 </script>
