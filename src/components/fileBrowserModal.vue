@@ -10,38 +10,23 @@
           </ion-button>
         </ion-buttons>
         <ion-buttons slot="end">
-          <ion-button
-            :disabled="Object.keys(files).length === 0"
-            @click="onSortByClicked"
-          >
+          <ion-button :disabled="Object.keys(files).length === 0" @click="onSortByClicked">
             <ion-icon :icon="funnelOutline" slot="icon-only"></ion-icon>
           </ion-button>
           <ion-button @click="onChangeDriveClicked">
             <ion-icon :icon="fileTray" slot="icon-only"></ion-icon>
           </ion-button>
-          <ion-button
-            :disabled="!serverConfig.uselocaldb"
-            @click="onCollectionsClicked"
-          >
+          <ion-button :disabled="!serverConfig.uselocaldb" @click="onCollectionsClicked">
             <ion-icon :icon="bookmarksOutline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
-        <ion-searchbar
-          :disabled="Object.keys(files).length === 0"
-          v-model="search"
-          @ionChange="onSearch"
-        ></ion-searchbar>
+        <ion-searchbar :disabled="Object.keys(files).length === 0" v-model="search" @ionInput="onSearch"></ion-searchbar>
       </ion-toolbar>
     </ion-header>
-    <ion-content
-      ref="browserContent"
-      class="ion-padding"
-      :scroll-events="true"
-      @ionScroll="logScroll($event)"
-      v-if="(files.cwd || files.collection_id) && connectionState"
-    >
+    <ion-content ref="browserContent" class="ion-padding" :scroll-events="true" @ionScroll="logScroll($event)"
+      v-if="(files.cwd || files.collection_id) && connectionState">
       <ion-list>
         <div class="row" @click="onPrevDirectoryClicked" v-if="files.prevDir">
           <div class="columnIcon">
@@ -50,31 +35,14 @@
           <div class="column">...</div>
         </div>
 
-        <div
-          class="row"
-          v-for="(entry, index) in browsableFiles"
-          :key="index"
-          @click="onEntryClicked(entry)"
-        >
+        <div class="row" v-for="(entry, index) in browsableFiles" :key="index" @click="onEntryClicked(entry)">
           <div class="columnIcon">
-            <ion-icon
-              slot="start"
-              v-if="entry.mediaStatus && entry.mediaStatus.finished === 0"
-              class="mediaStatusProgress"
-              :icon="decideIcon(entry)"
-            ></ion-icon>
-            <ion-icon
-              slot="start"
-              v-else-if="entry.mediaStatus && entry.mediaStatus.finished === 1"
-              class="mediaStatusFinished"
-              :icon="decideIcon(entry)"
-            ></ion-icon>
-            <ion-icon
-              v-else-if="entry.type === 'subtitle'"
-              class="fileformatSubtitle"
-              :icon="journalOutline"
-              slot="start"
-            ></ion-icon>
+            <ion-icon slot="start" v-if="entry.mediaStatus && entry.mediaStatus.finished === 0"
+              class="mediaStatusProgress" :icon="decideIcon(entry)"></ion-icon>
+            <ion-icon slot="start" v-else-if="entry.mediaStatus && entry.mediaStatus.finished === 1"
+              class="mediaStatusFinished" :icon="decideIcon(entry)"></ion-icon>
+            <ion-icon v-else-if="entry.type === 'subtitle'" class="fileformatSubtitle" :icon="journalOutline"
+              slot="start"></ion-icon>
             <ion-icon v-else :icon="decideIcon(entry)" slot="start"></ion-icon>
           </div>
           <div class="column">
@@ -82,16 +50,9 @@
           </div>
         </div>
       </ion-list>
-      <ion-infinite-scroll
-        @ionInfinite="onInfiniteScroll($event)"
-        threshold="1000px"
-        id="infinite-scroll"
-        :disabled="!infiniteScrollEnabled"
-      >
-        <ion-infinite-scroll-content
-          loading-spinner="circles"
-          loading-text="Loading more data..."
-        >
+      <ion-infinite-scroll @ionInfinite="onInfiniteScroll($event)" threshold="1000px" id="infinite-scroll"
+        :disabled="!infiniteScrollEnabled">
+        <ion-infinite-scroll-content loading-spinner="circles" loading-text="Loading more data...">
         </ion-infinite-scroll-content>
       </ion-infinite-scroll>
     </ion-content>
@@ -101,12 +62,8 @@
     <ion-content v-else-if="!loading">
       <ion-list-header>Collections</ion-list-header>
       <ion-list>
-        <ion-item
-          lines="full"
-          @click="getDirectoryContents(null, collection.id)"
-          v-for="(collection, i) in collections"
-          :key="i"
-        >
+        <ion-item lines="full" @click="getDirectoryContents(null, collection.id)" v-for="(collection, i) in collections"
+          :key="i">
           {{ collection.name }}
         </ion-item>
         <ion-item lines="full" v-if="collections.length == 0">
@@ -116,12 +73,7 @@
 
       <ion-list-header>Drives</ion-list-header>
       <ion-list>
-        <ion-item
-          lines="full"
-          @click="getDirectoryContents(drive.path)"
-          v-for="(drive, i) in drives"
-          :key="i"
-        >
+        <ion-item lines="full" @click="getDirectoryContents(drive.path)" v-for="(drive, i) in drives" :key="i">
           {{ drive.path }}
         </ion-item>
         <ion-item lines="full" v-if="drives.length == 0">
@@ -129,24 +81,14 @@
         </ion-item>
       </ion-list>
     </ion-content>
-    <ion-fab
-      v-if="scrollToTopEnabled"
-      vertical="bottom"
-      horizontal="end"
-      slot="fixed"
-      @click="onScrollToTopClicked"
-    >
+    <ion-fab v-if="scrollToTopEnabled" vertical="bottom" horizontal="end" slot="fixed" @click="onScrollToTopClicked">
       <ion-fab-button>
         <ion-icon :icon="arrowUp"></ion-icon>
       </ion-fab-button>
     </ion-fab>
 
     <ion-footer v-if="showOpenFolder">
-      <ion-button
-        :disabled="!files.cwd"
-        @click="onOpenDirectoryClicked"
-        color="success"
-      >
+      <ion-button :disabled="!files.cwd" @click="onOpenDirectoryClicked" color="success">
         Open folder
       </ion-button>
     </ion-footer>
@@ -493,6 +435,7 @@ export default {
     };
 
     const onSearch = () => {
+      console.log("Search");
       files.value = Object.assign({}, filesBak.value);
       files.value.content = files.value.content.filter(
         (el) => el.name.toLowerCase().indexOf(search.value.toLowerCase()) > -1
