@@ -28,6 +28,10 @@
                   <ion-icon :icon="bookmarksOutline" slot="start"></ion-icon>
                   <ion-label>Collections</ion-label>
                 </ion-item>
+                <ion-item v-if="files.cwd" button @click="onDirectoryClicked">
+                  <ion-icon :icon="addSharp" slot="start"></ion-icon>
+                  <ion-label>Folder to playlist</ion-label>
+                </ion-item>
               </ion-list>
             </ion-content>
           </ion-popover>
@@ -151,7 +155,8 @@ import {
   journalOutline,
   funnelOutline,
   arrowBackSharp,
-  ellipsisVerticalSharp
+  ellipsisVerticalSharp,
+  addSharp
 } from "ionicons/icons";
 import { formatTime } from "../tools";
 import {
@@ -373,6 +378,15 @@ export default {
           });
         });
       }
+    };
+
+    const onDirectoryClicked = async () => {
+      saveLastPath().then(() => {
+        modalController.dismiss({
+          filename: files.value.cwd,
+          appendToPlaylist: true
+        });
+      });
     };
 
     const onEntryClicked = async (entry) => {
@@ -608,7 +622,9 @@ export default {
       popoverOpen,
       popoverEvent,
       ellipsisVerticalSharp,
-      openPopover
+      openPopover,
+      addSharp,
+      onDirectoryClicked
     };
   },
   components: {
