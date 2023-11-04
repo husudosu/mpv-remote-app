@@ -14,22 +14,22 @@
         <ion-icon :icon="trashBin"></ion-icon>
       </ion-button>
       <ion-reorder-group @ionItemReorder="doReorder($event)" :disabled="playlist.length <= 1">
-        <ion-item lines="full" @click="onItemClicked(item)" v-for="item in playlist" :key="item.id">
-          <ion-icon class="playlistItemIndicator" v-if="item.current" slot="start" :icon="play"></ion-icon>
-          <ion-label class="ion-text-wrap">
-            <p>
-              {{
-                item.current
-                ? playerData["media-title"] || item.filename
-                : item.filename
-              }}
-            </p>
-          </ion-label>
+        <div class="row" v-for="item in playlist" :key="item.id" @click="onItemClicked(item)">
+          <div class="columnIcon">
+            <ion-icon class="playlistItemIndicator" v-if="item.current" slot="start" :icon="play"></ion-icon>
+          </div>
+          <div class="column">
+            {{
+              item.current
+              ? playerData["media-title"] || item.filename
+              : item.filename
+            }}
+          </div>
           <ion-button @click="onRemoveItemClicked(item)" fill="clear" slot="end">
             <ion-icon style="color: white" slot="icon-only" :icon="trashBin"></ion-icon>
           </ion-button>
           <ion-reorder slot="end"></ion-reorder>
-        </ion-item>
+        </div>
       </ion-reorder-group>
     </ion-content>
   </ion-page>
@@ -46,8 +46,6 @@ import {
   IonContent,
   IonReorder,
   IonReorderGroup,
-  IonItem,
-  IonLabel,
   IonIcon,
   IonButton,
   IonLoading,
@@ -69,7 +67,7 @@ export default {
     let lastOnStart = 0;
 
     // TODO: Replace Ion-List with custom solution something like implemented on fileBrowserModal.
-    onIonViewDidEnter(async () => {
+    onIonViewDidEnter(() => {
       // Get initial playlist.
       let loadingTimeout = setTimeout(() => {
         loading.value = true;
@@ -109,6 +107,7 @@ export default {
     const onRemoveItemClicked = (item) => {
       apiInstance.post(`/playlist/remove/${item.index}`);
     };
+    // TODO: If the user dragging playlist item stop refreshing of the playlist.
 
     const onItemClicked = (item) => {
       /* TODO: Create double tap gesture somehow for ion-item.
@@ -155,8 +154,6 @@ export default {
     IonContent,
     IonReorder,
     IonReorderGroup,
-    IonItem,
-    IonLabel,
     IonIcon,
     IonButton,
     IonLoading,
@@ -170,5 +167,37 @@ export default {
   height: 16px;
   margin-right: 5px;
   color: green;
+}
+
+.row {
+  display: flex;
+  background-color: #172246;
+  align-items: center;
+  justify-content: center;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.3);
+}
+
+.columnIcon {
+  padding-left: 17px;
+  padding-right: 30px;
+  flex: 10%;
+  min-width: 50px;
+  font-size: 25px;
+  color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.54);
+}
+
+.column {
+  flex: 90%;
+  min-width: 0px;
+  padding-right: 10px;
+}
+
+.fileBrowserPath {
+  padding-top: 0px;
+  margin-top: 0px;
+  height: 40px;
 }
 </style>
