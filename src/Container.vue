@@ -3,27 +3,14 @@
     <IonSplitPane content-id="main-content">
       <ion-menu content-id="main-content" type="overlay">
         <ion-content>
-          <ion-toast
-            :is-open="toast.isOpen"
-            :message="toast.message"
-            :duration="toast.duration"
-            @didDismiss="setToastState(false)"
-          />
+          <ion-toast :is-open="toast.isOpen" :message="toast.message" :duration="toast.duration"
+            @didDismiss="setToastState(false)" />
           <ion-list id="inbox-list">
             <ion-list-header>MPV Remote</ion-list-header>
             <template v-if="servers.length > 0">
-              <ion-select
-                class="serverSelect"
-                interface="action-sheet"
-                placeholder="No server selected"
-                :value="currentServerId"
-                @ionChange="setCurrentServer($event.target.value)"
-              >
-                <ion-select-option
-                  v-for="server in servers"
-                  :key="server.id"
-                  :value="server.id"
-                >
+              <ion-select class="serverSelect" interface="action-sheet" placeholder="No server selected"
+                :value="currentServerId" @ionChange="setCurrentServer($event.target.value)">
+                <ion-select-option v-for="server in servers" :key="server.id" :value="server.id">
                   {{ server.name }} ({{ server.host }}:{{ server.port }})
                 </ion-select-option>
               </ion-select>
@@ -32,25 +19,10 @@
               <div class="serverSelect">No server configured</div>
             </template>
             <div class="horizontalLine"></div>
-            <ion-menu-toggle
-              auto-hide="false"
-              v-for="(p, i) in appPages"
-              :key="i"
-            >
-              <ion-item
-                @click="selectedPageIndex = i"
-                router-direction="root"
-                :router-link="p.url"
-                lines="none"
-                detail="false"
-                class="hydrated"
-                :class="{ selected: selectedPageIndex === i }"
-              >
-                <ion-icon
-                  slot="start"
-                  :ios="p.iosIcon"
-                  :md="p.mdIcon"
-                ></ion-icon>
+            <ion-menu-toggle auto-hide="false" v-for="(p, i) in appPages" :key="i">
+              <ion-item @click="selectedPageIndex = i" router-direction="root" :router-link="p.url" lines="none"
+                detail="false" class="hydrated" :class="{ selected: selectedPageIndex === i }">
+                <ion-icon slot="start" :ios="p.iosIcon" :md="p.mdIcon"></ion-icon>
                 <ion-label>{{ p.title }}</ion-label>
               </ion-item>
             </ion-menu-toggle>
@@ -79,7 +51,7 @@ import {
   IonSplitPane,
   IonSelect,
   IonSelectOption,
-  IonToast,
+  IonToast
 } from "@ionic/vue";
 import {
   playCircleOutline,
@@ -93,6 +65,7 @@ import { useStore } from "vuex";
 
 import { AndroindIntentActions } from "./enums";
 import { apiInstance } from "./api";
+import { useRoute } from "vue-router";
 
 export default defineComponent({
   name: "App",
@@ -116,6 +89,8 @@ export default defineComponent({
     const store = useStore();
     const platforms = getPlatforms();
     const selectedPageIndex = ref(0);
+    const route = useRoute();
+
     /*
     Side menu handler
     */
@@ -259,12 +234,18 @@ export default defineComponent({
           store.dispatch("simpleapi/setPlaybackRefreshInterval");
         if (!store.state.settings.dbSession)
           await store.dispatch("settings/initDbSession");
+        if (route.name === "folder.playlist") {
+          console.log("We are on playlist route, so setting playlist interval.");
+          await store.dispatch("simpleapi/setPlaylistRefreshInterval");
+        }
 
         if (platforms.includes("hybrid")) registerBroadcastReceiver();
       } else {
         // Battery saving stuff
-
+        console.log(`Route: ${JSON.stringify(route)}`);
         // Clear update interval only if notiifcations disabled
+        // Disable playlist refresh interval.
+        store.commit("simpleapi/clearPlaylistRefreshInterval");
         if (store.getters["settings/androidNotificationEnabled"] === false) {
           store.commit("simpleapi/clearPlaybackRefreshInterval");
         }
@@ -424,6 +405,7 @@ ion-item.selected {
   width: 100%;
   border-bottom: 1px solid var(--ion-item-border-color, #d7d8da);
 }
+
 .serverSelect {
   width: 100%;
   justify-content: left;

@@ -22,7 +22,10 @@ function requestOnRejected(error) {
 
 // FIXME: App still creates musicController when it's disabled on settings.
 function handleDisconnect(auto_reconnect = false) {
-  if (!auto_reconnect) store.commit("simpleapi/clearPlaybackRefreshInterval");
+  if (!auto_reconnect) {
+    store.commit("simpleapi/clearPlaybackRefreshInterval");
+    store.commit("simpleapi/clearPlaylistRefreshInterval");
+  }
   store.commit("simpleapi/setConnectedState", false);
   store.commit("simpleapi/clearPlayerData");
 }
@@ -58,10 +61,12 @@ export async function configureInstance(host, port) {
   });
 
   // Get status after configuring
-  await apiInstance.get("/status").then((response) => {
-    console.log("Got initial status");
-    store.commit("simpleapi/setPlayerData", response.data);
-  });
+  await apiInstance
+    .get("/status", { params: { exclude: "playlist" } })
+    .then((response) => {
+      console.log("Got initial status");
+      store.commit("simpleapi/setPlayerData", response.data);
+    });
   // Handle music controls if needed
   if (store.getters["settings/androidNotificationEnabled"]) {
     console.log("Handle music controls");

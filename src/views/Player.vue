@@ -132,7 +132,8 @@ export default {
       });
       modal.onDidDismiss().then((response) => {
         if (response.data) {
-          console.log(`Data from modal: ${JSON.stringify(response.data)}`);
+          // Handling of query object which we get from FileBrowserModal.
+          const params = response.data.query ? response.data.query : {};
           const mode = response.data.appendToPlaylist
             ? loadFileFlags.APPEND_PLAY
             : loadFileFlags.REPLACE;
@@ -140,7 +141,7 @@ export default {
             filename: response.data.filename,
             flag: mode,
             seekTo: response.data.seekTo,
-          });
+          }, { params });
         }
       });
       return modal.present();

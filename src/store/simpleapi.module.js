@@ -27,6 +27,7 @@ const initialState = {
     "volume-max": 100,
     "media-title": null,
   },
+  playlist: [],
   playbackRefreshInterval: null,
   connected: false,
   MPVInfo: {
@@ -115,6 +116,16 @@ export const simpleapi = {
     setMPVInfo(state, value) {
       state.MPVInfo = value;
     },
+    setPlaylist(state, value) {
+      state.playlist = value;
+    },
+    clearPlaylistRefreshInterval(state) {
+      console.log("clear playlist refresh interval");
+      if (state.playlistRefreshInterval != null) {
+        clearInterval(state.playlistRefreshInterval);
+        state.playlistRefreshInterval = null;
+      }
+    },
     clearPlaybackRefreshInterval(state) {
       console.log("clear playback refresh interval");
       if (state.playbackRefreshInterval != null) {
@@ -137,15 +148,28 @@ export const simpleapi = {
     },
   },
   actions: {
+    setPlaylistRefreshInterval({ commit, state }) {
+      console.log("Set playlist interval");
+      if (state.playlistRefreshInterval == null) {
+        state.playlistRefreshInterval = setInterval(() => {
+          apiInstance.get("/playlist").then((response) => {
+            commit("setPlaylist", response.data);
+          });
+        }, 1500);
+      }
+    },
     setPlaybackRefreshInterval({ commit, state, dispatch, rootGetters }) {
       if (state.playbackRefreshInterval == null) {
         state.playbackRefreshInterval = setInterval(() => {
-          apiInstance.get("/status").then((response) => {
-            commit("setPlayerData", response.data);
-            if (rootGetters["settings/androidNotificationEnabled"] == true) {
-              dispatch("handleMusicControls");
-            }
-          });
+          // We get status data excluding playlist data.
+          apiInstance
+            .get("/status", { params: { exclude: "playlist" } })
+            .then((response) => {
+              commit("setPlayerData", response.data);
+              if (rootGetters["settings/androidNotificationEnabled"] == true) {
+                dispatch("handleMusicControls");
+              }
+            });
         }, 1500);
       }
     },

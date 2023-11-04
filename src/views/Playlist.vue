@@ -1,5 +1,6 @@
 <template>
   <ion-page>
+    <ion-loading :is-open="loading" message="Loading..."> </ion-loading>
     <ion-header :translucent="true">
       <ion-toolbar>
         <ion-buttons slot="start">
@@ -9,57 +10,29 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
-      <ion-button
-        @click="onClearPlaylistClicked"
-        size="small"
-        style="margin: 10px"
-        :disabled="playerData.playlist.length == 0"
-      >
+      <ion-button @click="onClearPlaylistClicked" size="small" style="margin: 10px" :disabled="playlist.length == 0">
         <ion-icon :icon="trashBin"></ion-icon>
       </ion-button>
-      <ion-reorder-group
-        @ionItemReorder="doReorder($event)"
-        :disabled="playerData.playlist.length <= 1"
-      >
-        <ion-item
-          lines="full"
-          @click="onItemClicked(item)"
-          v-for="item in playerData.playlist"
-          :key="item.id"
-        >
-          <ion-icon
-            class="playlistItemIndicator"
-            v-if="item.current"
-            slot="start"
-            :icon="play"
-          ></ion-icon>
+      <ion-reorder-group @ionItemReorder="doReorder($event)" :disabled="playlist.length <= 1">
+        <ion-item lines="full" @click="onItemClicked(item)" v-for="item in playlist" :key="item.id">
+          <ion-icon class="playlistItemIndicator" v-if="item.current" slot="start" :icon="play"></ion-icon>
           <ion-label class="ion-text-wrap">
             <p>
               {{
                 item.current
-                  ? playerData["media-title"] || item.filename
-                  : item.filename
+                ? playerData["media-title"] || item.filename
+                : item.filename
               }}
             </p>
           </ion-label>
-          <ion-button
-            @click="onRemoveItemClicked(item)"
-            fill="clear"
-            slot="end"
-          >
-            <ion-icon
-              style="color: white"
-              slot="icon-only"
-              :icon="trashBin"
-            ></ion-icon>
+          <ion-button @click="onRemoveItemClicked(item)" fill="clear" slot="end">
+            <ion-icon style="color: white" slot="icon-only" :icon="trashBin"></ion-icon>
           </ion-button>
           <ion-reorder slot="end"></ion-reorder>
         </ion-item>
       </ion-reorder-group>
     </ion-content>
-    <playerController
-      v-if="serverConfigured && isPlayerActive && connectedState"
-    ></playerController>
+    <playerController v-if="serverConfigured && isPlayerActive && connectedState"></playerController>
   </ion-page>
 </template>
 
@@ -78,10 +51,13 @@ import {
   IonLabel,
   IonIcon,
   IonButton,
+  IonLoading,
+  onIonViewDidEnter,
+  onIonViewWillLeave
 } from "@ionic/vue";
 
 import { play, add, remove, trashBin } from "ionicons/icons";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useStore } from "vuex";
 import playerController from "../components/playerController.vue";
 import { apiInstance } from "../api";
@@ -93,11 +69,31 @@ export default {
       () => store.state.settings.settings.configured
     );
     const playerData = computed(() => store.state.simpleapi.playerData);
+    const playlist = computed(() => store.state.simpleapi.playlist);
     const isPlayerActive = computed(() => {
       return playerData.value.filename ? true : false;
     });
     const DOUBLE_CLICK_THRESHOLD = 500;
+    const loading = ref(false);
     let lastOnStart = 0;
+    // TODO: Replace Ion-List with custom solution something like implemented on fileBrowserModal.
+    onIonViewDidEnter(async () => {
+      // Get initial playlist.
+      let loadingTimeout = setTimeout(() => {
+        loading.value = true;
+      }, 150);
+      apiInstance.get("/playlist").then((response) => {
+        store.commit("simpleapi/setPlaylist", response.data);
+      }).finally(() => {
+        clearTimeout(loadingTimeout);
+        loading.value = false;
+        store.dispatch("simpleapi/setPlaylistRefreshInterval");
+      });
+    });
+
+    onIonViewWillLeave(() => {
+      store.commit("simpleapi/clearPlaylistRefreshInterval");
+    });
 
     const doReorder = async (event) => {
       let fromIndex = event.detail.from;
@@ -130,13 +126,12 @@ export default {
       const now = Date.now();
 
       if (Math.abs(now - lastOnStart) <= DOUBLE_CLICK_THRESHOLD) {
-        const index = playerData.value.playlist.findIndex(
+        const index = playlist.value.findIndex(
           (el) => el.id == item.id
         );
 
         if (index > -1) {
           apiInstance.post(`/playlist/play/${index}`);
-          console.log(playerData.value.playlist);
         }
         lastOnStart = 0;
       } else {
@@ -157,6 +152,8 @@ export default {
       onItemClicked,
       onRemoveItemClicked,
       onClearPlaylistClicked,
+      playlist,
+      loading
     };
   },
   components: {
@@ -173,6 +170,7 @@ export default {
     IonLabel,
     IonIcon,
     IonButton,
+    IonLoading,
     playerController,
   },
 };

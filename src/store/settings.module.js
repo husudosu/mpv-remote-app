@@ -166,6 +166,11 @@ export const settings = {
           {},
           { root: true }
         );
+        await commit(
+          "simpleapi/clearPlaylistRefreshInterval",
+          {},
+          { root: true }
+        );
         configureInstance(server.host, server.port);
         // Load fileman history
         await dispatch("loadFilemanHistory");

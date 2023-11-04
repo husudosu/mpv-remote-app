@@ -384,7 +384,10 @@ export default {
       saveLastPath().then(() => {
         modalController.dismiss({
           filename: files.value.cwd,
-          appendToPlaylist: true
+          appendToPlaylist: true,
+          query: {
+            includeSubDir: true
+          }
         });
       });
     };
@@ -414,12 +417,10 @@ export default {
       const collectionId = history.pop();
 
       if (collectionId !== undefined && collectionId !== null) {
-        console.log(`Open collection from history ${collectionId}`);
         getDirectoryContents(null, collectionId);
       } else {
         getDirectoryContents(files.value.prevDir);
       }
-      console.log(`New history: ${history}`);
     };
 
     const onChangeDriveClicked = async () => {
