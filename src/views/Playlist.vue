@@ -32,7 +32,6 @@
         </ion-item>
       </ion-reorder-group>
     </ion-content>
-    <playerController v-if="serverConfigured && isPlayerActive && connectedState"></playerController>
   </ion-page>
 </template>
 
@@ -59,23 +58,16 @@ import {
 import { play, add, remove, trashBin } from "ionicons/icons";
 import { computed, ref } from "vue";
 import { useStore } from "vuex";
-import playerController from "../components/playerController.vue";
 import { apiInstance } from "../api";
 export default {
   setup() {
     const store = useStore();
-    const connectedState = computed(() => store.state.simpleapi.connected);
-    const serverConfigured = computed(
-      () => store.state.settings.settings.configured
-    );
     const playerData = computed(() => store.state.simpleapi.playerData);
     const playlist = computed(() => store.state.simpleapi.playlist);
-    const isPlayerActive = computed(() => {
-      return playerData.value.filename ? true : false;
-    });
     const DOUBLE_CLICK_THRESHOLD = 500;
     const loading = ref(false);
     let lastOnStart = 0;
+
     // TODO: Replace Ion-List with custom solution something like implemented on fileBrowserModal.
     onIonViewDidEnter(async () => {
       // Get initial playlist.
@@ -145,9 +137,6 @@ export default {
       add,
       remove,
       trashBin,
-      connectedState,
-      serverConfigured,
-      isPlayerActive,
       doReorder,
       onItemClicked,
       onRemoveItemClicked,
@@ -171,7 +160,6 @@ export default {
     IonIcon,
     IonButton,
     IonLoading,
-    playerController,
   },
 };
 </script>

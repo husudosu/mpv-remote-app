@@ -235,7 +235,6 @@ export default defineComponent({
         if (!store.state.settings.dbSession)
           await store.dispatch("settings/initDbSession");
         if (route.name === "folder.playlist") {
-          console.log("We are on playlist route, so setting playlist interval.");
           await store.dispatch("simpleapi/setPlaylistRefreshInterval");
         }
 
