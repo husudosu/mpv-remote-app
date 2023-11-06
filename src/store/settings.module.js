@@ -1,12 +1,15 @@
 import { Storage } from "@capacitor/storage";
 
 import {
+  createCustomCommand,
   createFilemanHistorySQL,
   createServer,
+  deleteCustomCommand,
   deleteServer,
   getFilemanHistorySQL,
   getServer,
   initDBTables,
+  updateCustomCommandSQL,
   UpdateFilemanHistorySQL,
   updateServerSQL,
 } from "../dbcrud";
@@ -20,6 +23,7 @@ const initialState = {
     servers: [],
     currentServerId: null,
     androidNotificationEnabled: false,
+    customCommands: [],
   },
   configured: false,
   sqlite: null,
@@ -86,6 +90,22 @@ export const settings = {
     },
     setFilemanLastPath(state, value) {
       state.filemanLastPath = value;
+    },
+    appendToCustomCommands(state, value) {
+      state.settings.customCommands.push(value);
+    },
+    updateCustomCommandEntry(state, value) {
+      const index = state.settings.customCommands.findIndex(
+        (el) => el.id === value.id
+      );
+      if (index > -1) state.settings.customCommands[index] = value;
+    },
+    removeFromCustomCommands(state, value) {
+      // Find server
+      const index = state.settings.customCommands.findIndex(
+        (el) => el.id === value
+      );
+      if (index > -1) state.settings.customCommands.splice(index, 1);
     },
   },
   actions: {
@@ -179,6 +199,8 @@ export const settings = {
           {},
           { root: true }
         );
+
+        // TODO: Have to load server custom commands here!
       } else console.log("Server not found");
     },
     initSQLITE: async function ({ commit }) {
@@ -294,6 +316,22 @@ export const settings = {
       );
       commit("setHistory", payload.paths);
       commit("setFilemanLastPath", payload.last_path);
+    },
+    addCustomCommand: async function ({ state, commit, dispatch }, payload) {
+      if (!state.dbSession || !state.dbSession.isDBOpen("remote_db"))
+        await dispatch("initDbSession");
+
+      const res = await createCustomCommand(state.dbSession, payload);
+      payload.id = res.changes.lastId;
+      commit("appendToCustomCommands", payload);
+    },
+    updateCustomCommand: async function ({ state, commit }, payload) {
+      await updateCustomCommandSQL(state.dbSession, payload.id, payload);
+      commit("updateCustomCommandEntry", payload);
+    },
+    removeCustomCommand: async function ({ state, commit }, customCommandId) {
+      await deleteCustomCommand(state.dbSession, customCommandId);
+      commit("removeFromCustomCommands", customCommandId);
     },
   },
 };

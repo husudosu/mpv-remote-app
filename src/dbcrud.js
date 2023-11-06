@@ -1,5 +1,5 @@
 export const initDBTables = async (db) => {
-  const queries = `
+  const queries_v1 = `
         PRAGMA foreign_keys=on;
         CREATE TABLE IF NOT EXISTS server (
             id INTEGER PRIMARY KEY NOT NULL,
@@ -18,9 +18,23 @@ export const initDBTables = async (db) => {
                 ON DELETE CASCADE
         );
     `;
+  // TODO: Refactor database handling to use migration, it will take long time.
+  const queries_v2 = `
+    CREATE TABLE IF NOT EXISTS custom_commands (
+      id INTEGER PRIMARY KEY NOT NULL,
+      server_id INTEGER NOT NULL,
+      name TEXT,
+      command TEXT NOT NULL,
+      default_args TEXT
+    )
+  `;
   console.log("Initalizing DB");
-  const res = await db.execute(queries);
+  const res = await db.execute(queries_v1);
   if (res.changes && res.changes.changes && res.changes.changes < 0) {
+    throw new Error(`Error: execute failed`);
+  }
+  const res2 = await db.execute(queries_v2);
+  if (res2.changes && res2.changes.changes && res2.changes.changes < 0) {
     throw new Error(`Error: execute failed`);
   }
 };
@@ -121,4 +135,46 @@ export const UpdateFilemanHistorySQL = async (
   } else {
     return await createFilemanHistorySQL(db, serverId, paths, last_path);
   }
+};
+
+export const createCustomCommand = async (db, data) => {
+  try {
+    const res = await db.run(
+      "INSERT INTO custom_commands (name, server_id, command, default_args) VALUES (?, ?, ?, ?);",
+      [data.name, data.server_id, data.command, data.default_args]
+    );
+
+    if (res.changes && res.changes.changes && res.changes.changes < 0) {
+      throw new Error("Error: execute failed");
+    }
+    return res;
+  } catch (e) {
+    console.log("Failed creating custom command:");
+    console.log(e);
+  }
+};
+
+export const updateCustomCommandSQL = async (db, id, data) => {
+  const res = await db.run(
+    "UPDATE custom_commands SET name=COALESCE(?, name), command=COALESCE(?, command), default_args=COALESCE(?, default_args) WHERE id=?",
+    [data.name, data.command, data.default_args, id]
+  );
+  if (res.changes && res.changes.changes && res.changes.changes < 0) {
+    throw new Error("Error: execute failed");
+  }
+  return res;
+};
+
+export const deleteCustomCommand = async (db, id) => {
+  const res = await db.run("DELETE FROM custom_commands WHERE id=?", [id]);
+  console.log(res);
+  return res;
+};
+
+export const getCustomCommands = async (db, serverId) => {
+  const res = await db.query(
+    "SELECT * FROM custom_commands where server_id=?",
+    [serverId]
+  );
+  return res.values;
 };

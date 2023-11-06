@@ -108,6 +108,12 @@ export default defineComponent({
         mdIcon: listOutline,
       },
       {
+        title: "Custom commands",
+        url: "/folder/customcommands",
+        iosIcon: playCircleOutline,
+        mdIcon: playCircleOutline,
+      },
+      {
         title: "Settings",
         url: "/folder/settings",
         iosIcon: cogOutline,
