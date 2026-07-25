@@ -20,14 +20,6 @@
     </ion-row>
     <ion-row class="videoControls">
       <ion-col size="12">
-        <ion-button @click="onPlayPauseClicked" fill="clear">
-          <ion-icon
-            v-if="playerData.pause"
-            slot="icon-only"
-            :icon="playOutline"
-          ></ion-icon>
-          <ion-icon v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
-        </ion-button>
         <ion-button @click="onStopClicked" fill="clear">
           <ion-icon slot="icon-only" :icon="stopOutline"></ion-icon>
         </ion-button>
@@ -35,6 +27,14 @@
           <ion-icon slot="icon-only" :icon="playSkipBackOutline"></ion-icon>
         </ion-button>
         <ion-button @click="onSkip(-5)" fill="clear"> -5 </ion-button>
+        <ion-button @click="onPlayPauseClicked" fill="clear" class="bigButton">
+          <ion-icon
+            v-if="playerData.pause"
+            slot="icon-only"
+            :icon="playOutline"
+          ></ion-icon>
+          <ion-icon v-else slot="icon-only" :icon="pauseOutline"></ion-icon>
+        </ion-button>
         <ion-button @click="onSkip(5)" fill="clear"> +5 </ion-button>
         <ion-button @click="onNextClicked" fill="clear">
           <ion-icon slot="icon-only" :icon="playSkipForwardOutline"></ion-icon>
@@ -144,11 +144,37 @@ export default {
 
 <style scoped>
 .videoControls ion-col {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
   margin-right: 1px;
 }
 .videoControls ion-button {
   color: #fff;
   font-size: 10px;
+  flex: 1 1 0;
+  width: auto;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+.videoControls ion-button.bigButton {
+  flex: 2 1 0;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  --border-radius: 50%;
+}
+
+.videoControls ion-button.bigButton ion-icon {
+  width: 48px;
+  height: 48px;
+  font-size: 32px;
 }
 
 .videotitle {
